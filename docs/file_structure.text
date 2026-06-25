@@ -1,0 +1,166 @@
+SpendWise — Proposed File Structure
+====================================
+Goal: offline-first expense tracker. Feature-first layout + shared data layer.
+State: Riverpod. Persistence: local DB (Drift recommended). No extra layers unless needed.
+
+Current state (today)
+---------------------
+lib/
+  main.dart
+  app/app.dart
+  core/          constants, router, theme, utils, widgets
+  data/          models, providers/spendwise_data_provider.dart (mock singleton)
+  features/      shell, dashboard, expenses, categories, reports, budget, search, account
+
+Target structure (implement gradually)
+--------------------------------------
+
+lib/
+├── main.dart                          # ProviderScope + runApp
+│
+├── app/
+│   ├── app.dart                       # MaterialApp.router, theme from preferences
+│   └── bootstrap.dart                 # optional: init DB, load prefs before runApp
+│
+├── core/
+│   ├── constants/
+│   │   └── app_icons.dart
+│   ├── database/
+│   │   ├── app_database.dart          # Drift database class
+│   │   ├── app_database.g.dart        # generated
+│   │   └── tables/                    # one file per table (or single tables.dart if small)
+│   │       ├── expenses_table.dart
+│   │       ├── categories_table.dart
+│   │       ├── budgets_table.dart
+│   │       ├── recurring_expenses_table.dart
+│   │       └── preferences_table.dart
+│   ├── router/
+│   │   └── app_router.dart
+│   ├── theme/
+│   │   ├── app_colors.dart
+│   │   ├── app_fonts.dart
+│   │   └── app_theme.dart
+│   ├── utils/
+│   │   ├── currency_converter.dart
+│   │   ├── currency_formatter.dart
+│   │   └── date_formatter.dart
+│   └── widgets/                       # shared UI only (no feature logic)
+│       ├── app_icon.dart
+│       ├── bottom_nav.dart
+│       ├── chart_widgets.dart
+│       ├── common_widgets.dart
+│       ├── expense_widgets.dart
+│       └── form_widgets.dart
+│
+├── data/
+│   ├── models/                        # app/domain models (keep existing files)
+│   │   ├── expense.dart
+│   │   ├── category.dart
+│   │   ├── budget.dart
+│   │   ├── recurring_expense.dart
+│   │   ├── monthly_summary.dart
+│   │   ├── dashboard_stats.dart
+│   │   ├── user_preferences.dart
+│   │   ├── user_profile.dart
+│   │   ├── payment_method.dart
+│   │   ├── app_currency.dart
+│   │   └── app_region.dart
+│   ├── mappers/                       # DB row <-> model (thin, no business rules)
+│   │   ├── expense_mapper.dart
+│   │   ├── category_mapper.dart
+│   │   ├── budget_mapper.dart
+│   │   └── recurring_expense_mapper.dart
+│   ├── datasources/
+│   │   └── local/
+│   │       ├── expense_local_datasource.dart
+│   │       ├── category_local_datasource.dart
+│   │       ├── budget_local_datasource.dart
+│   │       ├── recurring_expense_local_datasource.dart
+│   │       └── preferences_local_datasource.dart
+│   ├── repositories/                  # single place screens talk to for data
+│   │   ├── expense_repository.dart
+│   │   ├── category_repository.dart
+│   │   ├── budget_repository.dart
+│   │   ├── recurring_expense_repository.dart
+│   │   ├── report_repository.dart     # aggregates: monthly summary, trends, dashboard
+│   │   └── preferences_repository.dart
+│   └── services/
+│       ├── export_service.dart        # CSV / Excel file generation
+│       └── file_share_service.dart    # platform share / save dialog (thin wrapper)
+│
+├── providers/                         # app-wide Riverpod wiring (not inside features)
+│   ├── database_provider.dart         # keepAlive: Drift instance
+│   ├── repository_providers.dart      # one provider per repository
+│   ├── preferences_provider.dart      # theme, region, currency
+│   └── export_provider.dart           # export actions
+│
+└── features/
+    ├── shell/
+    │   └── main_shell.dart
+    │
+    ├── dashboard/
+    │   ├── dashboard_screen.dart
+    │   └── dashboard_providers.dart   # watch report + expense streams
+    │
+    ├── expenses/
+    │   ├── expenses_screen.dart
+    │   ├── expense_detail_screen.dart
+    │   ├── add_edit_expense_screen.dart
+    │   └── expense_providers.dart     # list, detail, add/edit notifier
+    │
+    ├── categories/
+    │   ├── categories_screen.dart
+    │   ├── category_detail_screen.dart
+    │   └── category_providers.dart
+    │
+    ├── budget/
+    │   ├── budget_screen.dart
+    │   ├── add_edit_budget_screen.dart
+    │   └── budget_providers.dart
+    │
+    ├── reports/
+    │   ├── reports_screen.dart
+    │   ├── monthly_summary_screen.dart
+    │   └── report_providers.dart
+    │
+    ├── search/
+    │   ├── search_screen.dart
+    │   └── search_providers.dart      # local filter state + query
+    │
+    └── account/
+        ├── account_screen.dart
+        └── account_providers.dart     # profile + prefs + export trigger
+
+assets/
+├── fonts/                             # Montserrat weights used in pubspec
+└── icons/                             # SVG set (existing)
+
+docs/
+├── file_structure.text                # this file
+└── architecture_plan.text             # repos, providers, screen map, data flow
+
+test/
+├── repositories/                      # unit tests for repos
+├── providers/                         # provider tests with overrides
+└── widget/                            # screen smoke / golden tests
+
+What we are NOT adding (on purpose)
+-----------------------------------
+- No separate domain/ folder with use-case classes per action
+- No service per entity (repos are enough for CRUD)
+- No global event bus
+- No code generation for models unless JSON/API is added later
+- No feature/data/presentation subfolders deeper than screens + providers
+
+Migration order (suggested)
+---------------------------
+1. Add Riverpod + Drift, database_provider, tables
+2. One repository at a time (expense first), replace mock reads
+3. Wire feature providers, then screens
+4. Preferences persistence
+5. Reports/aggregations in report_repository
+6. Export service last
+
+Delete when done
+----------------
+- data/providers/spendwise_data_provider.dart (mock singleton)

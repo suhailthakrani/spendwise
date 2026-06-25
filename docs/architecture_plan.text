@@ -1,0 +1,335 @@
+SpendWise — Architecture Plan (Riverpod)
+=========================================
+Practical map for implementation. Read top-to-bottom: DB → repos → providers → UI.
+
+Packages to add (when implementing)
+-----------------------------------
+- flutter_riverpod
+- riverpod_annotation + riverpod_generator (optional but recommended)
+- drift + drift_dev + sqlite3_flutter_libs
+- path_provider (export file path)
+- share_plus (share exported file)
+
+Riverpod rules we follow
+------------------------
+- Repositories are injected via providers; screens never open the DB directly.
+- DB provider is keepAlive; repositories depend on it.
+- Lists from DB use StreamProvider or AsyncNotifier — UI auto-updates on writes.
+- Form screens use a Notifier (add/edit) that calls the repository, then invalidates list providers.
+- Preferences (theme, currency, region) are a small AsyncNotifier — persisted immediately.
+- One provider file per feature; shared wiring lives in lib/providers/.
+- Use ref.watch in build, ref.read in callbacks (onPressed, onSave).
+- Test with ProviderScope overrides + fake repositories.
+
+────────────────────────────────────────────────────────────────────────────────
+1. DATABASE (local, single source of truth)
+────────────────────────────────────────────────────────────────────────────────
+
+Storage: Drift (SQLite), offline-only.
+
+Tables (amounts stored in USD as REAL, same as current mock):
+  expenses          id, amount, category_id, note, date, payment_method, is_recurring
+  categories        id, name, icon_name, color_value, is_custom, budget_limit?
+  budgets           id, name, limit_amount, category_id?, is_monthly
+  recurring_expenses id, title, amount, category_id, frequency, next_due_date, payment_method
+  preferences       key-value or single row: theme_mode, region_code, currency_code
+  user_profile      id, name, email, avatar_url?, member_since (optional, mock ok for v1)
+
+Notes:
+  - budget.spent is NOT stored; computed from expenses in repository/report layer.
+  - monthly summaries are NOT stored; computed on read in report_repository.
+  - category spending / dashboard stats: computed queries, not separate tables.
+
+Flow: DB → datasource (SQL) → mapper → model
+
+────────────────────────────────────────────────────────────────────────────────
+2. REPOSITORIES (what to build)
+────────────────────────────────────────────────────────────────────────────────
+
+ExpenseRepository
+  watchAll() / watchByCategory(id) / watchById(id)
+  search(query, categoryId?, dateFrom?, dateTo?, sort)
+  create(expense) / update(expense) / delete(id)
+  Used by: expenses list, detail, add/edit, search, category detail, dashboard recent
+
+CategoryRepository
+  watchAll()
+  create / update / delete (block delete if expenses exist, or reassign)
+  spendingForCategory(id) — sum expenses in display or base currency
+  Used by: categories list, category detail, expense/budget forms, charts
+
+BudgetRepository
+  watchAll() / watchById(id)
+  create / update / delete
+  progressFor(budget) — spent vs limit from expenses
+  Used by: budget screen, add/edit budget, dashboard budget card
+
+RecurringExpenseRepository
+  watchAll()
+  create / update / delete
+  Used by: budget screen recurring section
+
+ReportRepository
+  dashboardStats() — today/month totals, category breakdown, recent expense ids
+  currentMonthSummary()
+  monthlyTrend(months: 6)
+  monthlySummaries() — historical list
+  Used by: dashboard, reports, monthly summary (no writes)
+
+PreferencesRepository
+  watchPreferences()
+  setThemeMode / setRegion / setCurrency
+  Used by: app theme, account screen, all formatDisplay helpers
+
+ExportService (not a repo — stateless helper)
+  exportExpensesCsv(expenses, categories)
+  exportExpensesExcel(...) — optional phase 2
+  exportFullBackupJson(...) — optional
+  Called by: account screen via export provider
+
+────────────────────────────────────────────────────────────────────────────────
+3. PROVIDERS (what to create)
+────────────────────────────────────────────────────────────────────────────────
+
+lib/providers/  (app-wide)
+
+  databaseProvider                  → AppDatabase (keepAlive)
+  expenseRepositoryProvider         → ExpenseRepository
+  categoryRepositoryProvider        → CategoryRepository
+  budgetRepositoryProvider          → BudgetRepository
+  recurringExpenseRepositoryProvider
+  reportRepositoryProvider
+  preferencesRepositoryProvider
+  exportServiceProvider
+
+  preferencesProvider               → AsyncNotifier<UserPreferences>
+  themeModeProvider                 → derived from preferences (for MaterialApp)
+  displayCurrencyProvider           → derived from preferences (for formatters)
+
+lib/features/*/…_providers.dart  (feature-scoped)
+
+  dashboard_providers.dart
+    dashboardStatsProvider          → StreamProvider / FutureProvider from ReportRepository
+    recentExpensesProvider          → watch expense ids from stats, then watch expenses
+
+  expense_providers.dart
+    expensesListProvider            → StreamProvider<List<Expense>>
+    expenseDetailProvider(id)       → StreamProvider.family
+    expenseFormProvider(id?)        → Notifier for add/edit form state + save/delete
+
+  category_providers.dart
+    categoriesListProvider
+    categoryDetailProvider(id)
+    categoryFormProvider            → for add-category dialog
+
+  budget_providers.dart
+    budgetsListProvider
+    budgetDetailProvider(id)
+    budgetFormProvider(id?)
+    recurringExpensesProvider
+
+  report_providers.dart
+    currentMonthSummaryProvider
+    monthlyTrendProvider
+    monthlySummariesProvider
+
+  search_providers.dart
+    searchQueryProvider               → local UI state (query, filters, sort)
+    searchResultsProvider             → combines query + ExpenseRepository.search
+
+  account_providers.dart
+    userProfileProvider               → static/mock ok for v1
+    exportControllerProvider          → AsyncNotifier: runs ExportService + share
+
+Currency display helpers:
+  Keep formatDisplay on a small provider or extension that reads displayCurrencyProvider.
+  Do not duplicate conversion logic in widgets.
+
+────────────────────────────────────────────────────────────────────────────────
+4. SCREEN → PROVIDER MAP
+────────────────────────────────────────────────────────────────────────────────
+
+MainShell
+  └─ (no data providers; navigation only)
+
+DashboardScreen
+  ├─ dashboardStatsProvider
+  ├─ recentExpensesProvider
+  └─ displayCurrencyProvider (via AmountText / format helpers)
+
+ExpensesScreen
+  └─ expensesListProvider
+
+ExpenseDetailScreen
+  └─ expenseDetailProvider(expenseId)
+
+AddEditExpenseScreen
+  ├─ expenseFormProvider(expenseId?)
+  ├─ categoriesListProvider (category chips)
+  └─ displayCurrencyProvider
+
+CategoriesScreen
+  └─ categoriesListProvider
+
+CategoryDetailScreen
+  ├─ categoryDetailProvider(categoryId)
+  └─ expenses for category via ExpenseRepository.watchByCategory
+
+BudgetScreen
+  ├─ budgetsListProvider
+  └─ recurringExpensesProvider
+
+AddEditBudgetScreen
+  ├─ budgetFormProvider(budgetId?)
+  └─ categoriesListProvider (when type = category)
+
+ReportsScreen
+  ├─ currentMonthSummaryProvider
+  └─ monthlySummariesProvider
+
+MonthlySummaryScreen
+  └─ currentMonthSummaryProvider (or family by month/year later)
+
+SearchScreen
+  ├─ searchQueryProvider
+  ├─ searchResultsProvider
+  └─ categoriesListProvider (filter chips)
+
+AccountScreen
+  ├─ preferencesProvider
+  ├─ userProfileProvider
+  └─ exportControllerProvider (export actions)
+
+SpendWiseApp (app.dart)
+  └─ themeModeProvider, appRouter (unchanged)
+
+────────────────────────────────────────────────────────────────────────────────
+5. DATA FLOW
+────────────────────────────────────────────────────────────────────────────────
+
+READ path (DB → UI)
+-------------------
+  Drift table
+    → LocalDatasource (SQL query / watch)
+    → Mapper.toModel()
+    → Repository
+    → Riverpod StreamProvider / AsyncNotifier
+    → Screen (ConsumerWidget / ConsumerStatefulWidget)
+    → Widget (ExpenseTile, charts, etc.)
+
+Example: expense list on ExpensesScreen
+  expenses table
+    → ExpenseLocalDatasource.watchAll()
+    → ExpenseRepository.watchAll()
+    → expensesListProvider
+    → ExpensesScreen builds ListView
+
+WRITE path (UI → DB)
+--------------------
+  User taps Save
+    → Screen calls ref.read(expenseFormProvider.notifier).save()
+    → Notifier validates input
+    → ExpenseRepository.create() or .update()
+    → Datasource insert/update
+    → Drift write
+    → Stream emits new list
+    → UI rebuilds automatically (no manual setState for lists)
+
+Example: add expense
+  AddEditExpenseScreen Save
+    → expenseFormProvider.save()
+    → ExpenseRepository.create(expense)
+    → pop + list already updated via stream
+
+DELETE path
+-----------
+  Same as write: form/detail notifier → repository.delete(id) → stream updates
+
+PREFERENCES path (special case)
+-------------------------------
+  Account toggles dark mode
+    → preferencesProvider.notifier.setThemeMode()
+    → PreferencesRepository persists to preferences table (or shared_preferences)
+    → preferencesProvider state updates
+    → SpendWiseApp watches themeModeProvider → rebuilds ThemeData
+
+AGGREGATIONS (reports, dashboard)
+---------------------------------
+  No separate write — ReportRepository runs SQL sums/group-by on expenses table
+  Returns DashboardStats / MonthlySummary models
+  Cached only inside provider if needed (autoDispose + refetch is enough for v1)
+
+────────────────────────────────────────────────────────────────────────────────
+6. EXPORT FLOW (DB → file → user)
+────────────────────────────────────────────────────────────────────────────────
+
+  User taps Export CSV on AccountScreen
+    → ref.read(exportControllerProvider.notifier).exportCsv()
+    → ExportService reads:
+         - expensesListProvider / repository.watchAll() (one-shot)
+         - categories for name lookup
+    → ExportService writes file to app temp dir (path_provider)
+    → FileShareService.share(file) via share_plus
+    → Snackbar success / error on exportControllerProvider state
+
+  Excel: same pattern, phase 2 (add excel package only if needed)
+
+  Optional backup JSON: all tables → single file for restore later
+
+────────────────────────────────────────────────────────────────────────────────
+7. REPLACE MOCK (checklist)
+────────────────────────────────────────────────────────────────────────────────
+
+Phase 1 — Foundation
+  [ ] ProviderScope in main.dart
+  [ ] Drift schema + databaseProvider
+  [ ] Seed script or onCreate migration with default categories
+
+Phase 2 — Core CRUD
+  [ ] ExpenseRepository + expense providers + wire 3 expense screens
+  [ ] CategoryRepository + category screens
+  [ ] Remove expense/category reads from SpendWiseDataProvider
+
+Phase 3 — Budget & recurring
+  [ ] BudgetRepository + recurring repo + budget screens
+
+Phase 4 — Analytics
+  [ ] ReportRepository + dashboard + reports screens
+
+Phase 5 — Settings & export
+  [ ] PreferencesRepository (persist theme/region/currency)
+  [ ] ExportService + account export buttons
+  [ ] Delete spendwise_data_provider.dart
+
+────────────────────────────────────────────────────────────────────────────────
+8. TESTING (minimal, useful)
+────────────────────────────────────────────────────────────────────────────────
+
+  Unit: repository with in-memory Drift database
+  Provider: override repositoryProvider with fake, assert UI provider output
+  Widget: one smoke test per main tab after migration
+
+────────────────────────────────────────────────────────────────────────────────
+Quick reference diagram
+────────────────────────────────────────────────────────────────────────────────
+
+  ┌─────────────┐     watch/save      ┌──────────────────┐
+  │   Screens   │ ◄──────────────────►│ Feature Providers │
+  └─────────────┘                     └────────┬─────────┘
+                                               │
+                                               ▼
+                                    ┌──────────────────┐
+                                    │   Repositories   │
+                                    └────────┬─────────┘
+                                               │
+                         ┌─────────────────────┼─────────────────────┐
+                         ▼                     ▼                     ▼
+                  ┌────────────┐        ┌────────────┐        ┌──────────────┐
+                  │ Datasources│        │  Mappers   │        │ExportService │
+                  │  (Drift)   │        │            │        │ (read-only)  │
+                  └─────┬──────┘        └────────────┘        └──────────────┘
+                        │
+                        ▼
+                  ┌────────────┐
+                  │  SQLite DB │
+                  └────────────┘
