@@ -1,27 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../core/constants/app_icons.dart';
+import '../../core/utils/category_lookup.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../data/models/budget.dart';
 import '../../data/models/category.dart';
-import '../../data/providers/spendwise_data_provider.dart';
+import '../../providers/data_providers.dart';
+import '../../providers/preferences_providers.dart';
+import '../../providers/repository_providers.dart';
 
 enum BudgetFormType { monthly, category }
 
-class AddEditBudgetScreen extends StatefulWidget {
+class AddEditBudgetScreen extends ConsumerStatefulWidget {
   const AddEditBudgetScreen({super.key, this.budgetId});
 
   final String? budgetId;
 
   @override
-  State<AddEditBudgetScreen> createState() => _AddEditBudgetScreenState();
+  ConsumerState<AddEditBudgetScreen> createState() =>
+      _AddEditBudgetScreenState();
 }
 
-class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
+class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
   static const _kAnimDuration = Duration(milliseconds: 180);
   static const _kChipRadius = 12.0;
   static const _kFieldRadius = 14.0;
@@ -33,6 +39,8 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
   late BudgetFormType _type;
   String? _categoryId;
   double _alertThreshold = 0.8;
+  Budget? _existingBudget;
+  bool _initialized = false;
 
   bool get isEditing => widget.budgetId != null;
 
@@ -41,26 +49,42 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
   @override
   void initState() {
     super.initState();
-    final provider = SpendWiseDataProvider.instance;
-    final budget =
-        widget.budgetId != null ? provider.budgetById(widget.budgetId!) : null;
+    _type = BudgetFormType.monthly;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
+  }
 
+  Future<void> _loadInitial() async {
+    final categories =
+        await ref.read(categoryRepositoryProvider).watchAll().first;
+    final currency = ref.read(currencyDisplayProvider);
+
+    Budget? budget;
+    if (widget.budgetId != null) {
+      budget = await ref.read(budgetRepositoryProvider).getById(widget.budgetId!);
+    }
+
+    if (!mounted) return;
+
+    _existingBudget = budget;
     _type = budget?.categoryId != null
         ? BudgetFormType.category
         : BudgetFormType.monthly;
-    _categoryId = budget?.categoryId ?? provider.categories.first.id;
+    _categoryId = budget?.categoryId ??
+        (categories.isNotEmpty ? categories.first.id : null);
 
     if (budget != null) {
       _nameController.text = budget.name;
       _limitController.text =
-          provider.toDisplayAmount(budget.limit).toStringAsFixed(0);
+          currency.toDisplayAmount(budget.limit).toStringAsFixed(0);
     } else {
       _nameController.text = 'Monthly Budget';
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!isEditing) _limitFocus.requestFocus();
-    });
+    setState(() => _initialized = true);
+
+    if (!isEditing) {
+      _limitFocus.requestFocus();
+    }
   }
 
   @override
@@ -71,56 +95,99 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
     super.dispose();
   }
 
-  Budget? get _existingBudget => widget.budgetId != null
-      ? SpendWiseDataProvider.instance.budgetById(widget.budgetId!)
-      : null;
-
   bool get _showCategoryPicker =>
       _type == BudgetFormType.category || _existingBudget?.categoryId != null;
 
-  void _save(BuildContext context) {
-    context.pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isEditing
-              ? 'Budget updated (design only)'
-              : 'Budget created (design only)',
+  Future<void> _save(BuildContext context) async {
+    final limitDisplay = double.tryParse(_limitController.text);
+    if (limitDisplay == null || limitDisplay <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid budget limit')),
+      );
+      return;
+    }
+
+    final currency = ref.read(currencyDisplayProvider);
+    final repo = ref.read(budgetRepositoryProvider);
+    final name = _nameController.text.trim();
+    final limit = currency.toStorageAmount(limitDisplay);
+    final categoryId =
+        _type == BudgetFormType.category ? _categoryId : null;
+    final isMonthly = _type == BudgetFormType.monthly;
+
+    if (isEditing) {
+      await repo.update(
+        id: widget.budgetId!,
+        name: name,
+        limit: limit,
+        categoryId: categoryId,
+        isMonthly: isMonthly,
+      );
+    } else {
+      await repo.create(
+        id: const Uuid().v4(),
+        name: name,
+        limit: limit,
+        categoryId: categoryId,
+        isMonthly: isMonthly,
+      );
+    }
+
+    if (context.mounted) {
+      context.pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isEditing ? 'Budget updated' : 'Budget created'),
         ),
-      ),
-    );
+      );
+    }
   }
 
   void _selectType(BudgetFormType type) {
-    final provider = SpendWiseDataProvider.instance;
+    final categories = ref.read(categoriesProvider).valueOrNull ?? [];
     setState(() {
       _type = type;
       if (type == BudgetFormType.monthly) {
         _nameController.text = 'Monthly Budget';
         _categoryId = null;
-      } else {
-        _categoryId ??= provider.categories.first.id;
-        _nameController.text = provider.categoryById(_categoryId!)!.name;
+      } else if (categories.isNotEmpty) {
+        _categoryId ??= categories.first.id;
+        final cat = categories.firstWhere((c) => c.id == _categoryId);
+        _nameController.text = cat.name;
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = SpendWiseDataProvider.instance;
-    final categories = provider.categories;
-    final currency = provider.displayCurrency;
+    if (!_initialized) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const AppIcon(AppIcons.clear, size: 22),
+            onPressed: () => context.pop(),
+          ),
+          title: Text(isEditing ? 'Edit Budget' : 'Add Budget'),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final categories = categoriesAsync.valueOrNull ?? [];
+    final currency = ref.watch(currencyDisplayProvider);
+    final currencyCode = ref.watch(displayCurrencyCodeProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     final limit = double.tryParse(_limitController.text) ?? 0;
     final spent = _existingBudget != null
-        ? provider.toDisplayAmount(_existingBudget!.spent)
+        ? currency.toDisplayAmount(_existingBudget!.spent)
         : 0.0;
     final progress = limit > 0 ? (spent / limit).clamp(0.0, 1.0) : 0.0;
 
     final category = _categoryId != null
-        ? provider.categoryById(_categoryId!)
+        ? categoryById(categories, _categoryId!)
         : null;
     final accent = category?.color ?? AppColors.primary;
 
@@ -147,7 +214,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        provider.displayCurrencyCode,
+                        currencyCode,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: isDark
                               ? AppColors.textSecondaryDark
@@ -173,7 +240,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                         ),
                         decoration: InputDecoration(
                           hintText: '0',
-                          prefixText: '${currency.symbol} ',
+                          prefixText: '${currency.displayCurrency.symbol} ',
                           prefixStyle: theme.textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.w800,
                             fontSize: 38,
@@ -201,7 +268,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '${provider.formatDisplay(spent)} of ${provider.formatInUserCurrency(limit)} used',
+                          '${currency.formatDisplay(spent)} of ${currency.formatInUserCurrency(limit)} used',
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: isDark
                                 ? AppColors.textSecondaryDark
@@ -212,7 +279,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                       ],
                       const SizedBox(height: 18),
                       if (!isEditing) ...[
-                        _FieldLabel('Type'),
+                        const _FieldLabel('Type'),
                         const SizedBox(height: 8),
                         Row(
                           children: [
@@ -239,8 +306,8 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                         ),
                         const SizedBox(height: 12),
                       ],
-                      if (_showCategoryPicker) ...[
-                        _FieldLabel('Category'),
+                      if (_showCategoryPicker && categories.isNotEmpty) ...[
+                        const _FieldLabel('Category'),
                         const SizedBox(height: 8),
                         SizedBox(
                           height: 44,
@@ -296,7 +363,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      _FieldLabel('Alert at'),
+                      const _FieldLabel('Alert at'),
                       const SizedBox(height: 8),
                       SizedBox(
                         height: 40,
@@ -363,12 +430,17 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              context.go(AppRoutes.budget);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Budget deleted (design only)')),
-              );
+              await ref
+                  .read(budgetRepositoryProvider)
+                  .delete(widget.budgetId!);
+              if (context.mounted) {
+                context.go(AppRoutes.budget);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Budget deleted')),
+                );
+              }
             },
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Delete'),

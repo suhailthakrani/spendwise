@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_icons.dart';
@@ -8,19 +9,23 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../data/models/category.dart';
+import '../../data/models/expense.dart';
 import '../../data/models/payment_method.dart';
-import '../../data/providers/spendwise_data_provider.dart';
+import '../../providers/data_providers.dart';
+import '../../providers/preferences_providers.dart';
+import '../../providers/repository_providers.dart';
 
-class AddEditExpenseScreen extends StatefulWidget {
+class AddEditExpenseScreen extends ConsumerStatefulWidget {
   const AddEditExpenseScreen({super.key, this.expenseId});
 
   final String? expenseId;
 
   @override
-  State<AddEditExpenseScreen> createState() => _AddEditExpenseScreenState();
+  ConsumerState<AddEditExpenseScreen> createState() =>
+      _AddEditExpenseScreenState();
 }
 
-class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
+class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   static const _kAnimDuration = Duration(milliseconds: 180);
   static const _kChipRadius = 12.0;
   static const _kFieldRadius = 14.0;
@@ -33,30 +38,40 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
   late PaymentMethod _paymentMethod;
   late DateTime _date;
   bool _isRecurring = false;
+  bool _initialized = false;
 
   bool get isEditing => widget.expenseId != null;
 
   @override
   void initState() {
     super.initState();
-    final provider = SpendWiseDataProvider.instance;
-    final expense =
-        widget.expenseId != null ? provider.expenseById(widget.expenseId!) : null;
+    _paymentMethod = PaymentMethod.card;
+    _date = DateTime.now();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
+  }
 
-    _categoryId = expense?.categoryId ?? provider.categories.first.id;
-    _paymentMethod = expense?.paymentMethod ?? PaymentMethod.card;
-    _date = expense?.date ?? DateTime(2026, 6, 25);
-    _isRecurring = expense?.isRecurring ?? false;
+  Future<void> _loadInitial() async {
+    final categories =
+        await ref.read(categoryRepositoryProvider).watchAll().first;
+    final currency = ref.read(currencyDisplayProvider);
 
-    if (expense != null) {
+    if (widget.expenseId != null) {
+      final expense =
+          await ref.read(expenseRepositoryProvider).getById(widget.expenseId!);
+      if (!mounted || expense == null) return;
+      _categoryId = expense.categoryId;
+      _paymentMethod = expense.paymentMethod;
+      _date = expense.date;
+      _isRecurring = expense.isRecurring;
       _amountController.text =
-          provider.toDisplayAmount(expense.amount).toStringAsFixed(2);
+          currency.toDisplayAmount(expense.amount).toStringAsFixed(2);
       _noteController.text = expense.note;
+    } else {
+      _categoryId = categories.first.id;
+      _amountFocus.requestFocus();
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!isEditing) _amountFocus.requestFocus();
-    });
+    if (mounted) setState(() => _initialized = true);
   }
 
   @override
@@ -67,15 +82,40 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
     super.dispose();
   }
 
-  void _save(BuildContext context) {
+  Future<void> _save(BuildContext context) async {
+    final amountDisplay = double.tryParse(_amountController.text);
+    if (amountDisplay == null || amountDisplay <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid amount')),
+      );
+      return;
+    }
+
+    final currency = ref.read(currencyDisplayProvider);
+    final repo = ref.read(expenseRepositoryProvider);
+    final expense = Expense(
+      id: widget.expenseId ?? repo.newId(),
+      amount: currency.toStorageAmount(amountDisplay),
+      categoryId: _categoryId,
+      note: _noteController.text.trim().isEmpty
+          ? 'Expense'
+          : _noteController.text.trim(),
+      date: _date,
+      paymentMethod: _paymentMethod,
+      isRecurring: _isRecurring,
+    );
+
+    if (isEditing) {
+      await repo.update(expense);
+    } else {
+      await repo.create(expense);
+    }
+
+    if (!context.mounted) return;
     context.pop();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          isEditing
-              ? 'Expense updated (design only)'
-              : 'Expense saved (design only)',
-        ),
+        content: Text(isEditing ? 'Expense updated' : 'Expense saved'),
       ),
     );
   }
@@ -92,11 +132,18 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = SpendWiseDataProvider.instance;
-    final categories = provider.categories;
-    final currencyCode = provider.displayCurrencyCode;
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final currencyCode = ref.watch(displayCurrencyCodeProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    if (!_initialized) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final categories = categoriesAsync.valueOrNull ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -302,9 +349,10 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
+              ref.read(expenseRepositoryProvider).delete(widget.expenseId!);
               context.go(AppRoutes.expenses);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Expense deleted (design only)')),
+                const SnackBar(content: Text('Expense deleted')),
               );
             },
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),

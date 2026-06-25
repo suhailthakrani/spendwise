@@ -43,10 +43,13 @@ class MainShell extends StatelessWidget {
     return Scaffold(
       body: child,
       floatingActionButton: showFab
-          ? FloatingActionButton.extended(
+          ? FloatingActionButton(
               onPressed: () => context.push(AppRoutes.addExpense),
-              icon: const AppIcon(AppIcons.add, size: 20, color: Colors.white),
-              label: const Text('Add Expense'),
+              child: const AppIcon(
+                AppIcons.add,
+                size: 24,
+                color: Colors.white,
+              ),
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

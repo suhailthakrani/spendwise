@@ -29,6 +29,9 @@ part 'app_database.g.dart';
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
+  /// In-memory database for tests.
+  factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
+
   @override
   int get schemaVersion => 1;
 

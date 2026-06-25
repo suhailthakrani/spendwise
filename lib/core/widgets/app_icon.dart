@@ -7,11 +7,13 @@ class AppIcon extends StatelessWidget {
     super.key,
     this.size = 24,
     this.color,
+    this.fit = BoxFit.contain,
   });
 
   final String asset;
   final double size;
   final Color? color;
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +26,7 @@ class AppIcon extends StatelessWidget {
       colorFilter: iconColor != null
           ? ColorFilter.mode(iconColor, BlendMode.srcIn)
           : null,
+      fit: fit,
     );
   }
 }

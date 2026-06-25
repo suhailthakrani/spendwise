@@ -1,10 +1,13 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../constants/app_icons.dart';
 import '../theme/app_colors.dart';
 import '../../data/models/category.dart';
-import '../../data/providers/spendwise_data_provider.dart';
+import '../../providers/data_providers.dart';
+import '../../providers/preferences_providers.dart';
+import '../utils/category_lookup.dart';
 import 'app_icon.dart';
 
 class CategoryPieChart extends StatelessWidget {
@@ -105,152 +108,201 @@ class CategoryPieChart extends StatelessWidget {
   }
 }
 
-class MonthlyTrendChart extends StatelessWidget {
+class MonthlyTrendChart extends ConsumerWidget {
   const MonthlyTrendChart({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final provider = SpendWiseDataProvider.instance;
-    final data = provider.monthlyTrend;
-    final labels = provider.monthlyTrendLabels;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trendAsync = ref.watch(monthlyTrendProvider);
+    final labels = ref.watch(monthlyTrendLabelsProvider);
+    final currency = ref.watch(currencyDisplayProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    if (data.isEmpty) return const SizedBox.shrink();
+    return trendAsync.when(
+      loading: () => const SizedBox(height: 200),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (data) {
+        if (data.isEmpty) return const SizedBox.shrink();
 
-    final maxY = data.reduce((a, b) => a > b ? a : b) * 1.2;
-
-    return SizedBox(
-      height: 200,
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: maxY,
-          gridData: FlGridData(
-            show: true,
-            drawVerticalLine: false,
-            horizontalInterval: maxY / 4,
-            getDrawingHorizontalLine: (value) => FlLine(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : Colors.black.withValues(alpha: 0.06),
-              strokeWidth: 1,
-            ),
-          ),
-          borderData: FlBorderData(show: false),
-          titlesData: FlTitlesData(
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 48,
-                getTitlesWidget: (value, meta) => Text(
-                  provider.formatDisplay(value, compact: true),
-                  style: theme.textTheme.labelSmall,
+        final peak = data.reduce((a, b) => a > b ? a : b);
+        if (peak <= 0) {
+          return SizedBox(
+            height: 160,
+            child: Center(
+              child: Text(
+                'No spending data yet',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight,
                 ),
               ),
             ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  final index = value.toInt();
-                  if (index < 0 || index >= labels.length) {
-                    return const SizedBox.shrink();
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      labels[index],
+          );
+        }
+
+        final maxY = peak * 1.2;
+
+        return SizedBox(
+          height: 200,
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: maxY,
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: maxY / 4,
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : Colors.black.withValues(alpha: 0.06),
+                  strokeWidth: 1,
+                ),
+              ),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 48,
+                    getTitlesWidget: (value, meta) => Text(
+                      currency.formatDisplay(value, compact: true),
                       style: theme.textTheme.labelSmall,
                     ),
-                  );
-                },
-              ),
-            ),
-          ),
-          barGroups: List.generate(data.length, (i) {
-            return BarChartGroupData(
-              x: i,
-              barRods: [
-                BarChartRodData(
-                  toY: data[i],
-                  color: AppColors.primary,
-                  width: 20,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(6),
                   ),
                 ),
-              ],
-            );
-          }),
-        ),
-      ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      final index = value.toInt();
+                      if (index < 0 || index >= labels.length) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          labels[index],
+                          style: theme.textTheme.labelSmall,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              barGroups: List.generate(data.length, (i) {
+                return BarChartGroupData(
+                  x: i,
+                  barRods: [
+                    BarChartRodData(
+                      toY: data[i],
+                      color: AppColors.primary,
+                      width: 20,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(6),
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
-class CategorySpendingBars extends StatelessWidget {
+class CategorySpendingBars extends ConsumerWidget {
   const CategorySpendingBars({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final provider = SpendWiseDataProvider.instance;
-    final stats = provider.dashboardStats;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(dashboardStatsProvider);
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final currency = ref.watch(currencyDisplayProvider);
     final theme = Theme.of(context);
 
-    return Column(
-      children: stats.categorySpending.take(5).map((cs) {
-        final cat = provider.categoryById(cs.categoryId);
-        if (cat == null) return const SizedBox.shrink();
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-          child: Row(
-            children: [
-              AppIconBox(
-                asset: AppIcons.categoryIcon(cat.iconName),
-                color: cat.color,
-                size: 36,
-                iconSize: 18,
+    return statsAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (stats) {
+        final categories = categoriesAsync.valueOrNull ?? [];
+        if (stats.categorySpending.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Text(
+              'Category breakdown appears after you add expenses',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.brightness == Brightness.dark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            ),
+          );
+        }
+
+        return Column(
+          children: stats.categorySpending.take(5).map((cs) {
+            final cat = categoryById(categories, cs.categoryId);
+            if (cat == null) return const SizedBox.shrink();
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+              child: Row(
+                children: [
+                  AppIconBox(
+                    asset: AppIcons.categoryIcon(cat.iconName),
+                    color: cat.color,
+                    size: 36,
+                    iconSize: 18,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(cat.name, style: theme.textTheme.bodyMedium),
-                        Text(
-                          provider.formatDisplay(cs.amount),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w600,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(cat.name, style: theme.textTheme.bodyMedium),
+                            Text(
+                              currency.formatDisplay(cs.amount),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: cs.percentage / 100,
+                            minHeight: 6,
+                            backgroundColor: theme.brightness == Brightness.dark
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : Colors.black.withValues(alpha: 0.06),
+                            color: cat.color,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: cs.percentage / 100,
-                        minHeight: 6,
-                        backgroundColor: theme.brightness == Brightness.dark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : Colors.black.withValues(alpha: 0.06),
-                        color: cat.color,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 }

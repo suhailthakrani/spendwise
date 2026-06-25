@@ -1,130 +1,161 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_icons.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/category_lookup.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/common_widgets.dart';
-import '../../data/providers/spendwise_data_provider.dart';
+import '../../providers/data_providers.dart';
+import '../../providers/preferences_providers.dart';
+import '../../providers/repository_providers.dart';
 
-class ExpenseDetailScreen extends StatelessWidget {
+class ExpenseDetailScreen extends ConsumerWidget {
   const ExpenseDetailScreen({super.key, required this.expenseId});
 
   final String expenseId;
 
   @override
-  Widget build(BuildContext context) {
-    final provider = SpendWiseDataProvider.instance;
-    final expense = provider.expenseById(expenseId);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final expenseAsync = ref.watch(expenseDetailProvider(expenseId));
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final currency = ref.watch(currencyDisplayProvider);
     final theme = Theme.of(context);
 
-    if (expense == null) {
-      return Scaffold(
+    return expenseAsync.when(
+      loading: () => Scaffold(
         appBar: AppBar(),
-        body: const EmptyState(
-          iconAsset: AppIcons.error,
-          title: 'Expense not found',
-        ),
-      );
-    }
-
-    final category = provider.categoryById(expense.categoryId)!;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Expense Details'),
-        actions: [
-          IconButton(
-            icon: const AppIcon(AppIcons.edit, size: 22),
-            onPressed: () => context.push('/expenses/${expense.id}/edit'),
-          ),
-          IconButton(
-            icon: const AppIcon(AppIcons.delete, size: 22, color: AppColors.error),
-            onPressed: () => _showDeleteDialog(context),
-          ),
-        ],
+        body: const Center(child: CircularProgressIndicator()),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Center(
-            child: AppIconBox(
-              asset: AppIcons.categoryIcon(category.iconName),
-              color: category.color,
-              size: 72,
-              iconSize: 36,
+      error: (error, _) => Scaffold(
+        appBar: AppBar(),
+        body: Center(child: Text('Error: $error')),
+      ),
+      data: (expense) {
+        if (expense == null) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: const EmptyState(
+              iconAsset: AppIcons.error,
+              title: 'Expense not found',
             ),
-          ),
-          const SizedBox(height: 24),
-          Center(
-            child: Text(
-              provider.formatExpense(expense),
-              style: theme.textTheme.displaySmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: AppColors.error,
+          );
+        }
+
+        final categories = categoriesAsync.valueOrNull ?? [];
+        final category = categoryById(categories, expense.categoryId);
+        if (category == null) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: const EmptyState(
+              iconAsset: AppIcons.error,
+              title: 'Category not found',
+            ),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Expense Details'),
+            actions: [
+              IconButton(
+                icon: const AppIcon(AppIcons.edit, size: 22),
+                onPressed: () => context.push('/expenses/${expense.id}/edit'),
               ),
-            ),
+              IconButton(
+                icon: const AppIcon(
+                  AppIcons.delete,
+                  size: 22,
+                  color: AppColors.error,
+                ),
+                onPressed: () => _showDeleteDialog(context, ref),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Center(
-            child: Text(
-              expense.note,
-              style: theme.textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
+          body: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              Center(
+                child: AppIconBox(
+                  asset: AppIcons.categoryIcon(category.iconName),
+                  color: category.color,
+                  size: 72,
+                  iconSize: 36,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Center(
+                child: Text(
+                  currency.formatExpense(expense),
+                  style: theme.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.error,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  expense.note,
+                  style: theme.textTheme.titleMedium,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 32),
+              _DetailRow(
+                iconAsset: AppIcons.category,
+                label: 'Category',
+                value: category.name,
+                valueColor: category.color,
+              ),
+              _DetailRow(
+                iconAsset: AppIcons.calendar,
+                label: 'Date',
+                value: DateFormatter.medium(expense.date),
+              ),
+              _DetailRow(
+                iconAsset: AppIcons.clock,
+                label: 'Time',
+                value: DateFormatter.time(expense.date),
+              ),
+              _DetailRow(
+                iconAsset: AppIcons.paymentIcon(expense.paymentMethod.iconName),
+                label: 'Payment Method',
+                value: expense.paymentMethod.label,
+              ),
+              if (expense.isRecurring)
+                const _DetailRow(
+                  iconAsset: AppIcons.repeat,
+                  label: 'Type',
+                  value: 'Recurring expense',
+                  valueColor: AppColors.primary,
+                ),
+              const SizedBox(height: 32),
+              OutlinedButton(
+                onPressed: () => context.push('/expenses/${expense.id}/edit'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AppIcon(AppIcons.edit, size: 20),
+                    SizedBox(width: 8),
+                    Text('Edit Expense'),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 32),
-          _DetailRow(
-            iconAsset: AppIcons.category,
-            label: 'Category',
-            value: category.name,
-            valueColor: category.color,
-          ),
-          _DetailRow(
-            iconAsset: AppIcons.calendar,
-            label: 'Date',
-            value: DateFormatter.medium(expense.date),
-          ),
-          _DetailRow(
-            iconAsset: AppIcons.clock,
-            label: 'Time',
-            value: DateFormatter.time(expense.date),
-          ),
-          _DetailRow(
-            iconAsset: AppIcons.paymentIcon(expense.paymentMethod.iconName),
-            label: 'Payment Method',
-            value: expense.paymentMethod.label,
-          ),
-          if (expense.isRecurring)
-            const _DetailRow(
-              iconAsset: AppIcons.repeat,
-              label: 'Type',
-              value: 'Recurring expense',
-              valueColor: AppColors.primary,
-            ),
-          const SizedBox(height: 32),
-          OutlinedButton(
-            onPressed: () => context.push('/expenses/${expense.id}/edit'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AppIcon(AppIcons.edit, size: 20),
-                SizedBox(width: 8),
-                Text('Edit Expense'),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  void _showDeleteDialog(BuildContext context) {
+  void _showDeleteDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -138,12 +169,15 @@ class ExpenseDetailScreen extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              context.go(AppRoutes.expenses);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Expense deleted (design only)')),
-              );
+              await ref.read(expenseRepositoryProvider).delete(expenseId);
+              if (context.mounted) {
+                context.go(AppRoutes.expenses);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Expense deleted')),
+                );
+              }
             },
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Delete'),

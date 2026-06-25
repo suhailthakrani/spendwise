@@ -22,45 +22,42 @@ class SpendWiseBottomNav extends StatelessWidget {
     _NavItem(asset: AppIcons.account, label: 'Account'),
   ];
 
+  static const _barHeight = 76.0;
+  static const _cornerRadius = 36.0;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.06);
+    final barColor = isDark ? AppColors.darkSurface : Colors.white;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: surface,
-        border: Border(top: BorderSide(color: borderColor)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
       child: SafeArea(
         top: false,
-        minimum: const EdgeInsets.only(bottom: 4),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(6, 6, 6, 2),
-          child: Row(
-            children: List.generate(_items.length, (index) {
-              final item = _items[index];
-              final selected = index == selectedIndex;
-              return Expanded(
-                child: _NavButton(
-                  item: item,
-                  selected: selected,
-                  isDark: isDark,
-                  onTap: () => onSelected(index),
-                ),
-              );
-            }),
+        child: Material(
+          color: barColor,
+          elevation: isDark ? 16 : 12,
+          shadowColor: isDark
+              ? Colors.black.withValues(alpha: 0.45)
+              : AppColors.primary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(_cornerRadius),
+          child: SizedBox(
+            height: _barHeight,
+            child: Row(
+              children: List.generate(_items.length, (index) {
+                final item = _items[index];
+                final selected = index == selectedIndex;
+                return Expanded(
+                  child: _NavButton(
+                    item: item,
+                    selected: selected,
+                    isDark: isDark,
+                    onTap: () => onSelected(index),
+                  ),
+                );
+              }),
+            ),
           ),
         ),
       ),
@@ -90,48 +87,42 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected
-        ? AppColors.primary
-        : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight);
+    final inactiveColor = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+    final activeColor =
+        isDark ? AppColors.primaryLight : AppColors.primary;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(SpendWiseBottomNav._cornerRadius),
         splashColor: AppColors.primary.withValues(alpha: 0.08),
         highlightColor: AppColors.primary.withValues(alpha: 0.04),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.only(top: 12, bottom: 10),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOut,
-                width: 40,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: selected
-                      ? AppColors.primary.withValues(alpha: isDark ? 0.22 : 0.12)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: AppIcon(
-                    item.asset,
-                    size: 20,
-                    color: color,
-                  ),
+              AnimatedScale(
+                scale: selected ? 1.05 : 1.0,
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
+                child: AppIcon(
+                  item.asset,
+                  size: 24,
+                  color: selected ? activeColor : inactiveColor,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 5),
               AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
                 style: TextStyle(
-                  fontSize: selected ? 10.5 : 10,
+                  fontSize: 11,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  color: color,
+                  color: selected ? activeColor : inactiveColor,
                   height: 1.1,
                   letterSpacing: -0.1,
                 ),

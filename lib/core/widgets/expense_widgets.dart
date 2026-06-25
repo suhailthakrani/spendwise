@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_icons.dart';
 import '../../data/models/category.dart';
 import '../../data/models/expense.dart';
-import '../../data/providers/spendwise_data_provider.dart';
+import '../../providers/preferences_providers.dart';
 import 'app_icon.dart';
 import 'common_widgets.dart';
 
@@ -69,7 +70,7 @@ class ExpenseTile extends StatelessWidget {
   }
 }
 
-class CategoryChip extends StatelessWidget {
+class CategoryChip extends ConsumerWidget {
   const CategoryChip({
     super.key,
     required this.category,
@@ -84,10 +85,10 @@ class CategoryChip extends StatelessWidget {
   final double? showAmount;
 
   @override
-  Widget build(BuildContext context) {
-    final provider = SpendWiseDataProvider.instance;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currency = ref.watch(currencyDisplayProvider);
     final label = showAmount != null
-        ? '${category.name} (${provider.formatDisplay(showAmount!, compact: true)})'
+        ? '${category.name} (${currency.formatDisplay(showAmount!, compact: true)})'
         : category.name;
 
     return FilterChip(
@@ -109,7 +110,7 @@ class CategoryChip extends StatelessWidget {
   }
 }
 
-class BudgetProgressBar extends StatelessWidget {
+class BudgetProgressBar extends ConsumerWidget {
   const BudgetProgressBar({
     super.key,
     required this.label,
@@ -124,9 +125,9 @@ class BudgetProgressBar extends StatelessWidget {
   final Color? color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final provider = SpendWiseDataProvider.instance;
+    final currency = ref.watch(currencyDisplayProvider);
     final progress = limit > 0 ? (spent / limit).clamp(0.0, 1.0) : 0.0;
     final barColor = progress > 0.9
         ? const Color(0xFFEF4444)
@@ -149,7 +150,7 @@ class BudgetProgressBar extends StatelessWidget {
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
-                  '${provider.formatDisplay(spent, compact: true)} / ${provider.formatDisplay(limit, compact: true)}',
+                  '${currency.formatDisplay(spent, compact: true)} / ${currency.formatDisplay(limit, compact: true)}',
                   style: theme.textTheme.bodySmall,
                   textAlign: TextAlign.end,
                   overflow: TextOverflow.ellipsis,

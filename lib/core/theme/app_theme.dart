@@ -61,10 +61,15 @@ abstract final class AppTheme {
           ),
         ),
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        elevation: 4,
+        elevation: 0,
+        highlightElevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

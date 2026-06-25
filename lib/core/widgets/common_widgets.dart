@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_icons.dart';
 import '../../core/theme/app_colors.dart';
-import '../../data/providers/spendwise_data_provider.dart';
+import '../../providers/preferences_providers.dart';
 import 'app_icon.dart';
 
-class AmountText extends StatelessWidget {
+class AmountText extends ConsumerWidget {
   const AmountText({
     super.key,
     required this.amount,
@@ -22,10 +23,10 @@ class AmountText extends StatelessWidget {
   final bool compact;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final provider = SpendWiseDataProvider.instance;
-    final formatted = provider.formatDisplay(amount, compact: compact);
+    final currency = ref.watch(currencyDisplayProvider);
+    final formatted = currency.formatDisplay(amount, compact: compact);
     final prefix = showSign && amount > 0 ? '-' : '';
 
     return Text(
@@ -45,12 +46,14 @@ class SectionHeader extends StatelessWidget {
     this.action,
     this.actionLabel,
     this.onActionTap,
+    this.titleStyle,
   });
 
   final String title;
   final Widget? action;
   final String? actionLabel;
   final VoidCallback? onActionTap;
+  final TextStyle? titleStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +64,9 @@ class SectionHeader extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              style:
+                  titleStyle ??
+                  Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
             ),
@@ -69,10 +74,7 @@ class SectionHeader extends StatelessWidget {
           if (action != null)
             action!
           else if (actionLabel != null)
-            TextButton(
-              onPressed: onActionTap,
-              child: Text(actionLabel!),
-            ),
+            TextButton(onPressed: onActionTap, child: Text(actionLabel!)),
         ],
       ),
     );
@@ -105,35 +107,32 @@ class StatCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.max,
             children: [
               Row(
                 children: [
-                  if (iconAsset != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: (iconColor ?? AppColors.primary)
-                            .withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: AppIcon(
-                        iconAsset!,
-                        size: 20,
-                        color: iconColor ?? AppColors.primary,
-                      ),
+                  if (iconAsset != null && iconColor != null) ...[
+                    AppIconBox(
+                      asset: iconAsset!,
+                      color: iconColor!,
+                      size: 28,
+                      iconSize: 16,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                   ],
                   Expanded(
                     child: Text(
                       label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: isDark
                             ? AppColors.textSecondaryDark
@@ -143,9 +142,11 @@ class StatCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Text(
                 value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -154,6 +155,8 @@ class StatCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: isDark
                         ? AppColors.textSecondaryDark
@@ -162,7 +165,7 @@ class StatCard extends StatelessWidget {
                 ),
               ],
               if (progress != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
@@ -177,6 +180,7 @@ class StatCard extends StatelessWidget {
                   ),
                 ),
               ],
+              const Spacer(),
             ],
           ),
         ),
@@ -279,7 +283,8 @@ class SettingsTile extends StatelessWidget {
         style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
       ),
       subtitle: subtitle != null ? Text(subtitle!) : null,
-      trailing: trailing ??
+      trailing:
+          trailing ??
           (onTap != null
               ? const AppIcon(AppIcons.chevronRight, size: 20)
               : null),
