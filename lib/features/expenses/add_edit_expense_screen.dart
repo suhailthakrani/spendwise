@@ -158,7 +158,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     final categories = rankedCategories;
     final selected = categories.where((c) => c.id == _categoryId).firstOrNull;
     final preview = _visibleCategories(categories, selected);
-    final hasMore = categories.length > preview.length;
+    // Offer searchable sheet once the strip is likely to need scrolling.
+    final hasMore = categories.length > 6;
 
     return Scaffold(
       appBar: AppBar(
@@ -267,25 +268,13 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final cat in preview)
-                          _CompactCategoryChip(
-                            category: cat,
-                            selected: cat.id == _categoryId,
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              setState(() => _categoryId = cat.id);
-                            },
-                          ),
-                        if (hasMore)
-                          _ViewAllChip(
-                            onTap: () =>
-                                _showAllCategories(context, categories),
-                          ),
-                      ],
+                    _CategoryStrip(
+                      categories: preview,
+                      selectedId: _categoryId,
+                      onSelected: (id) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _categoryId = id);
+                      },
                     ),
                     if (selected != null &&
                         !preview.any((c) => c.id == selected.id)) ...[
@@ -329,19 +318,30 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                     const SizedBox(height: 20),
                     const _FieldLabel('Payment method'),
                     const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: PaymentMethod.values.map((method) {
-                        return _PaymentChip(
-                          method: method,
-                          selected: method == _paymentMethod,
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            setState(() => _paymentMethod = method);
-                          },
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        const gap = 8.0;
+                        final chipWidth =
+                            (constraints.maxWidth - gap) / 2;
+                        return Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: [
+                            for (final method in PaymentMethod.values)
+                              SizedBox(
+                                width: chipWidth,
+                                child: _PaymentChip(
+                                  method: method,
+                                  selected: method == _paymentMethod,
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(() => _paymentMethod = method);
+                                  },
+                                ),
+                              ),
+                          ],
                         );
-                      }).toList(),
+                      },
                     ),
                   ],
                 ),
@@ -374,11 +374,11 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     );
   }
 
-  /// Shows most-used categories first, always including the current selection.
+  /// Most-used categories for the 2-row strip; always includes the selection.
   List<ExpenseCategory> _visibleCategories(
     List<ExpenseCategory> ranked,
     ExpenseCategory? selected, {
-    int limit = 6,
+    int limit = 12,
   }) {
     if (ranked.length <= limit) return ranked;
 
@@ -451,45 +451,6 @@ class _FieldLabel extends StatelessWidget {
             color: AppColors.secondaryText(context),
             letterSpacing: 0.1,
           ),
-    );
-  }
-}
-
-class _ViewAllChip extends StatelessWidget {
-  const _ViewAllChip({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.primary.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(AppRadii.md),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadii.md),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const AppIcon(
-                AppIcons.category,
-                size: 18,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'View all',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -670,6 +631,58 @@ class _AllCategoriesSheetState extends State<_AllCategoriesSheet> {
   }
 }
 
+class _CategoryStrip extends StatelessWidget {
+  const _CategoryStrip({
+    required this.categories,
+    required this.selectedId,
+    required this.onSelected,
+  });
+
+  final List<ExpenseCategory> categories;
+  final String selectedId;
+  final ValueChanged<String> onSelected;
+
+  /// Matches [_CompactCategoryChip]: 10+10 padding, ~18 icon/text, 3 border.
+  static const _chipHeight = 42.0;
+  static const _rowGap = 8.0;
+
+  @override
+  Widget build(BuildContext context) {
+    if (categories.isEmpty) return const SizedBox.shrink();
+
+    // One row when a single chip; otherwise pack into at most two rows.
+    final rows = categories.length == 1 ? 1 : 2;
+    final height = rows == 1
+        ? _chipHeight
+        : (_chipHeight * 2) + _rowGap;
+
+    return SizedBox(
+      height: height,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Wrap(
+          direction: Axis.vertical,
+          spacing: _rowGap,
+          runSpacing: _rowGap,
+          children: [
+            for (final cat in categories)
+              SizedBox(
+                height: _chipHeight,
+                child: Center(
+                  child: _CompactCategoryChip(
+                    category: cat,
+                    selected: cat.id == selectedId,
+                    onTap: () => onSelected(cat.id),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CompactCategoryChip extends StatelessWidget {
   const _CompactCategoryChip({
     required this.category,
@@ -753,13 +766,13 @@ class _PaymentChip extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadii.sm),
         child: Container(
+          width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadii.sm),
             border: Border.all(color: borderColor, width: 1.5),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               AppIcon(
                 AppIcons.paymentIcon(method.iconName),
@@ -769,13 +782,17 @@ class _PaymentChip extends StatelessWidget {
                     : AppColors.secondaryText(context),
               ),
               const SizedBox(width: 6),
-              Text(
-                method.label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  height: 1.2,
-                  color: selected ? AppColors.primary : null,
+              Expanded(
+                child: Text(
+                  method.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                    color: selected ? AppColors.primary : null,
+                  ),
                 ),
               ),
             ],

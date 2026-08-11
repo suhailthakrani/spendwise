@@ -117,6 +117,8 @@ class CategoriesScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      // Drag-to-dismiss steals TextField cursor/selection gestures.
+      enableDrag: false,
       builder: (_) => const _AddCategorySheet(),
     );
   }
@@ -208,117 +210,132 @@ class _AddCategorySheetState extends ConsumerState<_AddCategorySheet> {
 
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 8, 20, 20 + bottomInset),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Add custom category',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'e.g. Personal grooming, Bike maintenance, Travel',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: AppColors.secondaryText(context),
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _nameController,
-            focusNode: _nameFocus,
-            textCapitalization: TextCapitalization.words,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _save(),
-            decoration: const InputDecoration(
-              labelText: 'Category name',
-              hintText: 'Personal grooming',
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Color',
-            style: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppColors.secondaryText(context),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              for (final color in _palette)
-                GestureDetector(
-                  onTap: () => setState(() => _selectedColor = color),
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _selectedColor == color
-                            ? theme.colorScheme.onSurface
-                            : Colors.transparent,
-                        width: 2.5,
-                      ),
+      child: SingleChildScrollView(
+        // Avoid the sheet parent stealing horizontal drags from the TextField.
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Add custom category',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
                     ),
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Icon',
-            style: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppColors.secondaryText(context),
+                IconButton(
+                  tooltip: 'Close',
+                  onPressed: _saving ? null : () => Navigator.pop(context),
+                  icon: const AppIcon(AppIcons.clear, size: 20),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final iconName in AppIcons.categoryIconChoices)
-                GestureDetector(
-                  onTap: () => setState(() => _selectedIcon = iconName),
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: _selectedIcon == iconName
-                          ? _selectedColor.withValues(alpha: 0.16)
-                          : AppColors.softFill(context),
-                      borderRadius: BorderRadius.circular(AppRadii.md),
-                      border: Border.all(
+            Text(
+              'e.g. Personal grooming, Bike maintenance, Travel',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.secondaryText(context),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _nameController,
+              focusNode: _nameFocus,
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.done,
+              // Only persist when the user taps "Add category".
+              onSubmitted: (_) => _nameFocus.unfocus(),
+              decoration: const InputDecoration(
+                labelText: 'Category name',
+                hintText: 'Personal grooming',
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Color',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.secondaryText(context),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final color in _palette)
+                  GestureDetector(
+                    onTap: () => setState(() => _selectedColor = color),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _selectedColor == color
+                              ? theme.colorScheme.onSurface
+                              : Colors.transparent,
+                          width: 2.5,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Icon',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.secondaryText(context),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final iconName in AppIcons.categoryIconChoices)
+                  GestureDetector(
+                    onTap: () => setState(() => _selectedIcon = iconName),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
                         color: _selectedIcon == iconName
-                            ? _selectedColor
-                            : Colors.transparent,
-                        width: 1.5,
+                            ? _selectedColor.withValues(alpha: 0.16)
+                            : AppColors.softFill(context),
+                        borderRadius: BorderRadius.circular(AppRadii.md),
+                        border: Border.all(
+                          color: _selectedIcon == iconName
+                              ? _selectedColor
+                              : Colors.transparent,
+                          width: 1.5,
+                        ),
                       ),
-                    ),
-                    child: Center(
-                      child: AppIcon(
-                        AppIcons.categoryIcon(iconName),
-                        size: 20,
-                        color: _selectedColor,
+                      child: Center(
+                        child: AppIcon(
+                          AppIcons.categoryIcon(iconName),
+                          size: 20,
+                          color: _selectedColor,
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: _saving ? null : _save,
-            child: Text(_saving ? 'Adding…' : 'Add category'),
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: _saving ? null : _save,
+              child: Text(_saving ? 'Adding…' : 'Add category'),
+            ),
+          ],
+        ),
       ),
     );
   }
