@@ -33,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -46,7 +46,7 @@ class AppDatabase extends _$AppDatabase {
             // Wipe leftover demo/sample transactional data from early builds.
             await clearUserGeneratedData();
           }
-          if (from < 3) {
+          if (from < 4) {
             await ensureDefaultCategories();
           }
         },

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_icons.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../data/models/category.dart';
 import '../../providers/data_providers.dart';
@@ -25,10 +26,15 @@ class CategoriesScreen extends ConsumerWidget {
         title: const Text('Categories'),
         actions: [
           IconButton(
+            tooltip: 'Add category',
             icon: const AppIcon(AppIcons.add, size: 22),
-            onPressed: () => _showAddCategoryDialog(context, ref),
+            onPressed: () => _openAddCategorySheet(context),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _openAddCategorySheet(context),
+        child: const AppIcon(AppIcons.add, size: 24, color: Colors.white),
       ),
       body: categoriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -37,7 +43,7 @@ class CategoriesScreen extends ConsumerWidget {
           final expenses = expensesAsync.valueOrNull ?? [];
 
           return ListView.separated(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
             itemCount: categories.length,
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
@@ -58,10 +64,13 @@ class CategoriesScreen extends ConsumerWidget {
                   ),
                   title: Row(
                     children: [
-                      Text(
-                        cat.name,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          cat.name,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (cat.isCustom) ...[
@@ -72,14 +81,14 @@ class CategoriesScreen extends ConsumerWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color:
-                                theme.colorScheme.primary.withValues(alpha: 0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             'Custom',
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.primary,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -89,7 +98,11 @@ class CategoriesScreen extends ConsumerWidget {
                   subtitle: Text(
                     '${catExpenses.length} transactions · ${currency.formatInUserCurrency(total)}',
                   ),
-                  trailing: const AppIcon(AppIcons.chevronRight, size: 20),
+                  trailing: AppIcon(
+                    AppIcons.chevronRight,
+                    size: 20,
+                    color: AppColors.tertiaryText(context),
+                  ),
                 ),
               );
             },
@@ -99,51 +112,214 @@ class CategoriesScreen extends ConsumerWidget {
     );
   }
 
-  void _showAddCategoryDialog(BuildContext context, WidgetRef ref) {
-    final nameController = TextEditingController();
-
-    showDialog(
+  void _openAddCategorySheet(BuildContext context) {
+    showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Category'),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Category name',
-            hintText: 'e.g. Travel',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-              if (name.isEmpty) return;
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => const _AddCategorySheet(),
+    );
+  }
+}
 
-              final repo = ref.read(categoryRepositoryProvider);
-              final category = ExpenseCategory(
-                id: repo.newId(),
-                name: name,
-                iconName: 'label',
-                color: AppColors.primary,
-                isCustom: true,
-              );
-              await repo.create(category);
-              if (ctx.mounted) Navigator.pop(ctx);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Category "$name" added')),
-                );
-              }
-            },
-            child: const Text('Add'),
+class _AddCategorySheet extends ConsumerStatefulWidget {
+  const _AddCategorySheet();
+
+  @override
+  ConsumerState<_AddCategorySheet> createState() => _AddCategorySheetState();
+}
+
+class _AddCategorySheetState extends ConsumerState<_AddCategorySheet> {
+  static const _palette = <Color>[
+    Color(0xFF0D9488),
+    Color(0xFF3B82F6),
+    Color(0xFFF97316),
+    Color(0xFFF59E0B),
+    Color(0xFF10B981),
+    Color(0xFFEC4899),
+    Color(0xFF6366F1),
+    Color(0xFFEF4444),
+    Color(0xFF06B6D4),
+    Color(0xFF8B5CF6),
+    Color(0xFF059669),
+    Color(0xFF64748B),
+  ];
+
+  final _nameController = TextEditingController();
+  final _nameFocus = FocusNode();
+
+  late Color _selectedColor;
+  late String _selectedIcon;
+  var _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedColor = _palette.first;
+    _selectedIcon = AppIcons.categoryIconChoices.last;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _nameFocus.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _nameFocus.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a category name')),
+      );
+      return;
+    }
+
+    setState(() => _saving = true);
+    try {
+      final repo = ref.read(categoryRepositoryProvider);
+      await repo.create(
+        ExpenseCategory(
+          id: repo.newId(),
+          name: name,
+          iconName: _selectedIcon,
+          color: _selectedColor,
+          isCustom: true,
+        ),
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('"$name" added')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 8, 20, 20 + bottomInset),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Add custom category',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'e.g. Personal grooming, Bike maintenance, Travel',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.secondaryText(context),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _nameController,
+            focusNode: _nameFocus,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _save(),
+            decoration: const InputDecoration(
+              labelText: 'Category name',
+              hintText: 'Personal grooming',
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Color',
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.secondaryText(context),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (final color in _palette)
+                GestureDetector(
+                  onTap: () => setState(() => _selectedColor = color),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _selectedColor == color
+                            ? theme.colorScheme.onSurface
+                            : Colors.transparent,
+                        width: 2.5,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Icon',
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.secondaryText(context),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final iconName in AppIcons.categoryIconChoices)
+                GestureDetector(
+                  onTap: () => setState(() => _selectedIcon = iconName),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: _selectedIcon == iconName
+                          ? _selectedColor.withValues(alpha: 0.16)
+                          : AppColors.softFill(context),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
+                      border: Border.all(
+                        color: _selectedIcon == iconName
+                            ? _selectedColor
+                            : Colors.transparent,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Center(
+                      child: AppIcon(
+                        AppIcons.categoryIcon(iconName),
+                        size: 20,
+                        color: _selectedColor,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          FilledButton(
+            onPressed: _saving ? null : _save,
+            child: Text(_saving ? 'Adding…' : 'Add category'),
           ),
         ],
       ),
-    ).then((_) => nameController.dispose());
+    );
   }
 }

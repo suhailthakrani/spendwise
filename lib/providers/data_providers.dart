@@ -18,6 +18,27 @@ final expensesProvider = StreamProvider<List<Expense>>((ref) {
   return ref.watch(expenseRepositoryProvider).watchAll();
 });
 
+/// Categories ordered by how often they've been used in expenses (most first).
+/// Unused categories keep their natural name order after the used ones.
+final categoriesByUsageProvider = Provider<List<ExpenseCategory>>((ref) {
+  final categories = ref.watch(categoriesProvider).valueOrNull ?? [];
+  final expenses = ref.watch(expensesProvider).valueOrNull ?? [];
+  if (categories.isEmpty) return const [];
+
+  final counts = <String, int>{};
+  for (final expense in expenses) {
+    counts[expense.categoryId] = (counts[expense.categoryId] ?? 0) + 1;
+  }
+
+  final ranked = [...categories]..sort((a, b) {
+      final countCompare =
+          (counts[b.id] ?? 0).compareTo(counts[a.id] ?? 0);
+      if (countCompare != 0) return countCompare;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+  return ranked;
+});
+
 final budgetsProvider = StreamProvider<List<Budget>>((ref) {
   // Also depend on expenses so spent/remaining stay in sync with Home.
   ref.watch(expensesProvider);

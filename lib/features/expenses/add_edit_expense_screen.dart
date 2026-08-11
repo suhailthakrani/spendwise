@@ -52,7 +52,19 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   Future<void> _loadInitial() async {
     final categories =
         await ref.read(categoryRepositoryProvider).watchAll().first;
+    final expenses =
+        await ref.read(expenseRepositoryProvider).watchAll().first;
     final currency = ref.read(currencyDisplayProvider);
+
+    final counts = <String, int>{};
+    for (final expense in expenses) {
+      counts[expense.categoryId] = (counts[expense.categoryId] ?? 0) + 1;
+    }
+    final ranked = [...categories]..sort((a, b) {
+        final byCount = (counts[b.id] ?? 0).compareTo(counts[a.id] ?? 0);
+        if (byCount != 0) return byCount;
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
 
     if (widget.expenseId != null) {
       final expense =
@@ -66,7 +78,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
           currency.toDisplayAmount(expense.amount).toStringAsFixed(2);
       _noteController.text = expense.note;
     } else {
-      _categoryId = categories.first.id;
+      _categoryId = ranked.isNotEmpty ? ranked.first.id : categories.first.id;
       _amountFocus.requestFocus();
     }
 
@@ -132,7 +144,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(categoriesProvider);
+    final rankedCategories = ref.watch(categoriesByUsageProvider);
     final currencyCode = ref.watch(displayCurrencyCodeProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -143,7 +155,10 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       );
     }
 
-    final categories = categoriesAsync.valueOrNull ?? [];
+    final categories = rankedCategories;
+    final selected = categories.where((c) => c.id == _categoryId).firstOrNull;
+    final preview = _visibleCategories(categories, selected);
+    final hasMore = categories.length > preview.length;
 
     return Scaffold(
       appBar: AppBar(
@@ -170,9 +185,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                         vertical: 28,
                       ),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkCard
-                            : Colors.white,
+                        color: isDark ? AppColors.darkCard : Colors.white,
                         borderRadius: BorderRadius.circular(AppRadii.xl),
                         border: Border.all(color: AppColors.border(context)),
                       ),
@@ -210,8 +223,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                             ),
                             decoration: InputDecoration(
                               hintText: '0.00',
-                              hintStyle:
-                                  theme.textTheme.displaySmall?.copyWith(
+                              hintStyle: theme.textTheme.displaySmall?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 48,
                                 height: 1.05,
@@ -229,27 +241,57 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const _FieldLabel('Category'),
+                    Row(
+                      children: [
+                        const Expanded(child: _FieldLabel('Category')),
+                        if (hasMore)
+                          TextButton(
+                            onPressed: () => _showAllCategories(
+                              context,
+                              categories,
+                            ),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text('View all'),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      hasMore ? 'Most used' : 'Choose a category',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.tertiaryText(context),
+                      ),
+                    ),
                     const SizedBox(height: 10),
-                    SizedBox(
-                      height: 48,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: categories.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          final cat = categories[index];
-                          return _CompactCategoryChip(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final cat in preview)
+                          _CompactCategoryChip(
                             category: cat,
                             selected: cat.id == _categoryId,
                             onTap: () {
                               HapticFeedback.selectionClick();
                               setState(() => _categoryId = cat.id);
                             },
-                          );
-                        },
-                      ),
+                          ),
+                        if (hasMore)
+                          _ViewAllChip(
+                            onTap: () =>
+                                _showAllCategories(context, categories),
+                          ),
+                      ],
                     ),
+                    if (selected != null &&
+                        !preview.any((c) => c.id == selected.id)) ...[
+                      const SizedBox(height: 10),
+                      _SelectedCategoryBanner(category: selected),
+                    ],
                     const SizedBox(height: 20),
                     const _FieldLabel('Note'),
                     const SizedBox(height: 10),
@@ -332,6 +374,40 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     );
   }
 
+  /// Shows most-used categories first, always including the current selection.
+  List<ExpenseCategory> _visibleCategories(
+    List<ExpenseCategory> ranked,
+    ExpenseCategory? selected, {
+    int limit = 6,
+  }) {
+    if (ranked.length <= limit) return ranked;
+
+    final visible = ranked.take(limit).toList();
+    if (selected != null && !visible.any((c) => c.id == selected.id)) {
+      visible[visible.length - 1] = selected;
+    }
+    return visible;
+  }
+
+  Future<void> _showAllCategories(
+    BuildContext context,
+    List<ExpenseCategory> categories,
+  ) async {
+    final selectedId = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => _AllCategoriesSheet(
+        categories: categories,
+        selectedId: _categoryId,
+      ),
+    );
+
+    if (selectedId != null && mounted) {
+      setState(() => _categoryId = selectedId);
+    }
+  }
+
   void _confirmDelete(BuildContext context) {
     showDialog(
       context: context,
@@ -379,6 +455,221 @@ class _FieldLabel extends StatelessWidget {
   }
 }
 
+class _ViewAllChip extends StatelessWidget {
+  const _ViewAllChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.primary.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(AppRadii.md),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const AppIcon(
+                AppIcons.category,
+                size: 18,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'View all',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectedCategoryBanner extends StatelessWidget {
+  const _SelectedCategoryBanner({required this.category});
+
+  final ExpenseCategory category;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: category.color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(color: category.color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          AppIcon(
+            AppIcons.categoryIcon(category.iconName),
+            size: 18,
+            color: category.color,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Selected: ${category.name}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: category.color,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AllCategoriesSheet extends StatefulWidget {
+  const _AllCategoriesSheet({
+    required this.categories,
+    required this.selectedId,
+  });
+
+  final List<ExpenseCategory> categories;
+  final String selectedId;
+
+  @override
+  State<_AllCategoriesSheet> createState() => _AllCategoriesSheetState();
+}
+
+class _AllCategoriesSheetState extends State<_AllCategoriesSheet> {
+  final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final query = _searchController.text.trim().toLowerCase();
+    final filtered = query.isEmpty
+        ? widget.categories
+        : widget.categories
+            .where((c) => c.name.toLowerCase().contains(query))
+            .toList();
+
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.75,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'All categories',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Most used appear first',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.secondaryText(context),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocus,
+                    onChanged: (_) => setState(() {}),
+                    decoration: const InputDecoration(
+                      hintText: 'Search categories',
+                      prefixIcon: Padding(
+                        padding: EdgeInsets.all(12),
+                        child: AppIcon(AppIcons.search, size: 20),
+                      ),
+                      prefixIconConstraints:
+                          BoxConstraints(minWidth: 44, minHeight: 44),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: filtered.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No categories match',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.secondaryText(context),
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      controller: scrollController,
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => Divider(
+                        height: 1,
+                        indent: 68,
+                        color: AppColors.border(context),
+                      ),
+                      itemBuilder: (context, index) {
+                        final cat = filtered[index];
+                        final selected = cat.id == widget.selectedId;
+                        return ListTile(
+                          onTap: () => Navigator.pop(context, cat.id),
+                          leading: AppIconBox(
+                            asset: AppIcons.categoryIcon(cat.iconName),
+                            color: cat.color,
+                            size: 42,
+                            iconSize: 20,
+                          ),
+                          title: Text(
+                            cat.name,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          trailing: selected
+                              ? const AppIcon(
+                                  AppIcons.info,
+                                  size: 20,
+                                  color: AppColors.primary,
+                                )
+                              : null,
+                          selected: selected,
+                          selectedTileColor:
+                              cat.color.withValues(alpha: 0.08),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadii.md),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _CompactCategoryChip extends StatelessWidget {
   const _CompactCategoryChip({
     required this.category,
@@ -392,47 +683,43 @@ class _CompactCategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: _AddEditExpenseScreenState._kAnimDuration,
-      curve: Curves.easeOutCubic,
-      decoration: BoxDecoration(
-        color: selected
-            ? category.color.withValues(alpha: 0.16)
-            : AppColors.softFill(context),
+    final borderColor = selected
+        ? category.color.withValues(alpha: 0.45)
+        : AppColors.border(context);
+
+    return Material(
+      color: selected
+          ? category.color.withValues(alpha: 0.16)
+          : AppColors.softFill(context),
+      borderRadius: BorderRadius.circular(AppRadii.md),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadii.md),
-        border: Border.all(
-          color: selected
-              ? category.color.withValues(alpha: 0.45)
-              : Colors.transparent,
-          width: 1.5,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AppIcon(
-                  AppIcons.categoryIcon(category.iconName),
-                  size: 18,
-                  color: category.color,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.md),
+            border: Border.all(color: borderColor, width: 1.5),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppIcon(
+                AppIcons.categoryIcon(category.iconName),
+                size: 18,
+                color: category.color,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                category.name,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                  color: selected ? category.color : null,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  category.name,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color: selected ? category.color : null,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -453,46 +740,45 @@ class _PaymentChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: _AddEditExpenseScreenState._kAnimDuration,
-      curve: Curves.easeOutCubic,
-      decoration: BoxDecoration(
-        color: selected
-            ? AppColors.primary.withValues(alpha: 0.12)
-            : AppColors.softFill(context),
+    final borderColor = selected
+        ? AppColors.primary.withValues(alpha: 0.45)
+        : AppColors.border(context);
+
+    return Material(
+      color: selected
+          ? AppColors.primary.withValues(alpha: 0.12)
+          : AppColors.softFill(context),
+      borderRadius: BorderRadius.circular(AppRadii.sm),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadii.sm),
-        border: Border.all(
-          color: selected
-              ? AppColors.primary.withValues(alpha: 0.4)
-              : Colors.transparent,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadii.sm),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AppIcon(
-                  AppIcons.paymentIcon(method.iconName),
-                  size: 16,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+            border: Border.all(color: borderColor, width: 1.5),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppIcon(
+                AppIcons.paymentIcon(method.iconName),
+                size: 16,
+                color: selected
+                    ? AppColors.primary
+                    : AppColors.secondaryText(context),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                method.label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
                   color: selected ? AppColors.primary : null,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  method.label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color: selected ? AppColors.primary : null,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

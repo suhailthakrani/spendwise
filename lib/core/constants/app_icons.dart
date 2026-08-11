@@ -56,6 +56,10 @@ abstract final class AppIcons {
   static const movie = '$_base/movie.svg';
   static const heart = '$_base/heart.svg';
   static const school = '$_base/school.svg';
+  static const wifi = '$_base/wifi.svg';
+  static const bolt = '$_base/bolt.svg';
+  static const flame = '$_base/flame.svg';
+  static const grocery = '$_base/grocery.svg';
 
   // Payment methods
   static const payments = '$_base/payments.svg';
@@ -63,7 +67,30 @@ abstract final class AppIcons {
   static const bank = '$_base/bank.svg';
   static const more = '$_base/more.svg';
 
+  /// Icons available when creating a custom category.
+  static const List<String> categoryIconChoices = [
+    'home',
+    'wifi',
+    'flame',
+    'bolt',
+    'grocery',
+    'shopping_bag',
+    'directions_car',
+    'favorite',
+    'school',
+    'movie',
+    'savings',
+    'receipt_long',
+    'restaurant',
+    'category',
+  ];
+
   static String categoryIcon(String iconName) => switch (iconName) {
+        'home' => home,
+        'wifi' => wifi,
+        'flame' => flame,
+        'bolt' => bolt,
+        'grocery' => grocery,
         'restaurant' => restaurant,
         'directions_car' => car,
         'shopping_bag' => shoppingBag,
@@ -72,6 +99,7 @@ abstract final class AppIcons {
         'favorite' => heart,
         'school' => school,
         'savings' => savings,
+        'label' || 'category' => category,
         _ => category,
       };
 

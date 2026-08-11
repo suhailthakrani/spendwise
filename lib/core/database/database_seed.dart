@@ -41,19 +41,37 @@ final _defaultProfile = UserProfilesCompanion.insert(
   email: '',
 );
 
-/// Starter categories only — no preset budget limits.
+/// Everyday starter categories. Users can add more custom ones anytime.
 final defaultCategories = <CategoriesCompanion>[
   CategoriesCompanion.insert(
-    id: 'cat_food',
-    name: 'Food',
-    iconName: 'restaurant',
-    colorValue: const Color(0xFF10B981).toARGB32(),
+    id: 'cat_home_rent',
+    name: 'Home Rent',
+    iconName: 'home',
+    colorValue: const Color(0xFF0D9488).toARGB32(),
   ),
   CategoriesCompanion.insert(
-    id: 'cat_transport',
-    name: 'Transport',
-    iconName: 'directions_car',
+    id: 'cat_internet',
+    name: 'Internet',
+    iconName: 'wifi',
     colorValue: const Color(0xFF3B82F6).toARGB32(),
+  ),
+  CategoriesCompanion.insert(
+    id: 'cat_gas',
+    name: 'Gas',
+    iconName: 'flame',
+    colorValue: const Color(0xFFF97316).toARGB32(),
+  ),
+  CategoriesCompanion.insert(
+    id: 'cat_light',
+    name: 'Light',
+    iconName: 'bolt',
+    colorValue: const Color(0xFFF59E0B).toARGB32(),
+  ),
+  CategoriesCompanion.insert(
+    id: 'cat_grocery',
+    name: 'Grocery',
+    iconName: 'grocery',
+    colorValue: const Color(0xFF10B981).toARGB32(),
   ),
   CategoriesCompanion.insert(
     id: 'cat_shopping',
@@ -62,16 +80,10 @@ final defaultCategories = <CategoriesCompanion>[
     colorValue: const Color(0xFFEC4899).toARGB32(),
   ),
   CategoriesCompanion.insert(
-    id: 'cat_bills',
-    name: 'Bills',
-    iconName: 'receipt_long',
-    colorValue: const Color(0xFFF59E0B).toARGB32(),
-  ),
-  CategoriesCompanion.insert(
-    id: 'cat_entertainment',
-    name: 'Entertainment',
-    iconName: 'movie',
-    colorValue: const Color(0xFF8B5CF6).toARGB32(),
+    id: 'cat_fuel',
+    name: 'Fuel',
+    iconName: 'directions_car',
+    colorValue: const Color(0xFF6366F1).toARGB32(),
   ),
   CategoriesCompanion.insert(
     id: 'cat_health',
@@ -84,6 +96,12 @@ final defaultCategories = <CategoriesCompanion>[
     name: 'Education',
     iconName: 'school',
     colorValue: const Color(0xFF06B6D4).toARGB32(),
+  ),
+  CategoriesCompanion.insert(
+    id: 'cat_entertainment',
+    name: 'Entertainment',
+    iconName: 'movie',
+    colorValue: const Color(0xFF8B5CF6).toARGB32(),
   ),
   CategoriesCompanion.insert(
     id: 'cat_investment',
