@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_icons.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../providers/preferences_providers.dart';
 import 'app_icon.dart';
 
@@ -27,13 +28,15 @@ class AmountText extends ConsumerWidget {
     final theme = Theme.of(context);
     final currency = ref.watch(currencyDisplayProvider);
     final formatted = currency.formatDisplay(amount, compact: compact);
-    final prefix = showSign && amount > 0 ? '-' : '';
+    final prefix = showSign && amount > 0 ? '−' : '';
 
     return Text(
       '$prefix$formatted',
       style: (style ?? theme.textTheme.titleMedium)?.copyWith(
-        color: color ?? theme.colorScheme.onSurface,
+        color: color ??
+            (showSign ? AppColors.error : theme.colorScheme.onSurface),
         fontWeight: FontWeight.w700,
+        fontFeatures: const [FontFeature.tabularFigures()],
       ),
     );
   }
@@ -47,6 +50,7 @@ class SectionHeader extends StatelessWidget {
     this.actionLabel,
     this.onActionTap,
     this.titleStyle,
+    this.padding,
   });
 
   final String title;
@@ -54,27 +58,44 @@ class SectionHeader extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onActionTap;
   final TextStyle? titleStyle;
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: padding ??
+          const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            AppSpacing.xl,
+            AppSpacing.page,
+            AppSpacing.sm,
+          ),
       child: Row(
         children: [
           Expanded(
             child: Text(
               title,
-              style:
-                  titleStyle ??
-                  Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+              style: titleStyle ??
+                  theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
                   ),
             ),
           ),
           if (action != null)
             action!
           else if (actionLabel != null)
-            TextButton(onPressed: onActionTap, child: Text(actionLabel!)),
+            TextButton(
+              onPressed: onActionTap,
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(actionLabel!),
+            ),
         ],
       ),
     );
@@ -104,18 +125,16 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final muted = AppColors.secondaryText(context);
 
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.max,
             children: [
               Row(
                 children: [
@@ -123,32 +142,30 @@ class StatCard extends StatelessWidget {
                     AppIconBox(
                       asset: iconAsset!,
                       color: iconColor!,
-                      size: 28,
+                      size: 32,
                       iconSize: 16,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                   ],
                   Expanded(
                     child: Text(
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isDark
-                            ? AppColors.textSecondaryDark
-                            : AppColors.textSecondaryLight,
-                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(color: muted),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Text(
                 value,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.headlineSmall?.copyWith(
+                style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
               if (subtitle != null) ...[
@@ -157,30 +174,23 @@ class StatCard extends StatelessWidget {
                   subtitle!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: isDark
-                        ? AppColors.textSecondaryDark
-                        : AppColors.textSecondaryLight,
-                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(color: muted),
                 ),
               ],
               if (progress != null) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppRadii.full),
                   child: LinearProgressIndicator(
                     value: progress,
-                    minHeight: 6,
-                    backgroundColor: isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.06),
+                    minHeight: 5,
+                    backgroundColor: AppColors.softFill(context),
                     color: progress! > 0.9
                         ? AppColors.warning
                         : AppColors.primary,
                   ),
                 ),
               ],
-              const Spacer(),
             ],
           ),
         ),
@@ -208,23 +218,31 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final muted = isDark
-        ? AppColors.textSecondaryDark
-        : AppColors.textSecondaryLight;
+    final muted = AppColors.secondaryText(context);
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppIcon(iconAsset, size: 64, color: muted),
-            const SizedBox(height: 16),
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: AppIcon(iconAsset, size: 40, color: AppColors.primary),
+              ),
+            ),
+            const SizedBox(height: 20),
             Text(
               title,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
               ),
               textAlign: TextAlign.center,
             ),
@@ -232,13 +250,19 @@ class EmptyState extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 subtitle!,
-                style: theme.textTheme.bodyMedium?.copyWith(color: muted),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: muted,
+                  height: 1.4,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 24),
-              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
+              FilledButton(
+                onPressed: onAction,
+                child: Text(actionLabel!),
+              ),
             ],
           ],
         ),
@@ -271,23 +295,125 @@ class SettingsTile extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.page,
+        vertical: 2,
+      ),
       leading: AppIconBox(
         asset: iconAsset,
         color: iconColor ?? AppColors.primary,
-        size: 40,
+        size: 42,
         iconSize: 20,
       ),
       title: Text(
         title,
         style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
       ),
-      subtitle: subtitle != null ? Text(subtitle!) : null,
-      trailing:
-          trailing ??
+      subtitle: subtitle != null
+          ? Text(
+              subtitle!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.secondaryText(context),
+              ),
+            )
+          : null,
+      trailing: trailing ??
           (onTap != null
-              ? const AppIcon(AppIcons.chevronRight, size: 20)
+              ? AppIcon(
+                  AppIcons.chevronRight,
+                  size: 18,
+                  color: AppColors.tertiaryText(context),
+                )
               : null),
+    );
+  }
+}
+
+/// Soft surface panel used for grouped settings / list blocks.
+class SurfaceGroup extends StatelessWidget {
+  const SurfaceGroup({
+    super.key,
+    required this.children,
+    this.margin,
+    this.padding,
+  });
+
+  final List<Widget> children;
+  final EdgeInsetsGeometry? margin;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: margin ??
+          const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+      child: Card(
+        child: Padding(
+          padding: padding ?? EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (var i = 0; i < children.length; i++) ...[
+                children[i],
+                if (i < children.length - 1)
+                  Divider(
+                    height: 1,
+                    indent: 72,
+                    color: AppColors.border(context),
+                  ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Day separator with optional daily total — standard in competitive trackers.
+class DateGroupHeader extends StatelessWidget {
+  const DateGroupHeader({
+    super.key,
+    required this.label,
+    this.totalLabel,
+  });
+
+  final String label;
+  final String? totalLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = AppColors.secondaryText(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.lg,
+        AppSpacing.page,
+        AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: muted,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const Spacer(),
+          if (totalLabel != null)
+            Text(
+              totalLabel!,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: muted,
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

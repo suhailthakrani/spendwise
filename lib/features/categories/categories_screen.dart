@@ -87,7 +87,7 @@ class CategoriesScreen extends ConsumerWidget {
                     ],
                   ),
                   subtitle: Text(
-                    '${catExpenses.length} transactions · ${currency.formatDisplay(total)}',
+                    '${catExpenses.length} transactions · ${currency.formatInUserCurrency(total)}',
                   ),
                   trailing: const AppIcon(AppIcons.chevronRight, size: 20),
                 ),

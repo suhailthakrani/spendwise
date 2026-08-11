@@ -59,94 +59,114 @@ class ExpenseDetailScreen extends ConsumerWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Expense Details'),
+            title: const Text('Details'),
             actions: [
-              IconButton(
-                icon: const AppIcon(AppIcons.edit, size: 22),
-                onPressed: () => context.push('/expenses/${expense.id}/edit'),
+              SoftIconButton(
+                asset: AppIcons.edit,
+                onPressed: () =>
+                    context.push('/expenses/${expense.id}/edit'),
+                size: 40,
+                iconSize: 18,
               ),
-              IconButton(
-                icon: const AppIcon(
-                  AppIcons.delete,
-                  size: 22,
+              const SizedBox(width: 8),
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: SoftIconButton(
+                  asset: AppIcons.delete,
+                  onPressed: () => _showDeleteDialog(context, ref),
+                  size: 40,
+                  iconSize: 18,
                   color: AppColors.error,
                 ),
-                onPressed: () => _showDeleteDialog(context, ref),
               ),
             ],
           ),
           body: ListView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
             children: [
-              Center(
-                child: AppIconBox(
-                  asset: AppIcons.categoryIcon(category.iconName),
-                  color: category.color,
-                  size: 72,
-                  iconSize: 36,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Center(
-                child: Text(
-                  currency.formatExpense(expense),
-                  style: theme.textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.error,
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 28),
+                  child: Column(
+                    children: [
+                      AppIconBox(
+                        asset: AppIcons.categoryIcon(category.iconName),
+                        color: category.color,
+                        size: 72,
+                        iconSize: 34,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        currency.formatExpense(expense),
+                        style: theme.textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.error,
+                          letterSpacing: -1,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        expense.note,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        category.name,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: category.color,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  expense.note,
-                  style: theme.textTheme.titleMedium,
-                  textAlign: TextAlign.center,
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    children: [
+                      _DetailRow(
+                        iconAsset: AppIcons.calendar,
+                        label: 'Date',
+                        value: DateFormatter.medium(expense.date),
+                      ),
+                      Divider(height: 1, indent: 68, color: AppColors.border(context)),
+                      _DetailRow(
+                        iconAsset: AppIcons.clock,
+                        label: 'Time',
+                        value: DateFormatter.time(expense.date),
+                      ),
+                      Divider(height: 1, indent: 68, color: AppColors.border(context)),
+                      _DetailRow(
+                        iconAsset:
+                            AppIcons.paymentIcon(expense.paymentMethod.iconName),
+                        label: 'Payment',
+                        value: expense.paymentMethod.label,
+                      ),
+                      if (expense.isRecurring) ...[
+                        Divider(height: 1, indent: 68, color: AppColors.border(context)),
+                        const _DetailRow(
+                          iconAsset: AppIcons.repeat,
+                          label: 'Type',
+                          value: 'Recurring',
+                          valueColor: AppColors.primary,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 32),
-              _DetailRow(
-                iconAsset: AppIcons.category,
-                label: 'Category',
-                value: category.name,
-                valueColor: category.color,
-              ),
-              _DetailRow(
-                iconAsset: AppIcons.calendar,
-                label: 'Date',
-                value: DateFormatter.medium(expense.date),
-              ),
-              _DetailRow(
-                iconAsset: AppIcons.clock,
-                label: 'Time',
-                value: DateFormatter.time(expense.date),
-              ),
-              _DetailRow(
-                iconAsset: AppIcons.paymentIcon(expense.paymentMethod.iconName),
-                label: 'Payment Method',
-                value: expense.paymentMethod.label,
-              ),
-              if (expense.isRecurring)
-                const _DetailRow(
-                  iconAsset: AppIcons.repeat,
-                  label: 'Type',
-                  value: 'Recurring expense',
-                  valueColor: AppColors.primary,
-                ),
-              const SizedBox(height: 32),
-              OutlinedButton(
-                onPressed: () => context.push('/expenses/${expense.id}/edit'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AppIcon(AppIcons.edit, size: 20),
-                    SizedBox(width: 8),
-                    Text('Edit Expense'),
-                  ],
-                ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () =>
+                    context.push('/expenses/${expense.id}/edit'),
+                child: const Text('Edit expense'),
               ),
             ],
           ),
@@ -159,9 +179,9 @@ class ExpenseDetailScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Expense'),
+        title: const Text('Delete expense'),
         content: const Text(
-          'Are you sure you want to delete this expense? This action cannot be undone.',
+          'Are you sure you want to delete this expense? This cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -206,16 +226,27 @@ class _DetailRow extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          AppIcon(iconAsset, size: 22, color: AppColors.textSecondaryLight),
-          const SizedBox(width: 16),
+          AppIconBox(
+            asset: iconAsset,
+            color: AppColors.primary,
+            size: 40,
+            iconSize: 18,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: theme.textTheme.bodySmall),
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.secondaryText(context),
+                  ),
+                ),
+                const SizedBox(height: 2),
                 Text(
                   value,
                   style: theme.textTheme.bodyLarge?.copyWith(

@@ -71,6 +71,7 @@ abstract final class AppIcons {
         'movie' => movie,
         'favorite' => heart,
         'school' => school,
+        'savings' => savings,
         _ => category,
       };
 

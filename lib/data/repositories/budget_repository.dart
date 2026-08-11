@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
 
 import '../../core/database/app_database.dart';
@@ -11,8 +13,53 @@ class BudgetRepository {
   final AppDatabase _db;
   final ExpenseRepository _expenses;
 
+  /// Emits whenever budgets **or** expenses change so [Budget.spent] stays fresh.
   Stream<List<Budget>> watchAll() {
-    return _db.select(_db.budgets).watch().asyncMap(_mapBudgets);
+    return Stream.multi((controller) {
+      List<BudgetRow>? latestRows;
+      var emitting = false;
+      var queued = false;
+
+      Future<void> emit() async {
+        if (latestRows == null) return;
+        if (emitting) {
+          queued = true;
+          return;
+        }
+        emitting = true;
+        try {
+          do {
+            queued = false;
+            final mapped = await _mapBudgets(latestRows!);
+            if (!controller.isClosed) controller.add(mapped);
+          } while (queued);
+        } catch (error, stackTrace) {
+          if (!controller.isClosed) {
+            controller.addError(error, stackTrace);
+          }
+        } finally {
+          emitting = false;
+        }
+      }
+
+      final budgetSub = _db.select(_db.budgets).watch().listen(
+        (rows) {
+          latestRows = rows;
+          emit();
+        },
+        onError: controller.addError,
+      );
+
+      final expenseSub = _db.select(_db.expenses).watch().listen(
+        (_) => emit(),
+        onError: controller.addError,
+      );
+
+      controller.onCancel = () async {
+        await budgetSub.cancel();
+        await expenseSub.cancel();
+      };
+    });
   }
 
   Future<Budget?> getById(String id) async {
@@ -80,6 +127,7 @@ class BudgetRepository {
 
   Future<double> _spentForBudget(BudgetRow row, {DateTime? month}) async {
     final reference = month ?? DateTime.now();
+    // Monthly overall budget (no category) uses all spending this month.
     return _expenses.sumForMonth(
       categoryId: row.categoryId,
       month: reference,

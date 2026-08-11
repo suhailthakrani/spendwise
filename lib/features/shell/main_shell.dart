@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/constants/app_icons.dart';
 import '../../core/router/app_router.dart';
 import '../../core/widgets/app_icon.dart';
-import '../../core/constants/app_icons.dart';
 import '../../core/widgets/bottom_nav.dart';
 
 class MainShell extends StatelessWidget {
@@ -38,13 +39,20 @@ class MainShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final index = _selectedIndex(context);
-    final showFab = index == 0 || index == 1;
+    final showFab = index == 1 || index == 3; // Spend + Budget only
 
     return Scaffold(
       body: child,
       floatingActionButton: showFab
           ? FloatingActionButton(
-              onPressed: () => context.push(AppRoutes.addExpense),
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                if (index == 3) {
+                  context.push(AppRoutes.addBudget);
+                } else {
+                  context.push(AppRoutes.addExpense);
+                }
+              },
               child: const AppIcon(
                 AppIcons.add,
                 size: 24,

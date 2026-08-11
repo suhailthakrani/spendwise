@@ -6,13 +6,25 @@ import 'app_database.dart';
 const _preferencesId = 1;
 const _profileId = 'profile_main';
 
-/// Inserts required bootstrap rows on first database creation.
-/// No sample expenses, budgets, or recurring items — user data only.
+/// Bootstraps only what a new install needs to run.
+///
+/// Never inserts expenses, budgets, recurring items, or fake profile info.
 Future<void> seedDatabase(AppDatabase db) async {
   await db.batch((batch) {
-    batch.insertAll(db.categories, _defaultCategories);
+    batch.insertAll(db.categories, defaultCategories);
     batch.insert(db.appPreferences, _defaultPreferences);
     batch.insert(db.userProfiles, _defaultProfile);
+  });
+}
+
+/// Adds any missing starter categories without touching existing ones.
+Future<void> ensureStarterCategories(AppDatabase db) async {
+  await db.batch((batch) {
+    batch.insertAll(
+      db.categories,
+      defaultCategories,
+      mode: InsertMode.insertOrIgnore,
+    );
   });
 }
 
@@ -29,7 +41,8 @@ final _defaultProfile = UserProfilesCompanion.insert(
   email: '',
 );
 
-final _defaultCategories = <CategoriesCompanion>[
+/// Starter categories only — no preset budget limits.
+final defaultCategories = <CategoriesCompanion>[
   CategoriesCompanion.insert(
     id: 'cat_food',
     name: 'Food',
@@ -71,5 +84,11 @@ final _defaultCategories = <CategoriesCompanion>[
     name: 'Education',
     iconName: 'school',
     colorValue: const Color(0xFF06B6D4).toARGB32(),
+  ),
+  CategoriesCompanion.insert(
+    id: 'cat_investment',
+    name: 'Investment',
+    iconName: 'savings',
+    colorValue: const Color(0xFF059669).toARGB32(),
   ),
 ];

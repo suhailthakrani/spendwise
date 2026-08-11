@@ -91,7 +91,7 @@ class CategoryDetailScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          currency.formatDisplay(total),
+                          currency.formatInUserCurrency(total),
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),

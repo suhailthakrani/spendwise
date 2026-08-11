@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../core/constants/app_icons.dart';
-import '../../core/utils/currency_display.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/utils/category_lookup.dart';
+import '../../core/utils/currency_display.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/chart_widgets.dart';
@@ -36,12 +38,12 @@ class DashboardScreen extends ConsumerWidget {
           final now = DateTime.now();
           final transactionsThisMonth = expenses
               .where(
-                (e) =>
-                    e.date.year == now.year && e.date.month == now.month,
+                (e) => e.date.year == now.year && e.date.month == now.month,
               )
               .length;
 
           return RefreshIndicator(
+            color: AppColors.primary,
             onRefresh: () async {
               ref.invalidate(dashboardStatsProvider);
               ref.invalidate(expensesProvider);
@@ -56,13 +58,14 @@ class DashboardScreen extends ConsumerWidget {
                   snap: true,
                   elevation: 0,
                   scrolledUnderElevation: 0,
-                  backgroundColor: Colors.transparent,
-                  toolbarHeight: 72,
+                  backgroundColor: theme.scaffoldBackgroundColor,
+                  toolbarHeight: 76,
                   title: _DashboardTitle(greeting: _greeting()),
                   actions: [
                     Padding(
                       padding: const EdgeInsets.only(right: 16),
-                      child: _SearchButton(
+                      child: SoftIconButton(
+                        asset: AppIcons.search,
                         onPressed: () => context.push(AppRoutes.search),
                       ),
                     ),
@@ -70,7 +73,12 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.page,
+                      4,
+                      AppSpacing.page,
+                      0,
+                    ),
                     child: _SpendingHeroCard(
                       stats: stats,
                       currency: currency,
@@ -79,7 +87,12 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.page,
+                      14,
+                      AppSpacing.page,
+                      0,
+                    ),
                     child: IntrinsicHeight(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -87,10 +100,10 @@ class DashboardScreen extends ConsumerWidget {
                           Expanded(
                             child: StatCard(
                               label: 'Transactions',
-                              value: '${expenses.length}',
-                              subtitle: transactionsThisMonth == expenses.length
-                                  ? 'All this month'
-                                  : '$transactionsThisMonth this month',
+                              value: '$transactionsThisMonth',
+                              subtitle: transactionsThisMonth == 1
+                                  ? 'This month'
+                                  : 'This month',
                               iconAsset: AppIcons.expenses,
                               iconColor: AppColors.primary,
                               onTap: () => context.go(AppRoutes.expenses),
@@ -108,9 +121,12 @@ class DashboardScreen extends ConsumerWidget {
                                   : '—',
                               subtitle: stats.monthlyBudget > 0
                                   ? '${(stats.budgetProgress * 100).toStringAsFixed(0)}% used'
-                                  : 'No budget set',
+                                  : 'Set a budget',
                               iconAsset: AppIcons.wallet,
                               iconColor: AppColors.accent,
+                              progress: stats.monthlyBudget > 0
+                                  ? stats.budgetProgress.clamp(0.0, 1.0)
+                                  : null,
                               onTap: () => context.go(AppRoutes.budget),
                             ),
                           ),
@@ -119,64 +135,64 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                SliverToBoxAdapter(
-                  child: SectionHeader(
-                    title: 'Spending by Category',
-                    titleStyle: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
+                const SliverToBoxAdapter(
+                  child: SectionHeader(title: 'Top categories'),
                 ),
-                const SliverToBoxAdapter(child: CategorySpendingBars()),
+                const SliverToBoxAdapter(child: _DashboardCategoryBars()),
                 SliverToBoxAdapter(
                   child: SectionHeader(
-                    title: 'Recent Transactions',
+                    title: 'Recent activity',
                     actionLabel: stats.recentExpenseIds.isNotEmpty
                         ? 'See all'
                         : null,
                     onActionTap: stats.recentExpenseIds.isNotEmpty
                         ? () => context.go(AppRoutes.expenses)
                         : null,
-                    titleStyle: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                    ),
                   ),
                 ),
                 if (stats.recentExpenseIds.isEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.page,
+                      ),
                       child: Card(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
+                            horizontal: 24,
                             vertical: 28,
                           ),
                           child: Column(
                             children: [
-                              AppIcon(
-                                AppIcons.expenses,
-                                size: 40,
-                                color: theme.brightness == Brightness.dark
-                                    ? AppColors.textSecondaryDark
-                                    : AppColors.textSecondaryLight,
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Center(
+                                  child: AppIcon(
+                                    AppIcons.expenses,
+                                    size: 26,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 14),
                               Text(
                                 'No transactions yet',
                                 style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Tap Add Expense to log your first spend',
+                                'Tap Add to log your first spend',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.brightness == Brightness.dark
-                                      ? AppColors.textSecondaryDark
-                                      : AppColors.textSecondaryLight,
+                                  color: AppColors.secondaryText(context),
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -187,62 +203,109 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   )
                 else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final id = stats.recentExpenseIds[index];
-                        final expense =
-                            expenses.where((e) => e.id == id).firstOrNull;
-                        if (expense == null) return const SizedBox.shrink();
-                        final category =
-                            categoryById(categories, expense.categoryId);
-                        if (category == null) return const SizedBox.shrink();
-                        return ExpenseTile(
-                          expense: expense,
-                          category: category,
-                          onTap: () => context.push('/expenses/$id'),
-                        );
-                      },
-                      childCount: stats.recentExpenseIds.length,
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.page,
+                      ),
+                      child: Card(
+                        child: Column(
+                          children: [
+                            for (var i = 0;
+                                i < stats.recentExpenseIds.length;
+                                i++) ...[
+                              Builder(
+                                builder: (context) {
+                                  final id = stats.recentExpenseIds[i];
+                                  final expense = expenses
+                                      .where((e) => e.id == id)
+                                      .firstOrNull;
+                                  if (expense == null) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  final category = categoryById(
+                                    categories,
+                                    expense.categoryId,
+                                  );
+                                  if (category == null) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return ExpenseTile(
+                                    expense: expense,
+                                    category: category,
+                                    dense: true,
+                                    onTap: () => context.push('/expenses/$id'),
+                                  );
+                                },
+                              ),
+                              if (i < stats.recentExpenseIds.length - 1)
+                                Divider(
+                                  height: 1,
+                                  indent: 78,
+                                  color: AppColors.border(context),
+                                ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.page,
+                      8,
+                      AppSpacing.page,
+                      AppSpacing.navClearance,
+                    ),
                     child: Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary
-                                        .withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const AppIcon(
-                                    AppIcons.reports,
-                                    size: 18,
-                                    color: AppColors.primary,
-                                  ),
+                                AppIconBox(
+                                  asset: AppIcons.reports,
+                                  color: AppColors.primary,
+                                  size: 36,
+                                  iconSize: 18,
                                 ),
                                 const SizedBox(width: 12),
-                                Text(
-                                  'Monthly Trend',
-                                  style:
-                                      theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.3,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Spending trend',
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -0.3,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Last 6 months',
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color:
+                                              AppColors.secondaryText(context),
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      context.go(AppRoutes.reports),
+                                  child: const Text('Insights'),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 20),
-                            const MonthlyTrendChart(),
+                            const SizedBox(height: 16),
+                            const MonthlyTrendChart(showHeader: false),
                           ],
                         ),
                       ),
@@ -265,6 +328,23 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
+class _DashboardCategoryBars extends StatelessWidget {
+  const _DashboardCategoryBars();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+      child: Card(
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: CategorySpendingBars(padded: false),
+        ),
+      ),
+    );
+  }
+}
+
 class _DashboardTitle extends StatelessWidget {
   const _DashboardTitle({required this.greeting});
 
@@ -273,7 +353,6 @@ class _DashboardTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final monthLabel = DateFormatter.monthYear(DateTime.now());
 
     return Column(
@@ -291,42 +370,11 @@ class _DashboardTitle extends StatelessWidget {
         Text(
           monthLabel,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: isDark
-                ? AppColors.textSecondaryDark
-                : AppColors.textSecondaryLight,
+            color: AppColors.secondaryText(context),
             fontWeight: FontWeight.w500,
           ),
         ),
       ],
-    );
-  }
-}
-
-class _SearchButton extends StatelessWidget {
-  const _SearchButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: isDark
-          ? Colors.white.withValues(alpha: 0.08)
-          : Colors.black.withValues(alpha: 0.05),
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(14),
-        child: const SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
-            child: AppIcon(AppIcons.search, size: 20),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -347,52 +395,57 @@ class _SpendingHeroCard extends StatelessWidget {
     final progress = hasBudget ? stats.budgetProgress : 0.0;
     final isOverBudget =
         hasBudget && stats.totalSpentThisMonth > stats.monthlyBudget;
-    final progressColor =
-        isOverBudget ? AppColors.warning : Colors.white;
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0D9488),
-            Color(0xFF0F766E),
-            Color(0xFF115E59),
-          ],
-          stops: [0.0, 0.55, 1.0],
+          colors: isOverBudget
+              ? const [
+                  Color(0xFFE11D48),
+                  Color(0xFFBE123C),
+                  Color(0xFF9F1239),
+                ]
+              : const [
+                  Color(0xFF0F766E),
+                  Color(0xFF0D9488),
+                  Color(0xFF0F766E),
+                ],
+          stops: const [0.0, 0.5, 1.0],
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.35),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            color: (isOverBudget ? AppColors.error : AppColors.primary)
+                .withValues(alpha: 0.28),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         child: Stack(
           children: [
             Positioned(
-              top: -30,
-              right: -20,
+              top: -36,
+              right: -24,
               child: _DecorCircle(
-                size: 140,
-                color: Colors.white.withValues(alpha: 0.06),
+                size: 150,
+                color: Colors.white.withValues(alpha: 0.07),
               ),
             ),
             Positioned(
-              bottom: -40,
-              left: -30,
+              bottom: -48,
+              left: -28,
               child: _DecorCircle(
-                size: 120,
-                color: Colors.white.withValues(alpha: 0.04),
+                size: 130,
+                color: Colors.white.withValues(alpha: 0.05),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -406,7 +459,7 @@ class _SpendingHeroCard extends StatelessWidget {
                             Text(
                               'Spent this month',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.8),
+                                color: Colors.white.withValues(alpha: 0.78),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -417,25 +470,26 @@ class _SpendingHeroCard extends StatelessWidget {
                               ),
                               style: theme.textTheme.displaySmall?.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -1,
-                                height: 1.05,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -1.2,
+                                height: 1.0,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
                       if (hasBudget)
                         _BudgetRing(
                           progress: progress,
-                          label:
-                              '${(progress * 100).toStringAsFixed(0)}%',
+                          label: '${(progress * 100).toStringAsFixed(0)}%',
                           isOverBudget: isOverBudget,
                         ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 22),
                   Row(
                     children: [
                       Expanded(
@@ -462,28 +516,32 @@ class _SpendingHeroCard extends StatelessWidget {
                   if (hasBudget) ...[
                     const SizedBox(height: 16),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(AppRadii.full),
                       child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 5,
+                        value: progress.clamp(0.0, 1.0),
+                        minHeight: 6,
                         backgroundColor: Colors.white.withValues(alpha: 0.18),
-                        color: progressColor,
+                        color: isOverBudget
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.95),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Text(
-                      'of ${currency.formatInUserCurrency(stats.monthlyBudget)} monthly budget',
+                      isOverBudget
+                          ? 'Over by ${currency.formatInUserCurrency(stats.totalSpentThisMonth - stats.monthlyBudget)}'
+                          : 'of ${currency.formatInUserCurrency(stats.monthlyBudget)} monthly budget',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.75),
+                        color: Colors.white.withValues(alpha: 0.78),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ] else ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     Text(
-                      'Set a monthly budget to track your spending',
+                      'Set a monthly budget to stay on track',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.75),
+                        color: Colors.white.withValues(alpha: 0.78),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -527,23 +585,20 @@ class _BudgetRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ringColor =
-        isOverBudget ? AppColors.warning : Colors.white;
-
     return SizedBox(
-      width: 72,
-      height: 72,
+      width: 74,
+      height: 74,
       child: Stack(
         alignment: Alignment.center,
         children: [
           SizedBox(
-            width: 72,
-            height: 72,
+            width: 74,
+            height: 74,
             child: CircularProgressIndicator(
               value: progress.clamp(0.0, 1.0),
-              strokeWidth: 6,
+              strokeWidth: 6.5,
               backgroundColor: Colors.white.withValues(alpha: 0.2),
-              color: ringColor,
+              color: Colors.white,
               strokeCap: StrokeCap.round,
             ),
           ),
@@ -587,8 +642,8 @@ class _GlassStatChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -609,6 +664,7 @@ class _GlassStatChip extends StatelessWidget {
               fontSize: 16,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.3,
+              fontFeatures: [FontFeature.tabularFigures()],
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

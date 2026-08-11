@@ -4,7 +4,11 @@ import '../../data/models/expense.dart';
 import 'currency_converter.dart';
 import 'currency_formatter.dart';
 
-/// Formats amounts stored in [storageCurrency] for the user's display currency.
+/// Formats amounts for the user's display currency.
+///
+/// Storage is always USD. Call sites must pick the right formatter:
+/// - [formatDisplay] / [toDisplayAmount]: pass **storage (USD)** amounts
+/// - [formatInUserCurrency]: pass amounts **already converted** to display currency
 class CurrencyDisplay {
   const CurrencyDisplay(this.displayCurrencyCode);
 
@@ -30,6 +34,7 @@ class CurrencyDisplay {
     );
   }
 
+  /// Formats a **USD storage** amount into the user's currency.
   String formatDisplay(double amount, {bool compact = false}) {
     return CurrencyFormatter.format(
       amount,
@@ -39,6 +44,7 @@ class CurrencyDisplay {
     );
   }
 
+  /// Formats an amount that is **already** in the user's display currency.
   String formatInUserCurrency(double amount, {bool compact = false}) {
     return CurrencyFormatter.format(
       amount,

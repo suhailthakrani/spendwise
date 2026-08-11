@@ -268,7 +268,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '${currency.formatDisplay(spent)} of ${currency.formatInUserCurrency(limit)} used',
+                          '${currency.formatInUserCurrency(spent)} of ${currency.formatInUserCurrency(limit)} used',
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: isDark
                                 ? AppColors.textSecondaryDark

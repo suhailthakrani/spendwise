@@ -54,12 +54,13 @@ class ReportRepository {
     );
 
     final budgets = await _budgets.watchAll().first;
-    final monthlyBudgetUsd = budgets.isNotEmpty ? budgets.first.limit : 0.0;
+    final monthly = budgets.where((b) => b.categoryId == null).firstOrNull;
+    final monthlyBudgetUsd = monthly?.limit ?? 0.0;
 
     return DashboardStats(
       totalSpentToday: currency.toDisplayAmount(todayTotalUsd),
       totalSpentThisMonth: totalMonthDisplay,
-      monthlyBudget: currency.toDisplayAmount(monthlyBudgetUsd.toDouble()),
+      monthlyBudget: currency.toDisplayAmount(monthlyBudgetUsd),
       categorySpending: categorySpending,
       recentExpenseIds: recent.take(5).map((e) => e.id).toList(),
     );

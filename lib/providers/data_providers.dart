@@ -19,6 +19,8 @@ final expensesProvider = StreamProvider<List<Expense>>((ref) {
 });
 
 final budgetsProvider = StreamProvider<List<Budget>>((ref) {
+  // Also depend on expenses so spent/remaining stay in sync with Home.
+  ref.watch(expensesProvider);
   return ref.watch(budgetRepositoryProvider).watchAll();
 });
 

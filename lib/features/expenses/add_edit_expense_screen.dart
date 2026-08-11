@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../data/models/category.dart';
@@ -27,8 +28,6 @@ class AddEditExpenseScreen extends ConsumerStatefulWidget {
 
 class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   static const _kAnimDuration = Duration(milliseconds: 180);
-  static const _kChipRadius = 12.0;
-  static const _kFieldRadius = 14.0;
 
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
@@ -112,6 +111,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     }
 
     if (!context.mounted) return;
+    HapticFeedback.lightImpact();
     context.pop();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -147,189 +147,186 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const AppIcon(AppIcons.clear, size: 22),
+        leading: SoftIconButton(
+          asset: AppIcons.clear,
           onPressed: () => context.pop(),
+          size: 40,
         ),
-        title: Text(isEditing ? 'Edit Expense' : 'Add Expense'),
-        actions: [
-          TextButton(
-            onPressed: () => _save(context),
-            child: const Text('Save'),
-          ),
-        ],
+        leadingWidth: 64,
+        title: Text(isEditing ? 'Edit expense' : 'New expense'),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      TextFormField(
-                        controller: _amountController,
-                        focusNode: _amountFocus,
-                        onChanged: (_) => setState(() {}),
-                        textAlign: TextAlign.center,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d+\.?\d{0,2}'),
-                          ),
-                        ],
-                        style: theme.textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 42,
-                          height: 1.08,
-                          letterSpacing: -0.8,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: '0.00',
-                          suffix: Padding(
-                            padding: const EdgeInsets.only(left: 6),
-                            child: Text(
-                              currencyCode,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: isDark
-                                    ? AppColors.textSecondaryDark
-                                    : AppColors.textSecondaryLight,
-                              ),
-                            ),
-                          ),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 10),
-                        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 28,
                       ),
-                      const SizedBox(height: 18),
-                      _FieldLabel('Category'),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 46,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: categories.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            final cat = categories[index];
-                            return _CompactCategoryChip(
-                              category: cat,
-                              selected: cat.id == _categoryId,
-                              onTap: () => setState(() => _categoryId = cat.id),
-                            );
-                          },
-                        ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.darkCard
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(AppRadii.xl),
+                        border: Border.all(color: AppColors.border(context)),
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _noteController,
-                        onChanged: (_) => setState(() {}),
-                        textInputAction: TextInputAction.done,
-                        decoration: InputDecoration(
-                          hintText: 'Add a note (optional)',
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(_kFieldRadius),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(_kFieldRadius),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(_kFieldRadius),
-                            borderSide:
-                                const BorderSide(color: AppColors.primary),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
+                      child: Column(
                         children: [
-                          Expanded(
-                            child: _MetaChip(
-                              iconAsset: AppIcons.calendar,
-                              label: DateFormatter.relative(_date),
-                              onTap: _pickDate,
+                          Text(
+                            currencyCode,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: AppColors.secondaryText(context),
+                              letterSpacing: 1.2,
                             ),
                           ),
-                          if (isEditing) ...[
-                            const SizedBox(width: 8),
-                            _MetaChip(
-                              iconAsset: AppIcons.repeat,
-                              label: 'Repeat',
-                              selected: _isRecurring,
-                              onTap: () => setState(
-                                () => _isRecurring = !_isRecurring,
-                              ),
+                          const SizedBox(height: 4),
+                          TextFormField(
+                            controller: _amountController,
+                            focusNode: _amountFocus,
+                            onChanged: (_) => setState(() {}),
+                            textAlign: TextAlign.center,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
                             ),
-                          ],
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d+\.?\d{0,2}'),
+                              ),
+                            ],
+                            style: theme.textTheme.displaySmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 48,
+                              height: 1.05,
+                              letterSpacing: -1.2,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                            decoration: InputDecoration(
+                              hintText: '0.00',
+                              hintStyle:
+                                  theme.textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 48,
+                                height: 1.05,
+                                letterSpacing: -1.2,
+                                color: AppColors.tertiaryText(context),
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              filled: false,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      _FieldLabel('Payment'),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 40,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: PaymentMethod.values.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            final method = PaymentMethod.values[index];
-                            return _PaymentChip(
-                              method: method,
-                              selected: method == _paymentMethod,
-                              onTap: () =>
-                                  setState(() => _paymentMethod = method),
-                            );
-                          },
-                        ),
+                    ),
+                    const SizedBox(height: 24),
+                    const _FieldLabel('Category'),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 48,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: categories.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final cat = categories[index];
+                          return _CompactCategoryChip(
+                            category: cat,
+                            selected: cat.id == _categoryId,
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _categoryId = cat.id);
+                            },
+                          );
+                        },
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 20),
+                    const _FieldLabel('Note'),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _noteController,
+                      onChanged: (_) => setState(() {}),
+                      textInputAction: TextInputAction.done,
+                      decoration: const InputDecoration(
+                        hintText: 'What was this for?',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _MetaChip(
+                            iconAsset: AppIcons.calendar,
+                            label: DateFormatter.relative(_date),
+                            onTap: _pickDate,
+                          ),
+                        ),
+                        if (isEditing) ...[
+                          const SizedBox(width: 10),
+                          _MetaChip(
+                            iconAsset: AppIcons.repeat,
+                            label: 'Repeat',
+                            selected: _isRecurring,
+                            onTap: () => setState(
+                              () => _isRecurring = !_isRecurring,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    const _FieldLabel('Payment method'),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: PaymentMethod.values.map((method) {
+                        return _PaymentChip(
+                          method: method,
+                          selected: method == _paymentMethod,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _paymentMethod = method);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: () => _save(context),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(_kFieldRadius),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: Column(
+                children: [
+                  FilledButton(
+                    onPressed: () => _save(context),
+                    child: Text(isEditing ? 'Update expense' : 'Save expense'),
                   ),
-                  backgroundColor: AppColors.primary,
-                ),
-                child: Text(isEditing ? 'Update' : 'Save Expense'),
+                  if (isEditing) ...[
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () => _confirmDelete(context),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                      ),
+                      child: const Text('Delete expense'),
+                    ),
+                  ],
+                ],
               ),
-              if (isEditing) ...[
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => _confirmDelete(context),
-                  style: TextButton.styleFrom(foregroundColor: AppColors.error),
-                  child: const Text('Delete Expense'),
-                ),
-              ],
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -371,14 +368,12 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Text(
       text,
-      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: isDark
-                ? AppColors.textSecondaryDark
-                : AppColors.textSecondaryLight,
+      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppColors.secondaryText(context),
+            letterSpacing: 0.1,
           ),
     );
   }
@@ -402,19 +397,23 @@ class _CompactCategoryChip extends StatelessWidget {
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
         color: selected
-            ? category.color.withValues(alpha: 0.15)
-            : Theme.of(context).inputDecorationTheme.fillColor,
-        borderRadius:
-            BorderRadius.circular(_AddEditExpenseScreenState._kChipRadius),
+            ? category.color.withValues(alpha: 0.16)
+            : AppColors.softFill(context),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(
+          color: selected
+              ? category.color.withValues(alpha: 0.45)
+              : Colors.transparent,
+          width: 1.5,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius:
-              BorderRadius.circular(_AddEditExpenseScreenState._kChipRadius),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -423,7 +422,7 @@ class _CompactCategoryChip extends StatelessWidget {
                   size: 18,
                   color: category.color,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Text(
                   category.name,
                   style: TextStyle(
@@ -460,16 +459,21 @@ class _PaymentChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: selected
             ? AppColors.primary.withValues(alpha: 0.12)
-            : Theme.of(context).inputDecorationTheme.fillColor,
-        borderRadius: BorderRadius.circular(10),
+            : AppColors.softFill(context),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        border: Border.all(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.4)
+              : Colors.transparent,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -482,7 +486,7 @@ class _PaymentChip extends StatelessWidget {
                 Text(
                   method.label,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     color: selected ? AppColors.primary : null,
                   ),
@@ -517,18 +521,21 @@ class _MetaChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: selected
             ? AppColors.primary.withValues(alpha: 0.12)
-            : Theme.of(context).inputDecorationTheme.fillColor,
-        borderRadius:
-            BorderRadius.circular(_AddEditExpenseScreenState._kChipRadius),
+            : AppColors.softFill(context),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.4)
+              : Colors.transparent,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius:
-              BorderRadius.circular(_AddEditExpenseScreenState._kChipRadius),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
