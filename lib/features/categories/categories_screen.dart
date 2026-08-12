@@ -135,6 +135,7 @@ class _AddCategorySheetState extends ConsumerState<_AddCategorySheet> {
   static const _palette = <Color>[
     Color(0xFF0D9488),
     Color(0xFF3B82F6),
+    Color(0xFF0EA5E9),
     Color(0xFFF97316),
     Color(0xFFF59E0B),
     Color(0xFF10B981),

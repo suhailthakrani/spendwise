@@ -8,10 +8,11 @@ import '../models/budget.dart';
 import 'expense_repository.dart';
 
 class BudgetRepository {
-  BudgetRepository(this._db, this._expenses);
+  BudgetRepository(this._db, this._expenses, this._userId);
 
   final AppDatabase _db;
   final ExpenseRepository _expenses;
+  final String _userId;
 
   /// Emits whenever budgets **or** expenses change so [Budget.spent] stays fresh.
   Stream<List<Budget>> watchAll() {
@@ -42,7 +43,10 @@ class BudgetRepository {
         }
       }
 
-      final budgetSub = _db.select(_db.budgets).watch().listen(
+      final budgetSub = (_db.select(_db.budgets)
+            ..where((t) => t.userId.equals(_userId)))
+          .watch()
+          .listen(
         (rows) {
           latestRows = rows;
           emit();
@@ -50,7 +54,10 @@ class BudgetRepository {
         onError: controller.addError,
       );
 
-      final expenseSub = _db.select(_db.expenses).watch().listen(
+      final expenseSub = (_db.select(_db.expenses)
+            ..where((t) => t.userId.equals(_userId)))
+          .watch()
+          .listen(
         (_) => emit(),
         onError: controller.addError,
       );
@@ -64,7 +71,7 @@ class BudgetRepository {
 
   Future<Budget?> getById(String id) async {
     final row = await (_db.select(_db.budgets)
-          ..where((t) => t.id.equals(id)))
+          ..where((t) => t.id.equals(id) & t.userId.equals(_userId)))
         .getSingleOrNull();
     if (row == null) return null;
     final spent = await _spentForBudget(row);
@@ -81,6 +88,7 @@ class BudgetRepository {
     await _db.into(_db.budgets).insert(
           BudgetMapper.toCompanion(
             id: id,
+            userId: _userId,
             name: name,
             limit: limit,
             categoryId: categoryId,
@@ -96,18 +104,22 @@ class BudgetRepository {
     String? categoryId,
     bool isMonthly = true,
   }) async {
-    await (_db.update(_db.budgets)..where((t) => t.id.equals(id))).write(
-          BudgetsCompanion(
-            name: Value(name),
-            limitAmount: Value(limit),
-            categoryId: Value(categoryId),
-            isMonthly: Value(isMonthly),
-          ),
-        );
+    await (_db.update(_db.budgets)
+          ..where((t) => t.id.equals(id) & t.userId.equals(_userId)))
+        .write(
+      BudgetsCompanion(
+        name: Value(name),
+        limitAmount: Value(limit),
+        categoryId: Value(categoryId),
+        isMonthly: Value(isMonthly),
+      ),
+    );
   }
 
   Future<void> delete(String id) async {
-    await (_db.delete(_db.budgets)..where((t) => t.id.equals(id))).go();
+    await (_db.delete(_db.budgets)
+          ..where((t) => t.id.equals(id) & t.userId.equals(_userId)))
+        .go();
   }
 
   Future<List<Budget>> _mapBudgets(List<BudgetRow> rows) async {
@@ -127,7 +139,6 @@ class BudgetRepository {
 
   Future<double> _spentForBudget(BudgetRow row, {DateTime? month}) async {
     final reference = month ?? DateTime.now();
-    // Monthly overall budget (no category) uses all spending this month.
     return _expenses.sumForMonth(
       categoryId: row.categoryId,
       month: reference,

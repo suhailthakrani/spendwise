@@ -3,34 +3,43 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/repositories/budget_repository.dart';
 import '../data/repositories/category_repository.dart';
 import '../data/repositories/expense_repository.dart';
-import '../data/repositories/preferences_repository.dart';
 import '../data/repositories/recurring_expense_repository.dart';
 import '../data/repositories/report_repository.dart';
 import '../data/repositories/user_profile_repository.dart';
 import 'database_provider.dart';
+import 'preferences_providers.dart';
+
+String _requireUserId(Ref ref) {
+  final userId = ref.watch(preferencesProvider).valueOrNull?.activeUserId;
+  if (userId == null || userId.isEmpty) {
+    throw StateError('Signed-in user required');
+  }
+  return userId;
+}
 
 final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) {
-  return ExpenseRepository(ref.watch(databaseProvider));
+  return ExpenseRepository(ref.watch(databaseProvider), _requireUserId(ref));
 });
 
 final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
-  return CategoryRepository(ref.watch(databaseProvider));
+  return CategoryRepository(ref.watch(databaseProvider), _requireUserId(ref));
 });
 
 final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
+  final userId = _requireUserId(ref);
   return BudgetRepository(
     ref.watch(databaseProvider),
     ref.watch(expenseRepositoryProvider),
+    userId,
   );
 });
 
 final recurringExpenseRepositoryProvider =
     Provider<RecurringExpenseRepository>((ref) {
-  return RecurringExpenseRepository(ref.watch(databaseProvider));
-});
-
-final preferencesRepositoryProvider = Provider<PreferencesRepository>((ref) {
-  return PreferencesRepository(ref.watch(databaseProvider));
+  return RecurringExpenseRepository(
+    ref.watch(databaseProvider),
+    _requireUserId(ref),
+  );
 });
 
 final userProfileRepositoryProvider = Provider<UserProfileRepository>((ref) {

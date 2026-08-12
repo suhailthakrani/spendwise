@@ -60,6 +60,7 @@ abstract final class AppIcons {
   static const bolt = '$_base/bolt.svg';
   static const flame = '$_base/flame.svg';
   static const grocery = '$_base/grocery.svg';
+  static const waterDrop = '$_base/water_drop.svg';
 
   // Payment methods
   static const payments = '$_base/payments.svg';
@@ -73,6 +74,7 @@ abstract final class AppIcons {
     'wifi',
     'flame',
     'bolt',
+    'water_drop',
     'grocery',
     'shopping_bag',
     'directions_car',
@@ -90,6 +92,7 @@ abstract final class AppIcons {
         'wifi' => wifi,
         'flame' => flame,
         'bolt' => bolt,
+        'water_drop' => waterDrop,
         'grocery' => grocery,
         'restaurant' => restaurant,
         'directions_car' => car,

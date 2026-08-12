@@ -3,29 +3,33 @@ import 'package:flutter/material.dart';
 class UserPreferences {
   const UserPreferences({
     required this.themeMode,
-    required this.regionCode,
-    required this.currencyCode,
+    this.hasCompletedOnboarding = false,
+    this.activeUserId,
   });
 
   final ThemeMode themeMode;
-  final String regionCode;
-  final String currencyCode;
+  final bool hasCompletedOnboarding;
+  final String? activeUserId;
+
+  bool get isSignedIn =>
+      activeUserId != null && activeUserId!.trim().isNotEmpty;
 
   factory UserPreferences.defaults() => const UserPreferences(
         themeMode: ThemeMode.light,
-        regionCode: 'US',
-        currencyCode: 'USD',
       );
 
   UserPreferences copyWith({
     ThemeMode? themeMode,
-    String? regionCode,
-    String? currencyCode,
+    bool? hasCompletedOnboarding,
+    String? activeUserId,
+    bool clearActiveUserId = false,
   }) {
     return UserPreferences(
       themeMode: themeMode ?? this.themeMode,
-      regionCode: regionCode ?? this.regionCode,
-      currencyCode: currencyCode ?? this.currencyCode,
+      hasCompletedOnboarding:
+          hasCompletedOnboarding ?? this.hasCompletedOnboarding,
+      activeUserId:
+          clearActiveUserId ? null : (activeUserId ?? this.activeUserId),
     );
   }
 }

@@ -6,9 +6,9 @@ import '../data/models/dashboard_stats.dart';
 import '../data/models/expense.dart';
 import '../data/models/monthly_summary.dart';
 import '../data/models/recurring_expense.dart';
-import '../data/models/user_profile.dart';
 import 'preferences_providers.dart';
 import 'repository_providers.dart';
+import 'auth_providers.dart';
 
 final categoriesProvider = StreamProvider<List<ExpenseCategory>>((ref) {
   return ref.watch(categoryRepositoryProvider).watchAll();
@@ -49,10 +49,7 @@ final recurringExpensesProvider = StreamProvider<List<RecurringExpense>>((ref) {
   return ref.watch(recurringExpenseRepositoryProvider).watchAll();
 });
 
-final userProfileProvider = StreamProvider<UserProfile?>((ref) {
-  return ref.watch(userProfileRepositoryProvider).watchProfile();
-});
-
+final userProfileProvider = currentUserProvider;
 final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   final currency = ref.watch(currencyDisplayProvider);
   ref.watch(expensesProvider);

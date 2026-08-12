@@ -3,6 +3,8 @@ import 'package:drift/drift.dart';
 @DataClassName('CategoryRow')
 class Categories extends Table {
   TextColumn get id => text()();
+  TextColumn get userId =>
+      text().withDefault(const Constant('profile_main'))();
   TextColumn get name => text()();
   TextColumn get iconName => text()();
   IntColumn get colorValue => integer()();

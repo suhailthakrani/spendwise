@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/constants/app_icons.dart';
-import '../../core/utils/category_lookup.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/amount_input_formatter.dart';
+import '../../core/utils/category_lookup.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../data/models/budget.dart';
 import '../../data/models/category.dart';
@@ -74,8 +74,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
 
     if (budget != null) {
       _nameController.text = budget.name;
-      _limitController.text =
-          currency.toDisplayAmount(budget.limit).toStringAsFixed(0);
+      _limitController.text = currency.formatForInput(budget.limit);
     } else {
       _nameController.text = 'Monthly Budget';
     }
@@ -99,7 +98,8 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
       _type == BudgetFormType.category || _existingBudget?.categoryId != null;
 
   Future<void> _save(BuildContext context) async {
-    final limitDisplay = double.tryParse(_limitController.text);
+    final currency = ref.read(currencyDisplayProvider);
+    final limitDisplay = currency.parseInput(_limitController.text);
     if (limitDisplay == null || limitDisplay <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter a valid budget limit')),
@@ -107,7 +107,6 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
       return;
     }
 
-    final currency = ref.read(currencyDisplayProvider);
     final repo = ref.read(budgetRepositoryProvider);
     final name = _nameController.text.trim();
     final limit = currency.toStorageAmount(limitDisplay);
@@ -180,7 +179,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final limit = double.tryParse(_limitController.text) ?? 0;
+    final limit = currency.parseInput(_limitController.text) ?? 0;
     final spent = _existingBudget != null
         ? currency.toDisplayAmount(_existingBudget!.spent)
         : 0.0;
@@ -228,9 +227,13 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                         focusNode: _limitFocus,
                         onChanged: (_) => setState(() {}),
                         textAlign: TextAlign.center,
-                        keyboardType: TextInputType.number,
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: currency.allowsDecimalInput,
+                        ),
                         inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
+                          AmountInputFormatter(
+                            decimalDigits: currency.decimalDigits,
+                          ),
                         ],
                         style: theme.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w800,
@@ -239,8 +242,8 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                           letterSpacing: -0.8,
                         ),
                         decoration: InputDecoration(
-                          hintText: '0',
-                          prefixText: '${currency.displayCurrency.symbol} ',
+                          hintText: currency.amountInputHint,
+                          prefixText: '${currency.symbol} ',
                           prefixStyle: theme.textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.w800,
                             fontSize: 38,

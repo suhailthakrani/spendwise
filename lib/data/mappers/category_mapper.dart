@@ -16,9 +16,13 @@ abstract final class CategoryMapper {
     );
   }
 
-  static CategoriesCompanion toCompanion(ExpenseCategory category) {
+  static CategoriesCompanion toCompanion(
+    ExpenseCategory category, {
+    required String userId,
+  }) {
     return CategoriesCompanion(
       id: Value(category.id),
+      userId: Value(userId),
       name: Value(category.name),
       iconName: Value(category.iconName),
       colorValue: Value(category.color.toARGB32()),

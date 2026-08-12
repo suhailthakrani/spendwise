@@ -7,27 +7,33 @@ import '../models/expense.dart';
 import '../models/expense_sort.dart';
 
 class ExpenseRepository {
-  ExpenseRepository(this._db);
+  ExpenseRepository(this._db, this._userId);
 
   final AppDatabase _db;
+  final String _userId;
   static const _uuid = Uuid();
 
   Stream<List<Expense>> watchAll() {
     return (_db.select(_db.expenses)
+          ..where((t) => t.userId.equals(_userId))
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .watch()
         .map((rows) => rows.map(ExpenseMapper.fromRow).toList());
   }
 
   Stream<Expense?> watchById(String id) {
-    return (_db.select(_db.expenses)..where((t) => t.id.equals(id)))
+    return (_db.select(_db.expenses)
+          ..where((t) => t.id.equals(id) & t.userId.equals(_userId)))
         .watchSingleOrNull()
         .map((row) => row == null ? null : ExpenseMapper.fromRow(row));
   }
 
   Stream<List<Expense>> watchByCategory(String categoryId) {
     return (_db.select(_db.expenses)
-          ..where((t) => t.categoryId.equals(categoryId))
+          ..where(
+            (t) =>
+                t.categoryId.equals(categoryId) & t.userId.equals(_userId),
+          )
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .watch()
         .map((rows) => rows.map(ExpenseMapper.fromRow).toList());
@@ -35,7 +41,7 @@ class ExpenseRepository {
 
   Future<Expense?> getById(String id) async {
     final row = await (_db.select(_db.expenses)
-          ..where((t) => t.id.equals(id)))
+          ..where((t) => t.id.equals(id) & t.userId.equals(_userId)))
         .getSingleOrNull();
     return row == null ? null : ExpenseMapper.fromRow(row);
   }
@@ -48,17 +54,21 @@ class ExpenseRepository {
     ExpenseSortBy sortBy = ExpenseSortBy.dateDesc,
     required double Function(double) toDisplayAmount,
   }) async {
-    var queryBuilder = _db.select(_db.expenses);
+    var queryBuilder = _db.select(_db.expenses)
+      ..where((t) => t.userId.equals(_userId));
 
     if (categoryId != null) {
       queryBuilder = queryBuilder..where((t) => t.categoryId.equals(categoryId));
     }
     if (startDate != null) {
-      queryBuilder = queryBuilder..where((t) => t.date.isBiggerOrEqualValue(startDate));
+      queryBuilder =
+          queryBuilder..where((t) => t.date.isBiggerOrEqualValue(startDate));
     }
     if (endDate != null) {
-      final end = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
-      queryBuilder = queryBuilder..where((t) => t.date.isSmallerOrEqualValue(end));
+      final end =
+          DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+      queryBuilder =
+          queryBuilder..where((t) => t.date.isSmallerOrEqualValue(end));
     }
 
     var results = await queryBuilder.get();
@@ -101,7 +111,8 @@ class ExpenseRepository {
     var query = _db.selectOnly(_db.expenses)
       ..addColumns([_db.expenses.amount.sum()])
       ..where(
-        _db.expenses.date.isBetweenValues(monthStart, monthEnd),
+        _db.expenses.userId.equals(_userId) &
+            _db.expenses.date.isBetweenValues(monthStart, monthEnd),
       );
 
     if (categoryId != null) {
@@ -118,7 +129,10 @@ class ExpenseRepository {
 
     var query = _db.selectOnly(_db.expenses)
       ..addColumns([_db.expenses.amount.sum()])
-      ..where(_db.expenses.date.isBetweenValues(dayStart, dayEnd));
+      ..where(
+        _db.expenses.userId.equals(_userId) &
+            _db.expenses.date.isBetweenValues(dayStart, dayEnd),
+      );
 
     if (categoryId != null) {
       query = query..where(_db.expenses.categoryId.equals(categoryId));
@@ -129,24 +143,30 @@ class ExpenseRepository {
   }
 
   Future<void> create(Expense expense) async {
-    await _db.into(_db.expenses).insert(ExpenseMapper.toCompanion(expense));
+    await _db
+        .into(_db.expenses)
+        .insert(ExpenseMapper.toCompanion(expense, userId: _userId));
   }
 
   Future<void> update(Expense expense) async {
-    await (_db.update(_db.expenses)..where((t) => t.id.equals(expense.id))).write(
-          ExpensesCompanion(
-            amount: Value(expense.amount),
-            categoryId: Value(expense.categoryId),
-            note: Value(expense.note),
-            date: Value(expense.date),
-            paymentMethod: Value(expense.paymentMethod.name),
-            isRecurring: Value(expense.isRecurring),
-          ),
-        );
+    await (_db.update(_db.expenses)
+          ..where((t) => t.id.equals(expense.id) & t.userId.equals(_userId)))
+        .write(
+      ExpensesCompanion(
+        amount: Value(expense.amount),
+        categoryId: Value(expense.categoryId),
+        note: Value(expense.note),
+        date: Value(expense.date),
+        paymentMethod: Value(expense.paymentMethod.name),
+        isRecurring: Value(expense.isRecurring),
+      ),
+    );
   }
 
   Future<void> delete(String id) async {
-    await (_db.delete(_db.expenses)..where((t) => t.id.equals(id))).go();
+    await (_db.delete(_db.expenses)
+          ..where((t) => t.id.equals(id) & t.userId.equals(_userId)))
+        .go();
   }
 
   String newId() => _uuid.v4();

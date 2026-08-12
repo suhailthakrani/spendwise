@@ -5,6 +5,8 @@ import 'categories_table.dart';
 @DataClassName('BudgetRow')
 class Budgets extends Table {
   TextColumn get id => text()();
+  TextColumn get userId =>
+      text().withDefault(const Constant('profile_main'))();
   TextColumn get name => text()();
   RealColumn get limitAmount => real()();
   TextColumn get categoryId => text().nullable().references(Categories, #id)();

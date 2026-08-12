@@ -83,7 +83,9 @@ abstract final class AppTheme {
         foregroundColor: Colors.white,
         elevation: 4,
         highlightElevation: 6,
-        shape: const CircleBorder(),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.md),
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(

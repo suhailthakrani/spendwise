@@ -4,8 +4,9 @@ import 'package:drift/drift.dart';
 class AppPreferences extends Table {
   IntColumn get id => integer()();
   TextColumn get themeMode => text()();
-  TextColumn get regionCode => text()();
-  TextColumn get currencyCode => text()();
+  BoolColumn get hasCompletedOnboarding =>
+      boolean().withDefault(const Constant(false))();
+  TextColumn get activeUserId => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

@@ -32,8 +32,9 @@ class AppDatabase extends _$AppDatabase {
   /// In-memory database for tests.
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
+  /// First release — fresh installs only; no upgrade migrations.
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -41,41 +42,7 @@ class AppDatabase extends _$AppDatabase {
           await migrator.createAll();
           await seedDatabase(this);
         },
-        onUpgrade: (migrator, from, to) async {
-          if (from < 2) {
-            // Wipe leftover demo/sample transactional data from early builds.
-            await clearUserGeneratedData();
-          }
-          if (from < 4) {
-            await ensureDefaultCategories();
-          }
-        },
       );
-
-  /// Removes expenses, budgets, and recurring items; resets profile.
-  /// Keeps categories and app preferences.
-  Future<void> clearUserGeneratedData() async {
-    await transaction(() async {
-      await delete(expenses).go();
-      await delete(budgets).go();
-      await delete(recurringExpenses).go();
-      await (update(categories)).write(
-        const CategoriesCompanion(budgetLimit: Value(null)),
-      );
-      await (update(userProfiles)).write(
-        const UserProfilesCompanion(
-          name: Value(''),
-          email: Value(''),
-          memberSince: Value(null),
-        ),
-      );
-    });
-  }
-
-  /// Inserts any missing starter categories (safe for existing installs).
-  Future<void> ensureDefaultCategories() async {
-    await ensureStarterCategories(this);
-  }
 
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {

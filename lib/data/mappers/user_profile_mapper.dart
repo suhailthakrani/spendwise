@@ -7,6 +7,8 @@ abstract final class UserProfileMapper {
       id: row.id,
       name: row.name,
       email: row.email,
+      regionCode: row.regionCode,
+      currencyCode: row.currencyCode,
       avatarUrl: row.avatarUrl,
       memberSince: row.memberSince,
     );

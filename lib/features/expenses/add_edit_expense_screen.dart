@@ -7,6 +7,7 @@ import '../../core/constants/app_icons.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../data/models/category.dart';
@@ -74,8 +75,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       _paymentMethod = expense.paymentMethod;
       _date = expense.date;
       _isRecurring = expense.isRecurring;
-      _amountController.text =
-          currency.toDisplayAmount(expense.amount).toStringAsFixed(2);
+      _amountController.text = currency.formatForInput(expense.amount);
       _noteController.text = expense.note;
     } else {
       _categoryId = ranked.isNotEmpty ? ranked.first.id : categories.first.id;
@@ -94,7 +94,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   }
 
   Future<void> _save(BuildContext context) async {
-    final amountDisplay = double.tryParse(_amountController.text);
+    final currency = ref.read(currencyDisplayProvider);
+    final amountDisplay = currency.parseInput(_amountController.text);
     if (amountDisplay == null || amountDisplay <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter a valid amount')),
@@ -102,7 +103,6 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       return;
     }
 
-    final currency = ref.read(currencyDisplayProvider);
     final repo = ref.read(expenseRepositoryProvider);
     final expense = Expense(
       id: widget.expenseId ?? repo.newId(),
@@ -145,6 +145,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     final rankedCategories = ref.watch(categoriesByUsageProvider);
+    final currency = ref.watch(currencyDisplayProvider);
     final currencyCode = ref.watch(displayCurrencyCodeProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -205,12 +206,12 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                             focusNode: _amountFocus,
                             onChanged: (_) => setState(() {}),
                             textAlign: TextAlign.center,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
+                            keyboardType: TextInputType.numberWithOptions(
+                              decimal: currency.allowsDecimalInput,
                             ),
                             inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d+\.?\d{0,2}'),
+                              AmountInputFormatter(
+                                decimalDigits: currency.decimalDigits,
                               ),
                             ],
                             style: theme.textTheme.displaySmall?.copyWith(
@@ -223,13 +224,20 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                               ],
                             ),
                             decoration: InputDecoration(
-                              hintText: '0.00',
+                              hintText: currency.amountInputHint,
                               hintStyle: theme.textTheme.displaySmall?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 48,
                                 height: 1.05,
                                 letterSpacing: -1.2,
                                 color: AppColors.tertiaryText(context),
+                              ),
+                              prefixText: '${currency.symbol} ',
+                              prefixStyle:
+                                  theme.textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 36,
+                                color: AppColors.primary,
                               ),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,

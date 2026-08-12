@@ -5,6 +5,8 @@ import 'categories_table.dart';
 @DataClassName('RecurringExpenseRow')
 class RecurringExpenses extends Table {
   TextColumn get id => text()();
+  TextColumn get userId =>
+      text().withDefault(const Constant('profile_main'))();
   TextColumn get title => text()();
   RealColumn get amount => real()();
   TextColumn get categoryId => text().references(Categories, #id)();

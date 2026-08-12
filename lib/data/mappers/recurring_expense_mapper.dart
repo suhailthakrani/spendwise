@@ -17,9 +17,13 @@ abstract final class RecurringExpenseMapper {
     );
   }
 
-  static RecurringExpensesCompanion toCompanion(RecurringExpense expense) {
+  static RecurringExpensesCompanion toCompanion(
+    RecurringExpense expense, {
+    required String userId,
+  }) {
     return RecurringExpensesCompanion(
       id: Value(expense.id),
+      userId: Value(userId),
       title: Value(expense.title),
       amount: Value(expense.amount),
       categoryId: Value(expense.categoryId),

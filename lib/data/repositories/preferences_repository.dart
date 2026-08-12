@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:spendwise/data/mappers/preferences_mapper.dart';
-import 'package:spendwise/data/models/app_region.dart';
 import 'package:spendwise/data/models/user_preferences.dart';
 
 import '../../core/database/app_database.dart';
@@ -34,20 +33,19 @@ class PreferencesRepository {
     await _upsert(current.copyWith(themeMode: mode));
   }
 
-  Future<void> setRegion(String regionCode) async {
+  Future<void> completeOnboarding() async {
     final current = await getPreferences();
-    final region = AppRegion.byCode(regionCode);
-    await _upsert(
-      current.copyWith(
-        regionCode: regionCode,
-        currencyCode: region.defaultCurrencyCode,
-      ),
-    );
+    await _upsert(current.copyWith(hasCompletedOnboarding: true));
   }
 
-  Future<void> setCurrency(String currencyCode) async {
+  Future<void> setActiveUserId(String userId) async {
     final current = await getPreferences();
-    await _upsert(current.copyWith(currencyCode: currencyCode));
+    await _upsert(current.copyWith(activeUserId: userId));
+  }
+
+  Future<void> clearSession() async {
+    final current = await getPreferences();
+    await _upsert(current.copyWith(clearActiveUserId: true));
   }
 
   Future<void> _upsert(UserPreferences preferences) async {

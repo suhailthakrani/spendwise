@@ -10,8 +10,8 @@ abstract final class PreferencesMapper {
   static UserPreferences fromRow(PreferencesRow row) {
     return UserPreferences(
       themeMode: ThemeMode.values.byName(row.themeMode),
-      regionCode: row.regionCode,
-      currencyCode: row.currencyCode,
+      hasCompletedOnboarding: row.hasCompletedOnboarding,
+      activeUserId: row.activeUserId,
     );
   }
 
@@ -19,8 +19,8 @@ abstract final class PreferencesMapper {
     return AppPreferencesCompanion(
       id: const Value(preferencesId),
       themeMode: Value(preferences.themeMode.name),
-      regionCode: Value(preferences.regionCode),
-      currencyCode: Value(preferences.currencyCode),
+      hasCompletedOnboarding: Value(preferences.hasCompletedOnboarding),
+      activeUserId: Value(preferences.activeUserId),
     );
   }
 }

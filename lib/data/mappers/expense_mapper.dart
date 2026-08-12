@@ -17,9 +17,13 @@ abstract final class ExpenseMapper {
     );
   }
 
-  static ExpensesCompanion toCompanion(Expense expense) {
+  static ExpensesCompanion toCompanion(
+    Expense expense, {
+    required String userId,
+  }) {
     return ExpensesCompanion(
       id: Value(expense.id),
+      userId: Value(userId),
       amount: Value(expense.amount),
       categoryId: Value(expense.categoryId),
       note: Value(expense.note),

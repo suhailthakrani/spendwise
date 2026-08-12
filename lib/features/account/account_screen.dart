@@ -8,11 +8,12 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/widgets/profile_avatar.dart';
 import '../../data/models/app_currency.dart';
 import '../../data/models/app_region.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
-import '../../providers/repository_providers.dart';
+import '../../providers/auth_providers.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -36,7 +37,9 @@ class AccountScreen extends ConsumerWidget {
       data: (prefs) {
         final profile = profileAsync.valueOrNull;
         final isDark = prefs.themeMode == ThemeMode.dark;
-        final region = AppRegion.byCode(prefs.regionCode);
+        final regionCode = profile?.regionCode ?? 'US';
+        final currencyCodeValue = profile?.currencyCode ?? currencyCode;
+        final region = AppRegion.byCode(regionCode);
 
         return Scaffold(
           appBar: AppBar(
@@ -63,27 +66,9 @@ class AccountScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(18),
                     child: Row(
                       children: [
-                        Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                AppColors.primary.withValues(alpha: 0.2),
-                                AppColors.primaryLight.withValues(alpha: 0.25),
-                              ],
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Center(
-                            child: AppIcon(
-                              AppIcons.profile,
-                              size: 30,
-                              color: AppColors.primary,
-                            ),
-                          ),
+                        ProfileAvatar(
+                          path: profile?.avatarUrl,
+                          size: 64,
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -130,7 +115,7 @@ class AccountScreen extends ConsumerWidget {
                         ),
                         SoftIconButton(
                           asset: AppIcons.edit,
-                          onPressed: () {},
+                          onPressed: () => context.push(AppRoutes.editProfile),
                           size: 40,
                           iconSize: 18,
                         ),
@@ -177,15 +162,15 @@ class AccountScreen extends ConsumerWidget {
                     title: 'Region',
                     subtitle: region.name,
                     onTap: () =>
-                        _showRegionPicker(context, ref, prefs.regionCode),
+                        _showRegionPicker(context, ref, regionCode),
                   ),
                   SettingsTile(
                     iconAsset: AppIcons.currency,
                     title: 'Currency',
                     subtitle:
-                        '${AppCurrency.byCode(prefs.currencyCode).name} (${prefs.currencyCode})',
+                        '${AppCurrency.byCode(currencyCodeValue).name} ($currencyCodeValue)',
                     onTap: () =>
-                        _showCurrencyPicker(context, ref, prefs.currencyCode),
+                        _showCurrencyPicker(context, ref, currencyCodeValue),
                   ),
                 ],
               ),
@@ -233,7 +218,7 @@ class AccountScreen extends ConsumerWidget {
                     title: 'Log out',
                     subtitle: 'Sign out of your account',
                     iconColor: AppColors.error,
-                    onTap: () => _showLogoutDialog(context),
+                    onTap: () => _showLogoutDialog(context, ref),
                   ),
                 ],
               ),
@@ -294,7 +279,7 @@ class AccountScreen extends ConsumerWidget {
               ? const AppIcon(AppIcons.info, color: AppColors.primary)
               : null,
           onTap: () {
-            ref.read(preferencesRepositoryProvider).setRegion(region.code);
+            ref.read(authControllerProvider).setRegion(region.code);
             Navigator.pop(context);
           },
         );
@@ -310,7 +295,7 @@ class AccountScreen extends ConsumerWidget {
     _showPickerBottomSheet(
       context: context,
       title: 'Select currency',
-      subtitle: 'Applies to all amounts across the app',
+      subtitle: 'Applies to all amounts on this account',
       children: AppCurrency.all.map((currency) {
         final selected = currentCode == currency.code;
         return ListTile(
@@ -330,7 +315,7 @@ class AccountScreen extends ConsumerWidget {
                 ),
           ),
           onTap: () {
-            ref.read(preferencesRepositoryProvider).setCurrency(currency.code);
+            ref.read(authControllerProvider).setCurrency(currency.code);
             Navigator.pop(context);
           },
         );
@@ -409,7 +394,7 @@ class AccountScreen extends ConsumerWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -421,11 +406,12 @@ class AccountScreen extends ConsumerWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out (design only)')),
-              );
+              await ref.read(authControllerProvider).signOut();
+              if (context.mounted) {
+                context.go(AppRoutes.signin);
+              }
             },
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Log out'),

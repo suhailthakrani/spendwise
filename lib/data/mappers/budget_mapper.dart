@@ -17,6 +17,7 @@ abstract final class BudgetMapper {
 
   static BudgetsCompanion toCompanion({
     required String id,
+    required String userId,
     required String name,
     required double limit,
     String? categoryId,
@@ -24,6 +25,7 @@ abstract final class BudgetMapper {
   }) {
     return BudgetsCompanion(
       id: Value(id),
+      userId: Value(userId),
       name: Value(name),
       limitAmount: Value(limit),
       categoryId: Value(categoryId),
