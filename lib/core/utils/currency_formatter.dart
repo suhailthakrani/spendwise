@@ -1,7 +1,6 @@
 import 'package:intl/intl.dart';
 
 import '../../data/models/app_currency.dart';
-import '../../data/models/app_region.dart';
 import 'currency_converter.dart';
 
 abstract final class CurrencyFormatter {
@@ -22,12 +21,7 @@ abstract final class CurrencyFormatter {
           );
 
     final currency = AppCurrency.byCode(targetCode);
-    final resolvedLocale = locale ??
-        AppRegion.all
-            .where((r) => r.defaultCurrencyCode == targetCode)
-            .map((r) => r.locale)
-            .firstOrNull ??
-        'en_US';
+    final resolvedLocale = locale ?? 'en_US';
 
     final formatter = compact
         ? NumberFormat.compactCurrency(

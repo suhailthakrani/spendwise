@@ -7,13 +7,12 @@ import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/profile_avatar.dart';
-import '../../data/models/app_currency.dart';
-import '../../data/models/app_region.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
-import '../../providers/auth_providers.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -22,7 +21,6 @@ class AccountScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
     final prefsAsync = ref.watch(preferencesProvider);
-    final currencyCode = ref.watch(displayCurrencyCodeProvider);
     final theme = Theme.of(context);
 
     return prefsAsync.when(
@@ -34,12 +32,8 @@ class AccountScreen extends ConsumerWidget {
         appBar: AppBar(title: const Text('You')),
         body: Center(child: Text('Error: $error')),
       ),
-      data: (prefs) {
+      data: (_) {
         final profile = profileAsync.valueOrNull;
-        final isDark = prefs.themeMode == ThemeMode.dark;
-        final regionCode = profile?.regionCode ?? 'US';
-        final currencyCodeValue = profile?.currencyCode ?? currencyCode;
-        final region = AppRegion.byCode(regionCode);
 
         return Scaffold(
           appBar: AppBar(
@@ -124,59 +118,15 @@ class AccountScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const _SectionTitle(title: 'Preferences'),
-              SurfaceGroup(
-                children: [
-                  SwitchListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 2,
-                    ),
-                    secondary: AppIconBox(
-                      asset: isDark ? AppIcons.darkMode : AppIcons.lightMode,
-                      color: AppColors.primary,
-                      size: 42,
-                      iconSize: 20,
-                    ),
-                    title: Text(
-                      'Dark mode',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Match your preference',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.secondaryText(context),
-                      ),
-                    ),
-                    value: isDark,
-                    onChanged: (value) {
-                      ref.read(preferencesRepositoryProvider).setThemeMode(
-                            value ? ThemeMode.dark : ThemeMode.light,
-                          );
-                    },
-                  ),
-                  SettingsTile(
-                    iconAsset: AppIcons.globe,
-                    title: 'Region',
-                    subtitle: region.name,
-                    onTap: () =>
-                        _showRegionPicker(context, ref, regionCode),
-                  ),
-                  SettingsTile(
-                    iconAsset: AppIcons.currency,
-                    title: 'Currency',
-                    subtitle:
-                        '${AppCurrency.byCode(currencyCodeValue).name} ($currencyCodeValue)',
-                    onTap: () =>
-                        _showCurrencyPicker(context, ref, currencyCodeValue),
-                  ),
-                ],
-              ),
               const _SectionTitle(title: 'Data'),
               SurfaceGroup(
                 children: [
+                  SettingsTile(
+                    iconAsset: AppIcons.savings,
+                    title: 'Saving goals',
+                    subtitle: 'Track goals and wishlist items',
+                    onTap: () => context.push(AppRoutes.goals),
+                  ),
                   SettingsTile(
                     iconAsset: AppIcons.category,
                     title: 'Categories',
@@ -197,16 +147,41 @@ class AccountScreen extends ConsumerWidget {
                   SettingsTile(
                     iconAsset: AppIcons.exportCsv,
                     title: 'Export CSV',
-                    subtitle: 'Download all expenses',
-                    onTap: () =>
-                        _showExportSnackBar(context, 'CSV', currencyCode),
+                    subtitle: 'Choose timeline and preview',
+                    onTap: () => context.push(
+                      '${AppRoutes.export}?format=csv',
+                    ),
                   ),
                   SettingsTile(
                     iconAsset: AppIcons.exportExcel,
                     title: 'Export Excel',
-                    subtitle: 'Download all expenses',
-                    onTap: () =>
-                        _showExportSnackBar(context, 'Excel', currencyCode),
+                    subtitle: 'Choose timeline and preview',
+                    onTap: () => context.push(
+                      '${AppRoutes.export}?format=excel',
+                    ),
+                  ),
+                ],
+              ),
+              const _SectionTitle(title: 'App'),
+              SurfaceGroup(
+                children: [
+                  SettingsTile(
+                    iconAsset: AppIcons.settings,
+                    title: 'Settings',
+                    subtitle: 'Theme, country, currency, account',
+                    onTap: () => context.push(AppRoutes.settings),
+                  ),
+                  SettingsTile(
+                    iconAsset: AppIcons.info,
+                    title: 'FAQs',
+                    subtitle: 'Common questions',
+                    onTap: () => context.push(AppRoutes.faq),
+                  ),
+                  SettingsTile(
+                    iconAsset: AppIcons.receipt,
+                    title: 'Privacy',
+                    subtitle: 'How your data stays on this device',
+                    onTap: () => context.push(AppRoutes.privacy),
                   ),
                 ],
               ),
@@ -227,11 +202,7 @@ class AccountScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const AppIcon(
-                      AppIcons.logo,
-                      size: 16,
-                      color: AppColors.primary,
-                    ),
+                    const AppLogo(size: 22),
                     const SizedBox(width: 8),
                     Text(
                       'SpendWise · EvenLogix',
@@ -258,148 +229,14 @@ class AccountScreen extends ConsumerWidget {
     );
   }
 
-  void _showRegionPicker(
-    BuildContext context,
-    WidgetRef ref,
-    String currentCode,
-  ) {
-    _showPickerBottomSheet(
-      context: context,
-      title: 'Select region',
-      children: AppRegion.all.map((region) {
-        final selected = currentCode == region.code;
-        return ListTile(
-          leading: AppIcon(
-            AppIcons.globe,
-            color: selected ? AppColors.primary : null,
-          ),
-          title: Text(region.name),
-          subtitle: Text(region.defaultCurrencyCode),
-          trailing: selected
-              ? const AppIcon(AppIcons.info, color: AppColors.primary)
-              : null,
-          onTap: () {
-            ref.read(authControllerProvider).setRegion(region.code);
-            Navigator.pop(context);
-          },
-        );
-      }).toList(),
-    );
-  }
-
-  void _showCurrencyPicker(
-    BuildContext context,
-    WidgetRef ref,
-    String currentCode,
-  ) {
-    _showPickerBottomSheet(
-      context: context,
-      title: 'Select currency',
-      subtitle: 'Applies to all amounts on this account',
-      children: AppCurrency.all.map((currency) {
-        final selected = currentCode == currency.code;
-        return ListTile(
-          leading: AppIconBox(
-            asset: AppIcons.currency,
-            color: selected ? AppColors.primary : AppColors.accent,
-            size: 40,
-            iconSize: 20,
-          ),
-          title: Text(currency.name),
-          subtitle: Text(currency.code),
-          trailing: Text(
-            currency.symbol,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: selected ? AppColors.primary : null,
-                ),
-          ),
-          onTap: () {
-            ref.read(authControllerProvider).setCurrency(currency.code);
-            Navigator.pop(context);
-          },
-        );
-      }).toList(),
-    );
-  }
-
-  void _showPickerBottomSheet({
-    required BuildContext context,
-    required String title,
-    String? subtitle,
-    required List<Widget> children,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      builder: (ctx) {
-        final maxSheetHeight = MediaQuery.sizeOf(ctx).height * 0.85;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxSheetHeight),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    20,
-                    8,
-                    20,
-                    subtitle == null ? 12 : 4,
-                  ),
-                  child: Text(
-                    title,
-                    style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3,
-                        ),
-                  ),
-                ),
-                if (subtitle != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                    child: Text(
-                      subtitle,
-                      style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                            color: AppColors.secondaryText(ctx),
-                          ),
-                    ),
-                  ),
-                Flexible(
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: children,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showExportSnackBar(
-    BuildContext context,
-    String format,
-    String currency,
-  ) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Export to $format in $currency (coming soon)'),
-      ),
-    );
-  }
-
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Log out'),
-        content: const Text('Are you sure you want to log out?'),
+        title: const Text('Log out?'),
+        content: const Text(
+          'You’ll need to sign in again to access this account on this device.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),

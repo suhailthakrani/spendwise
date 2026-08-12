@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/models/export_format.dart';
 import '../../features/account/account_screen.dart';
 import '../../features/account/edit_profile_screen.dart';
+import '../../features/account/export_screen.dart';
+import '../../features/account/faq_screen.dart';
+import '../../features/account/privacy_screen.dart';
+import '../../features/account/settings_screen.dart';
 import '../../features/auth/signin_screen.dart';
 import '../../features/auth/signup_screen.dart';
 import '../../features/budget/add_edit_budget_screen.dart';
@@ -14,15 +19,21 @@ import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/expenses/add_edit_expense_screen.dart';
 import '../../features/expenses/expense_detail_screen.dart';
 import '../../features/expenses/expenses_screen.dart';
+import '../../features/goals/add_edit_goal_screen.dart';
+import '../../features/goals/contribute_goal_screen.dart';
+import '../../features/goals/goal_detail_screen.dart';
+import '../../features/goals/goals_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/reports/monthly_summary_screen.dart';
 import '../../features/reports/reports_screen.dart';
 import '../../features/search/search_screen.dart';
 import '../../features/shell/main_shell.dart';
+import '../../features/splash/splash_screen.dart';
 import '../../providers/preferences_providers.dart';
 import '../../data/models/user_preferences.dart';
 
 abstract final class AppRoutes {
+  static const splash = '/splash';
   static const dashboard = '/';
   static const expenses = '/expenses';
   static const expenseDetail = '/expenses/:id';
@@ -35,9 +46,18 @@ abstract final class AppRoutes {
   static const budget = '/budget';
   static const addBudget = '/budget/add';
   static const editBudget = '/budget/:id/edit';
+  static const goals = '/goals';
+  static const addGoal = '/goals/add';
+  static const goalDetail = '/goals/:id';
+  static const editGoal = '/goals/:id/edit';
+  static const contributeGoal = '/goals/:id/contribute';
   static const search = '/search';
   static const account = '/account';
   static const editProfile = '/account/edit';
+  static const export = '/account/export';
+  static const settings = '/account/settings';
+  static const faq = '/account/faq';
+  static const privacy = '/account/privacy';
   static const onboarding = '/onboarding';
   static const signin = '/signin';
   static const signup = '/signup';
@@ -47,17 +67,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = _RouterRefresh(ref);
 
   final router = GoRouter(
-    initialLocation: AppRoutes.signin,
+    initialLocation: AppRoutes.splash,
     refreshListenable: refresh,
     redirect: (context, state) {
       final prefsAsync = ref.read(preferencesProvider);
       final loc = state.matchedLocation;
+      final onSplash = loc == AppRoutes.splash;
       final onOnboarding = loc == AppRoutes.onboarding;
       final onAuth = loc == AppRoutes.signin || loc == AppRoutes.signup;
 
-      // Prefer auth routes while prefs stream is still warming up.
+      // Splash owns its own exit navigation after boot + min display time.
+      if (onSplash) return null;
+
       if (prefsAsync.isLoading || !prefsAsync.hasValue) {
-        return onOnboarding || onAuth ? null : AppRoutes.signin;
+        return AppRoutes.splash;
       }
 
       final prefs = prefsAsync.requireValue;
@@ -78,6 +101,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: AppRoutes.splash,
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
@@ -130,6 +157,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.faq,
+        builder: (context, state) => const FaqScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.privacy,
+        builder: (context, state) => const PrivacyScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.addExpense,
         builder: (context, state) => const AddEditExpenseScreen(),
       ),
@@ -172,6 +211,43 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => AddEditBudgetScreen(
           budgetId: state.pathParameters['id'],
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.goals,
+        builder: (context, state) => const GoalsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.addGoal,
+        builder: (context, state) => const AddEditGoalScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.editGoal,
+        builder: (context, state) => AddEditGoalScreen(
+          goalId: state.pathParameters['id'],
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.contributeGoal,
+        builder: (context, state) => ContributeGoalScreen(
+          goalId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.goalDetail,
+        builder: (context, state) => GoalDetailScreen(
+          goalId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.export,
+        builder: (context, state) {
+          final formatParam =
+              state.uri.queryParameters['format']?.toLowerCase();
+          final format = formatParam == 'excel'
+              ? ExportFormat.excel
+              : ExportFormat.csv;
+          return ExportScreen(format: format);
+        },
       ),
     ],
   );

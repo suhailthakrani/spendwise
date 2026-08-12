@@ -5,7 +5,9 @@ import '../data/repositories/category_repository.dart';
 import '../data/repositories/expense_repository.dart';
 import '../data/repositories/recurring_expense_repository.dart';
 import '../data/repositories/report_repository.dart';
+import '../data/repositories/saving_goal_repository.dart';
 import '../data/repositories/user_profile_repository.dart';
+import '../data/services/export_service.dart';
 import 'database_provider.dart';
 import 'preferences_providers.dart';
 
@@ -50,5 +52,19 @@ final reportRepositoryProvider = Provider<ReportRepository>((ref) {
   return ReportRepository(
     ref.watch(expenseRepositoryProvider),
     ref.watch(budgetRepositoryProvider),
+  );
+});
+
+final savingGoalRepositoryProvider = Provider<SavingGoalRepository>((ref) {
+  return SavingGoalRepository(
+    ref.watch(databaseProvider),
+    _requireUserId(ref),
+  );
+});
+
+final exportServiceProvider = Provider<ExportService>((ref) {
+  return ExportService(
+    expenseRepository: ref.watch(expenseRepositoryProvider),
+    categoryRepository: ref.watch(categoryRepositoryProvider),
   );
 });

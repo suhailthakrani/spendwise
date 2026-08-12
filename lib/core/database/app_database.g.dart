@@ -2372,6 +2372,998 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
   }
 }
 
+class $SavingGoalsTable extends SavingGoals
+    with TableInfo<$SavingGoalsTable, SavingGoalRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SavingGoalsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('profile_main'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _targetAmountMeta =
+      const VerificationMeta('targetAmount');
+  @override
+  late final GeneratedColumn<double> targetAmount = GeneratedColumn<double>(
+      'target_amount', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _deadlineMeta =
+      const VerificationMeta('deadline');
+  @override
+  late final GeneratedColumn<DateTime> deadline = GeneratedColumn<DateTime>(
+      'deadline', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _monthlyTargetMeta =
+      const VerificationMeta('monthlyTarget');
+  @override
+  late final GeneratedColumn<double> monthlyTarget = GeneratedColumn<double>(
+      'monthly_target', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _wishlistTitleMeta =
+      const VerificationMeta('wishlistTitle');
+  @override
+  late final GeneratedColumn<String> wishlistTitle = GeneratedColumn<String>(
+      'wishlist_title', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _wishlistNoteMeta =
+      const VerificationMeta('wishlistNote');
+  @override
+  late final GeneratedColumn<String> wishlistNote = GeneratedColumn<String>(
+      'wishlist_note', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _priorityMeta =
+      const VerificationMeta('priority');
+  @override
+  late final GeneratedColumn<int> priority = GeneratedColumn<int>(
+      'priority', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('active'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        userId,
+        name,
+        targetAmount,
+        deadline,
+        monthlyTarget,
+        wishlistTitle,
+        wishlistNote,
+        priority,
+        status,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'saving_goals';
+  @override
+  VerificationContext validateIntegrity(Insertable<SavingGoalRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('target_amount')) {
+      context.handle(
+          _targetAmountMeta,
+          targetAmount.isAcceptableOrUnknown(
+              data['target_amount']!, _targetAmountMeta));
+    } else if (isInserting) {
+      context.missing(_targetAmountMeta);
+    }
+    if (data.containsKey('deadline')) {
+      context.handle(_deadlineMeta,
+          deadline.isAcceptableOrUnknown(data['deadline']!, _deadlineMeta));
+    }
+    if (data.containsKey('monthly_target')) {
+      context.handle(
+          _monthlyTargetMeta,
+          monthlyTarget.isAcceptableOrUnknown(
+              data['monthly_target']!, _monthlyTargetMeta));
+    }
+    if (data.containsKey('wishlist_title')) {
+      context.handle(
+          _wishlistTitleMeta,
+          wishlistTitle.isAcceptableOrUnknown(
+              data['wishlist_title']!, _wishlistTitleMeta));
+    }
+    if (data.containsKey('wishlist_note')) {
+      context.handle(
+          _wishlistNoteMeta,
+          wishlistNote.isAcceptableOrUnknown(
+              data['wishlist_note']!, _wishlistNoteMeta));
+    }
+    if (data.containsKey('priority')) {
+      context.handle(_priorityMeta,
+          priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta));
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SavingGoalRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SavingGoalRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      targetAmount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}target_amount'])!,
+      deadline: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}deadline']),
+      monthlyTarget: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}monthly_target']),
+      wishlistTitle: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}wishlist_title']),
+      wishlistNote: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}wishlist_note']),
+      priority: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}priority'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $SavingGoalsTable createAlias(String alias) {
+    return $SavingGoalsTable(attachedDatabase, alias);
+  }
+}
+
+class SavingGoalRow extends DataClass implements Insertable<SavingGoalRow> {
+  final String id;
+  final String userId;
+  final String name;
+  final double targetAmount;
+  final DateTime? deadline;
+  final double? monthlyTarget;
+  final String? wishlistTitle;
+  final String? wishlistNote;
+  final int priority;
+  final String status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const SavingGoalRow(
+      {required this.id,
+      required this.userId,
+      required this.name,
+      required this.targetAmount,
+      this.deadline,
+      this.monthlyTarget,
+      this.wishlistTitle,
+      this.wishlistNote,
+      required this.priority,
+      required this.status,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['name'] = Variable<String>(name);
+    map['target_amount'] = Variable<double>(targetAmount);
+    if (!nullToAbsent || deadline != null) {
+      map['deadline'] = Variable<DateTime>(deadline);
+    }
+    if (!nullToAbsent || monthlyTarget != null) {
+      map['monthly_target'] = Variable<double>(monthlyTarget);
+    }
+    if (!nullToAbsent || wishlistTitle != null) {
+      map['wishlist_title'] = Variable<String>(wishlistTitle);
+    }
+    if (!nullToAbsent || wishlistNote != null) {
+      map['wishlist_note'] = Variable<String>(wishlistNote);
+    }
+    map['priority'] = Variable<int>(priority);
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SavingGoalsCompanion toCompanion(bool nullToAbsent) {
+    return SavingGoalsCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      name: Value(name),
+      targetAmount: Value(targetAmount),
+      deadline: deadline == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deadline),
+      monthlyTarget: monthlyTarget == null && nullToAbsent
+          ? const Value.absent()
+          : Value(monthlyTarget),
+      wishlistTitle: wishlistTitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(wishlistTitle),
+      wishlistNote: wishlistNote == null && nullToAbsent
+          ? const Value.absent()
+          : Value(wishlistNote),
+      priority: Value(priority),
+      status: Value(status),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SavingGoalRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SavingGoalRow(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      name: serializer.fromJson<String>(json['name']),
+      targetAmount: serializer.fromJson<double>(json['targetAmount']),
+      deadline: serializer.fromJson<DateTime?>(json['deadline']),
+      monthlyTarget: serializer.fromJson<double?>(json['monthlyTarget']),
+      wishlistTitle: serializer.fromJson<String?>(json['wishlistTitle']),
+      wishlistNote: serializer.fromJson<String?>(json['wishlistNote']),
+      priority: serializer.fromJson<int>(json['priority']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'name': serializer.toJson<String>(name),
+      'targetAmount': serializer.toJson<double>(targetAmount),
+      'deadline': serializer.toJson<DateTime?>(deadline),
+      'monthlyTarget': serializer.toJson<double?>(monthlyTarget),
+      'wishlistTitle': serializer.toJson<String?>(wishlistTitle),
+      'wishlistNote': serializer.toJson<String?>(wishlistNote),
+      'priority': serializer.toJson<int>(priority),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SavingGoalRow copyWith(
+          {String? id,
+          String? userId,
+          String? name,
+          double? targetAmount,
+          Value<DateTime?> deadline = const Value.absent(),
+          Value<double?> monthlyTarget = const Value.absent(),
+          Value<String?> wishlistTitle = const Value.absent(),
+          Value<String?> wishlistNote = const Value.absent(),
+          int? priority,
+          String? status,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      SavingGoalRow(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        name: name ?? this.name,
+        targetAmount: targetAmount ?? this.targetAmount,
+        deadline: deadline.present ? deadline.value : this.deadline,
+        monthlyTarget:
+            monthlyTarget.present ? monthlyTarget.value : this.monthlyTarget,
+        wishlistTitle:
+            wishlistTitle.present ? wishlistTitle.value : this.wishlistTitle,
+        wishlistNote:
+            wishlistNote.present ? wishlistNote.value : this.wishlistNote,
+        priority: priority ?? this.priority,
+        status: status ?? this.status,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  SavingGoalRow copyWithCompanion(SavingGoalsCompanion data) {
+    return SavingGoalRow(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      name: data.name.present ? data.name.value : this.name,
+      targetAmount: data.targetAmount.present
+          ? data.targetAmount.value
+          : this.targetAmount,
+      deadline: data.deadline.present ? data.deadline.value : this.deadline,
+      monthlyTarget: data.monthlyTarget.present
+          ? data.monthlyTarget.value
+          : this.monthlyTarget,
+      wishlistTitle: data.wishlistTitle.present
+          ? data.wishlistTitle.value
+          : this.wishlistTitle,
+      wishlistNote: data.wishlistNote.present
+          ? data.wishlistNote.value
+          : this.wishlistNote,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SavingGoalRow(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('targetAmount: $targetAmount, ')
+          ..write('deadline: $deadline, ')
+          ..write('monthlyTarget: $monthlyTarget, ')
+          ..write('wishlistTitle: $wishlistTitle, ')
+          ..write('wishlistNote: $wishlistNote, ')
+          ..write('priority: $priority, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      userId,
+      name,
+      targetAmount,
+      deadline,
+      monthlyTarget,
+      wishlistTitle,
+      wishlistNote,
+      priority,
+      status,
+      createdAt,
+      updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SavingGoalRow &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.name == this.name &&
+          other.targetAmount == this.targetAmount &&
+          other.deadline == this.deadline &&
+          other.monthlyTarget == this.monthlyTarget &&
+          other.wishlistTitle == this.wishlistTitle &&
+          other.wishlistNote == this.wishlistNote &&
+          other.priority == this.priority &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SavingGoalsCompanion extends UpdateCompanion<SavingGoalRow> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> name;
+  final Value<double> targetAmount;
+  final Value<DateTime?> deadline;
+  final Value<double?> monthlyTarget;
+  final Value<String?> wishlistTitle;
+  final Value<String?> wishlistNote;
+  final Value<int> priority;
+  final Value<String> status;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SavingGoalsCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.targetAmount = const Value.absent(),
+    this.deadline = const Value.absent(),
+    this.monthlyTarget = const Value.absent(),
+    this.wishlistTitle = const Value.absent(),
+    this.wishlistNote = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SavingGoalsCompanion.insert({
+    required String id,
+    this.userId = const Value.absent(),
+    required String name,
+    required double targetAmount,
+    this.deadline = const Value.absent(),
+    this.monthlyTarget = const Value.absent(),
+    this.wishlistTitle = const Value.absent(),
+    this.wishlistNote = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.status = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name),
+        targetAmount = Value(targetAmount),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<SavingGoalRow> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? name,
+    Expression<double>? targetAmount,
+    Expression<DateTime>? deadline,
+    Expression<double>? monthlyTarget,
+    Expression<String>? wishlistTitle,
+    Expression<String>? wishlistNote,
+    Expression<int>? priority,
+    Expression<String>? status,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (name != null) 'name': name,
+      if (targetAmount != null) 'target_amount': targetAmount,
+      if (deadline != null) 'deadline': deadline,
+      if (monthlyTarget != null) 'monthly_target': monthlyTarget,
+      if (wishlistTitle != null) 'wishlist_title': wishlistTitle,
+      if (wishlistNote != null) 'wishlist_note': wishlistNote,
+      if (priority != null) 'priority': priority,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SavingGoalsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? userId,
+      Value<String>? name,
+      Value<double>? targetAmount,
+      Value<DateTime?>? deadline,
+      Value<double?>? monthlyTarget,
+      Value<String?>? wishlistTitle,
+      Value<String?>? wishlistNote,
+      Value<int>? priority,
+      Value<String>? status,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return SavingGoalsCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      targetAmount: targetAmount ?? this.targetAmount,
+      deadline: deadline ?? this.deadline,
+      monthlyTarget: monthlyTarget ?? this.monthlyTarget,
+      wishlistTitle: wishlistTitle ?? this.wishlistTitle,
+      wishlistNote: wishlistNote ?? this.wishlistNote,
+      priority: priority ?? this.priority,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (targetAmount.present) {
+      map['target_amount'] = Variable<double>(targetAmount.value);
+    }
+    if (deadline.present) {
+      map['deadline'] = Variable<DateTime>(deadline.value);
+    }
+    if (monthlyTarget.present) {
+      map['monthly_target'] = Variable<double>(monthlyTarget.value);
+    }
+    if (wishlistTitle.present) {
+      map['wishlist_title'] = Variable<String>(wishlistTitle.value);
+    }
+    if (wishlistNote.present) {
+      map['wishlist_note'] = Variable<String>(wishlistNote.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<int>(priority.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SavingGoalsCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('targetAmount: $targetAmount, ')
+          ..write('deadline: $deadline, ')
+          ..write('monthlyTarget: $monthlyTarget, ')
+          ..write('wishlistTitle: $wishlistTitle, ')
+          ..write('wishlistNote: $wishlistNote, ')
+          ..write('priority: $priority, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SavingContributionsTable extends SavingContributions
+    with TableInfo<$SavingContributionsTable, SavingContributionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SavingContributionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('profile_main'));
+  static const VerificationMeta _goalIdMeta = const VerificationMeta('goalId');
+  @override
+  late final GeneratedColumn<String> goalId = GeneratedColumn<String>(
+      'goal_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES saving_goals (id)'));
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+      'amount', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+      'note', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, userId, goalId, amount, note, date, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'saving_contributions';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<SavingContributionRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    }
+    if (data.containsKey('goal_id')) {
+      context.handle(_goalIdMeta,
+          goalId.isAcceptableOrUnknown(data['goal_id']!, _goalIdMeta));
+    } else if (isInserting) {
+      context.missing(_goalIdMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(_amountMeta,
+          amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SavingContributionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SavingContributionRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      goalId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}goal_id'])!,
+      amount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
+      note: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}note'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $SavingContributionsTable createAlias(String alias) {
+    return $SavingContributionsTable(attachedDatabase, alias);
+  }
+}
+
+class SavingContributionRow extends DataClass
+    implements Insertable<SavingContributionRow> {
+  final String id;
+  final String userId;
+  final String goalId;
+  final double amount;
+  final String note;
+  final DateTime date;
+  final DateTime createdAt;
+  const SavingContributionRow(
+      {required this.id,
+      required this.userId,
+      required this.goalId,
+      required this.amount,
+      required this.note,
+      required this.date,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['goal_id'] = Variable<String>(goalId);
+    map['amount'] = Variable<double>(amount);
+    map['note'] = Variable<String>(note);
+    map['date'] = Variable<DateTime>(date);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  SavingContributionsCompanion toCompanion(bool nullToAbsent) {
+    return SavingContributionsCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      goalId: Value(goalId),
+      amount: Value(amount),
+      note: Value(note),
+      date: Value(date),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SavingContributionRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SavingContributionRow(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      goalId: serializer.fromJson<String>(json['goalId']),
+      amount: serializer.fromJson<double>(json['amount']),
+      note: serializer.fromJson<String>(json['note']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'goalId': serializer.toJson<String>(goalId),
+      'amount': serializer.toJson<double>(amount),
+      'note': serializer.toJson<String>(note),
+      'date': serializer.toJson<DateTime>(date),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  SavingContributionRow copyWith(
+          {String? id,
+          String? userId,
+          String? goalId,
+          double? amount,
+          String? note,
+          DateTime? date,
+          DateTime? createdAt}) =>
+      SavingContributionRow(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        goalId: goalId ?? this.goalId,
+        amount: amount ?? this.amount,
+        note: note ?? this.note,
+        date: date ?? this.date,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  SavingContributionRow copyWithCompanion(SavingContributionsCompanion data) {
+    return SavingContributionRow(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      goalId: data.goalId.present ? data.goalId.value : this.goalId,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      note: data.note.present ? data.note.value : this.note,
+      date: data.date.present ? data.date.value : this.date,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SavingContributionRow(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('goalId: $goalId, ')
+          ..write('amount: $amount, ')
+          ..write('note: $note, ')
+          ..write('date: $date, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, userId, goalId, amount, note, date, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SavingContributionRow &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.goalId == this.goalId &&
+          other.amount == this.amount &&
+          other.note == this.note &&
+          other.date == this.date &&
+          other.createdAt == this.createdAt);
+}
+
+class SavingContributionsCompanion
+    extends UpdateCompanion<SavingContributionRow> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> goalId;
+  final Value<double> amount;
+  final Value<String> note;
+  final Value<DateTime> date;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const SavingContributionsCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.goalId = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.note = const Value.absent(),
+    this.date = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SavingContributionsCompanion.insert({
+    required String id,
+    this.userId = const Value.absent(),
+    required String goalId,
+    required double amount,
+    this.note = const Value.absent(),
+    required DateTime date,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        goalId = Value(goalId),
+        amount = Value(amount),
+        date = Value(date),
+        createdAt = Value(createdAt);
+  static Insertable<SavingContributionRow> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? goalId,
+    Expression<double>? amount,
+    Expression<String>? note,
+    Expression<DateTime>? date,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (goalId != null) 'goal_id': goalId,
+      if (amount != null) 'amount': amount,
+      if (note != null) 'note': note,
+      if (date != null) 'date': date,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SavingContributionsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? userId,
+      Value<String>? goalId,
+      Value<double>? amount,
+      Value<String>? note,
+      Value<DateTime>? date,
+      Value<DateTime>? createdAt,
+      Value<int>? rowid}) {
+    return SavingContributionsCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      goalId: goalId ?? this.goalId,
+      amount: amount ?? this.amount,
+      note: note ?? this.note,
+      date: date ?? this.date,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (goalId.present) {
+      map['goal_id'] = Variable<String>(goalId.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SavingContributionsCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('goalId: $goalId, ')
+          ..write('amount: $amount, ')
+          ..write('note: $note, ')
+          ..write('date: $date, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2382,6 +3374,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $RecurringExpensesTable(this);
   late final $AppPreferencesTable appPreferences = $AppPreferencesTable(this);
   late final $UserProfilesTable userProfiles = $UserProfilesTable(this);
+  late final $SavingGoalsTable savingGoals = $SavingGoalsTable(this);
+  late final $SavingContributionsTable savingContributions =
+      $SavingContributionsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2392,7 +3387,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         budgets,
         recurringExpenses,
         appPreferences,
-        userProfiles
+        userProfiles,
+        savingGoals,
+        savingContributions
       ];
 }
 
@@ -4151,6 +5148,687 @@ typedef $$UserProfilesTableProcessedTableManager = ProcessedTableManager<
     ),
     UserProfileRow,
     PrefetchHooks Function()>;
+typedef $$SavingGoalsTableCreateCompanionBuilder = SavingGoalsCompanion
+    Function({
+  required String id,
+  Value<String> userId,
+  required String name,
+  required double targetAmount,
+  Value<DateTime?> deadline,
+  Value<double?> monthlyTarget,
+  Value<String?> wishlistTitle,
+  Value<String?> wishlistNote,
+  Value<int> priority,
+  Value<String> status,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$SavingGoalsTableUpdateCompanionBuilder = SavingGoalsCompanion
+    Function({
+  Value<String> id,
+  Value<String> userId,
+  Value<String> name,
+  Value<double> targetAmount,
+  Value<DateTime?> deadline,
+  Value<double?> monthlyTarget,
+  Value<String?> wishlistTitle,
+  Value<String?> wishlistNote,
+  Value<int> priority,
+  Value<String> status,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+final class $$SavingGoalsTableReferences
+    extends BaseReferences<_$AppDatabase, $SavingGoalsTable, SavingGoalRow> {
+  $$SavingGoalsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$SavingContributionsTable,
+      List<SavingContributionRow>> _savingContributionsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.savingContributions,
+          aliasName: $_aliasNameGenerator(
+              db.savingGoals.id, db.savingContributions.goalId));
+
+  $$SavingContributionsTableProcessedTableManager get savingContributionsRefs {
+    final manager =
+        $$SavingContributionsTableTableManager($_db, $_db.savingContributions)
+            .filter((f) => f.goalId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_savingContributionsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$SavingGoalsTableFilterComposer
+    extends Composer<_$AppDatabase, $SavingGoalsTable> {
+  $$SavingGoalsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get targetAmount => $composableBuilder(
+      column: $table.targetAmount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get deadline => $composableBuilder(
+      column: $table.deadline, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get monthlyTarget => $composableBuilder(
+      column: $table.monthlyTarget, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get wishlistTitle => $composableBuilder(
+      column: $table.wishlistTitle, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get wishlistNote => $composableBuilder(
+      column: $table.wishlistNote, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get priority => $composableBuilder(
+      column: $table.priority, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> savingContributionsRefs(
+      Expression<bool> Function($$SavingContributionsTableFilterComposer f) f) {
+    final $$SavingContributionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.savingContributions,
+        getReferencedColumn: (t) => t.goalId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SavingContributionsTableFilterComposer(
+              $db: $db,
+              $table: $db.savingContributions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$SavingGoalsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SavingGoalsTable> {
+  $$SavingGoalsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get targetAmount => $composableBuilder(
+      column: $table.targetAmount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get deadline => $composableBuilder(
+      column: $table.deadline, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get monthlyTarget => $composableBuilder(
+      column: $table.monthlyTarget,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get wishlistTitle => $composableBuilder(
+      column: $table.wishlistTitle,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get wishlistNote => $composableBuilder(
+      column: $table.wishlistNote,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get priority => $composableBuilder(
+      column: $table.priority, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$SavingGoalsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SavingGoalsTable> {
+  $$SavingGoalsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get targetAmount => $composableBuilder(
+      column: $table.targetAmount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deadline =>
+      $composableBuilder(column: $table.deadline, builder: (column) => column);
+
+  GeneratedColumn<double> get monthlyTarget => $composableBuilder(
+      column: $table.monthlyTarget, builder: (column) => column);
+
+  GeneratedColumn<String> get wishlistTitle => $composableBuilder(
+      column: $table.wishlistTitle, builder: (column) => column);
+
+  GeneratedColumn<String> get wishlistNote => $composableBuilder(
+      column: $table.wishlistNote, builder: (column) => column);
+
+  GeneratedColumn<int> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  Expression<T> savingContributionsRefs<T extends Object>(
+      Expression<T> Function($$SavingContributionsTableAnnotationComposer a)
+          f) {
+    final $$SavingContributionsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.savingContributions,
+            getReferencedColumn: (t) => t.goalId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SavingContributionsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.savingContributions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$SavingGoalsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SavingGoalsTable,
+    SavingGoalRow,
+    $$SavingGoalsTableFilterComposer,
+    $$SavingGoalsTableOrderingComposer,
+    $$SavingGoalsTableAnnotationComposer,
+    $$SavingGoalsTableCreateCompanionBuilder,
+    $$SavingGoalsTableUpdateCompanionBuilder,
+    (SavingGoalRow, $$SavingGoalsTableReferences),
+    SavingGoalRow,
+    PrefetchHooks Function({bool savingContributionsRefs})> {
+  $$SavingGoalsTableTableManager(_$AppDatabase db, $SavingGoalsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SavingGoalsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SavingGoalsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SavingGoalsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<double> targetAmount = const Value.absent(),
+            Value<DateTime?> deadline = const Value.absent(),
+            Value<double?> monthlyTarget = const Value.absent(),
+            Value<String?> wishlistTitle = const Value.absent(),
+            Value<String?> wishlistNote = const Value.absent(),
+            Value<int> priority = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SavingGoalsCompanion(
+            id: id,
+            userId: userId,
+            name: name,
+            targetAmount: targetAmount,
+            deadline: deadline,
+            monthlyTarget: monthlyTarget,
+            wishlistTitle: wishlistTitle,
+            wishlistNote: wishlistNote,
+            priority: priority,
+            status: status,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            Value<String> userId = const Value.absent(),
+            required String name,
+            required double targetAmount,
+            Value<DateTime?> deadline = const Value.absent(),
+            Value<double?> monthlyTarget = const Value.absent(),
+            Value<String?> wishlistTitle = const Value.absent(),
+            Value<String?> wishlistNote = const Value.absent(),
+            Value<int> priority = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SavingGoalsCompanion.insert(
+            id: id,
+            userId: userId,
+            name: name,
+            targetAmount: targetAmount,
+            deadline: deadline,
+            monthlyTarget: monthlyTarget,
+            wishlistTitle: wishlistTitle,
+            wishlistNote: wishlistNote,
+            priority: priority,
+            status: status,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$SavingGoalsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({savingContributionsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (savingContributionsRefs) db.savingContributions
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (savingContributionsRefs)
+                    await $_getPrefetchedData<SavingGoalRow, $SavingGoalsTable,
+                            SavingContributionRow>(
+                        currentTable: table,
+                        referencedTable: $$SavingGoalsTableReferences
+                            ._savingContributionsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SavingGoalsTableReferences(db, table, p0)
+                                .savingContributionsRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.goalId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$SavingGoalsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SavingGoalsTable,
+    SavingGoalRow,
+    $$SavingGoalsTableFilterComposer,
+    $$SavingGoalsTableOrderingComposer,
+    $$SavingGoalsTableAnnotationComposer,
+    $$SavingGoalsTableCreateCompanionBuilder,
+    $$SavingGoalsTableUpdateCompanionBuilder,
+    (SavingGoalRow, $$SavingGoalsTableReferences),
+    SavingGoalRow,
+    PrefetchHooks Function({bool savingContributionsRefs})>;
+typedef $$SavingContributionsTableCreateCompanionBuilder
+    = SavingContributionsCompanion Function({
+  required String id,
+  Value<String> userId,
+  required String goalId,
+  required double amount,
+  Value<String> note,
+  required DateTime date,
+  required DateTime createdAt,
+  Value<int> rowid,
+});
+typedef $$SavingContributionsTableUpdateCompanionBuilder
+    = SavingContributionsCompanion Function({
+  Value<String> id,
+  Value<String> userId,
+  Value<String> goalId,
+  Value<double> amount,
+  Value<String> note,
+  Value<DateTime> date,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+final class $$SavingContributionsTableReferences extends BaseReferences<
+    _$AppDatabase, $SavingContributionsTable, SavingContributionRow> {
+  $$SavingContributionsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $SavingGoalsTable _goalIdTable(_$AppDatabase db) =>
+      db.savingGoals.createAlias($_aliasNameGenerator(
+          db.savingContributions.goalId, db.savingGoals.id));
+
+  $$SavingGoalsTableProcessedTableManager get goalId {
+    final $_column = $_itemColumn<String>('goal_id')!;
+
+    final manager = $$SavingGoalsTableTableManager($_db, $_db.savingGoals)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_goalIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$SavingContributionsTableFilterComposer
+    extends Composer<_$AppDatabase, $SavingContributionsTable> {
+  $$SavingContributionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $$SavingGoalsTableFilterComposer get goalId {
+    final $$SavingGoalsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.goalId,
+        referencedTable: $db.savingGoals,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SavingGoalsTableFilterComposer(
+              $db: $db,
+              $table: $db.savingGoals,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SavingContributionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SavingContributionsTable> {
+  $$SavingContributionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $$SavingGoalsTableOrderingComposer get goalId {
+    final $$SavingGoalsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.goalId,
+        referencedTable: $db.savingGoals,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SavingGoalsTableOrderingComposer(
+              $db: $db,
+              $table: $db.savingGoals,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SavingContributionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SavingContributionsTable> {
+  $$SavingContributionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$SavingGoalsTableAnnotationComposer get goalId {
+    final $$SavingGoalsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.goalId,
+        referencedTable: $db.savingGoals,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SavingGoalsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.savingGoals,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SavingContributionsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SavingContributionsTable,
+    SavingContributionRow,
+    $$SavingContributionsTableFilterComposer,
+    $$SavingContributionsTableOrderingComposer,
+    $$SavingContributionsTableAnnotationComposer,
+    $$SavingContributionsTableCreateCompanionBuilder,
+    $$SavingContributionsTableUpdateCompanionBuilder,
+    (SavingContributionRow, $$SavingContributionsTableReferences),
+    SavingContributionRow,
+    PrefetchHooks Function({bool goalId})> {
+  $$SavingContributionsTableTableManager(
+      _$AppDatabase db, $SavingContributionsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SavingContributionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SavingContributionsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SavingContributionsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<String> goalId = const Value.absent(),
+            Value<double> amount = const Value.absent(),
+            Value<String> note = const Value.absent(),
+            Value<DateTime> date = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SavingContributionsCompanion(
+            id: id,
+            userId: userId,
+            goalId: goalId,
+            amount: amount,
+            note: note,
+            date: date,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            Value<String> userId = const Value.absent(),
+            required String goalId,
+            required double amount,
+            Value<String> note = const Value.absent(),
+            required DateTime date,
+            required DateTime createdAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SavingContributionsCompanion.insert(
+            id: id,
+            userId: userId,
+            goalId: goalId,
+            amount: amount,
+            note: note,
+            date: date,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$SavingContributionsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({goalId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (goalId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.goalId,
+                    referencedTable:
+                        $$SavingContributionsTableReferences._goalIdTable(db),
+                    referencedColumn: $$SavingContributionsTableReferences
+                        ._goalIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$SavingContributionsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SavingContributionsTable,
+    SavingContributionRow,
+    $$SavingContributionsTableFilterComposer,
+    $$SavingContributionsTableOrderingComposer,
+    $$SavingContributionsTableAnnotationComposer,
+    $$SavingContributionsTableCreateCompanionBuilder,
+    $$SavingContributionsTableUpdateCompanionBuilder,
+    (SavingContributionRow, $$SavingContributionsTableReferences),
+    SavingContributionRow,
+    PrefetchHooks Function({bool goalId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4167,4 +5845,8 @@ class $AppDatabaseManager {
       $$AppPreferencesTableTableManager(_db, _db.appPreferences);
   $$UserProfilesTableTableManager get userProfiles =>
       $$UserProfilesTableTableManager(_db, _db.userProfiles);
+  $$SavingGoalsTableTableManager get savingGoals =>
+      $$SavingGoalsTableTableManager(_db, _db.savingGoals);
+  $$SavingContributionsTableTableManager get savingContributions =>
+      $$SavingContributionsTableTableManager(_db, _db.savingContributions);
 }

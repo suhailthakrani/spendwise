@@ -1,0 +1,115 @@
+import 'package:flutter/material.dart';
+
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+
+class PrivacyScreen extends StatelessWidget {
+  const PrivacyScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Privacy')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.page,
+          8,
+          AppSpacing.page,
+          AppSpacing.navClearance,
+        ),
+        children: [
+          Text(
+            'Your privacy on SpendWise',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Last updated: August 2026',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.tertiaryText(context),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const _PrivacyBlock(
+            title: 'Local-first storage',
+            body:
+                'SpendWise is designed as an offline expense tracker. Your profile, expenses, budgets, categories, and saving goals are stored in an encrypted local database on this device.',
+          ),
+          const _PrivacyBlock(
+            title: 'No cloud account',
+            body:
+                'This version does not create a cloud account or sync your financial data to SpendWise servers. Sign-in credentials are verified locally.',
+          ),
+          const _PrivacyBlock(
+            title: 'Encryption at rest',
+            body:
+                'The app database is protected with SQLCipher. The encryption key is stored in the platform secure store (Keychain / Keystore), not in plain files.',
+          ),
+          const _PrivacyBlock(
+            title: 'Exports you choose',
+            body:
+                'If you export CSV or Excel, files are created on your device and shared only through the system share sheet you select. We do not upload exports.',
+          ),
+          const _PrivacyBlock(
+            title: 'Photos',
+            body:
+                'Profile photos you pick stay in app storage on this device. They are removed when you clear your avatar or close your account.',
+          ),
+          const _PrivacyBlock(
+            title: 'Closing your account',
+            body:
+                'Close account (in Settings) asks for your password, then deletes only the signed-in user’s data from this device. Other local users are unaffected.',
+          ),
+          const _PrivacyBlock(
+            title: 'Contact',
+            body:
+                'SpendWise is built by EvenLogix. For privacy questions about this app, contact the developer through your distribution channel or support email provided with the release.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PrivacyBlock extends StatelessWidget {
+  const _PrivacyBlock({
+    required this.title,
+    required this.body,
+  });
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            body,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.secondaryText(context),
+              height: 1.45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

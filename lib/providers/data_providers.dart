@@ -1,11 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/utils/goal_pace_calculator.dart';
 import '../data/models/budget.dart';
 import '../data/models/category.dart';
 import '../data/models/dashboard_stats.dart';
 import '../data/models/expense.dart';
 import '../data/models/monthly_summary.dart';
 import '../data/models/recurring_expense.dart';
+import '../data/models/saving_contribution.dart';
+import '../data/models/saving_goal.dart';
 import 'preferences_providers.dart';
 import 'repository_providers.dart';
 import 'auth_providers.dart';
@@ -92,4 +95,44 @@ final categoryExpensesProvider =
 final budgetDetailProvider = FutureProvider.family<Budget?, String>((ref, id) {
   ref.watch(expensesProvider);
   return ref.watch(budgetRepositoryProvider).getById(id);
+});
+
+final savingGoalsProvider = StreamProvider<List<SavingGoal>>((ref) {
+  return ref.watch(savingGoalRepositoryProvider).watchAll();
+});
+
+final activeSavingGoalsProvider = StreamProvider<List<SavingGoal>>((ref) {
+  return ref.watch(savingGoalRepositoryProvider).watchActive();
+});
+
+final savingGoalDetailProvider =
+    StreamProvider.family<SavingGoal?, String>((ref, id) {
+  return ref.watch(savingGoalRepositoryProvider).watchById(id);
+});
+
+final goalContributionsProvider =
+    StreamProvider.family<List<SavingContribution>, String>((ref, goalId) {
+  return ref.watch(savingGoalRepositoryProvider).watchContributions(goalId);
+});
+
+/// Monthly save requirement for budget banner (display currency).
+final monthlyGoalsPaceProvider = Provider<({
+  SavingGoal? primary,
+  int activeCount,
+  double requiredDisplay,
+  double primaryRequiredDisplay,
+})>((ref) {
+  final goals = ref.watch(activeSavingGoalsProvider).valueOrNull ?? [];
+  final currency = ref.watch(currencyDisplayProvider);
+  final primary = GoalPaceCalculator.primaryGoal(goals);
+  final requiredUsd = GoalPaceCalculator.totalRequiredThisMonth(goals);
+  final primaryUsd =
+      primary == null ? 0.0 : GoalPaceCalculator.requiredThisMonth(primary);
+
+  return (
+    primary: primary,
+    activeCount: goals.length,
+    requiredDisplay: currency.toDisplayAmount(requiredUsd),
+    primaryRequiredDisplay: currency.toDisplayAmount(primaryUsd),
+  );
 });

@@ -197,7 +197,7 @@ class UserProfileRepository {
     return updated;
   }
 
-  /// Updates region; currency becomes the region's default.
+  /// Updates country/region only — currency stays independent.
   Future<UserProfile> setRegion({
     required String userId,
     required String regionCode,
@@ -205,10 +205,7 @@ class UserProfileRepository {
     final region = AppRegion.byCode(regionCode);
     await (_db.update(_db.userProfiles)..where((t) => t.id.equals(userId)))
         .write(
-      UserProfilesCompanion(
-        regionCode: Value(region.code),
-        currencyCode: Value(region.defaultCurrencyCode),
-      ),
+      UserProfilesCompanion(regionCode: Value(region.code)),
     );
     final updated = await getById(userId);
     if (updated == null) throw AuthException('Profile not found');
@@ -228,6 +225,46 @@ class UserProfileRepository {
     final updated = await getById(userId);
     if (updated == null) throw AuthException('Profile not found');
     return updated;
+  }
+
+  /// Verifies password, then permanently deletes this user's local data.
+  Future<void> deleteAccount({
+    required String userId,
+    required String password,
+  }) async {
+    final row = await (_db.select(_db.userProfiles)
+          ..where((t) => t.id.equals(userId)))
+        .getSingleOrNull();
+    if (row == null) {
+      throw AuthException('Account not found');
+    }
+    if (!PasswordHasher.verify(
+      password: password,
+      salt: row.passwordSalt,
+      expectedHash: row.passwordHash,
+    )) {
+      throw AuthException('Incorrect password');
+    }
+
+    await _db.transaction(() async {
+      await (_db.delete(_db.savingContributions)
+            ..where((t) => t.userId.equals(userId)))
+          .go();
+      await (_db.delete(_db.savingGoals)
+            ..where((t) => t.userId.equals(userId)))
+          .go();
+      await (_db.delete(_db.expenses)..where((t) => t.userId.equals(userId)))
+          .go();
+      await (_db.delete(_db.budgets)..where((t) => t.userId.equals(userId)))
+          .go();
+      await (_db.delete(_db.recurringExpenses)
+            ..where((t) => t.userId.equals(userId)))
+          .go();
+      await (_db.delete(_db.categories)..where((t) => t.userId.equals(userId)))
+          .go();
+      await (_db.delete(_db.userProfiles)..where((t) => t.id.equals(userId)))
+          .go();
+    });
   }
 
   bool _isValidEmail(String email) {

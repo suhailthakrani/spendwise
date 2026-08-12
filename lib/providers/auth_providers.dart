@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/utils/avatar_storage.dart';
 import '../data/models/user_profile.dart';
 import '../data/repositories/user_profile_repository.dart';
 import 'preferences_providers.dart';
@@ -115,5 +116,18 @@ class AuthController {
           userId: userId,
           currencyCode: currencyCode,
         );
+  }
+
+  /// Password-gated deletion of the signed-in user's local data only.
+  Future<void> closeAccount({required String password}) async {
+    final userId = _ref.read(currentUserIdProvider);
+    if (userId == null) throw AuthException('Not signed in');
+
+    await _ref.read(userProfileRepositoryProvider).deleteAccount(
+          userId: userId,
+          password: password,
+        );
+    await AvatarStorage.deleteForUser(userId);
+    await _ref.read(preferencesRepositoryProvider).clearSession();
   }
 }

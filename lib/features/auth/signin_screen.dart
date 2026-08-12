@@ -7,6 +7,7 @@ import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_logo.dart';
 import '../../data/repositories/user_profile_repository.dart';
 import '../../providers/auth_providers.dart';
 
@@ -73,23 +74,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 12),
-                  Center(
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(AppRadii.lg),
-                      ),
-                      child: const Center(
-                        child: AppIcon(
-                          AppIcons.logo,
-                          size: 36,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ),
+                  const Center(child: AppLogo(size: 88)),
                   const SizedBox(height: 20),
                   Text(
                     'Welcome back',
@@ -101,7 +86,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign in to your SpendWise account on this device',
+                    'Sign in to SpendWise on this device',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppColors.secondaryText(context),

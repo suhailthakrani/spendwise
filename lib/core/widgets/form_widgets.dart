@@ -237,3 +237,126 @@ class FormStickyActions extends StatelessWidget {
     );
   }
 }
+
+Future<T?> showSearchablePickerSheet<T>({
+  required BuildContext context,
+  required String title,
+  required String searchHint,
+  required List<T> items,
+  required String Function(T) labelOf,
+  required String Function(T) subtitleOf,
+  required bool Function(T) isSelected,
+  required String iconAsset,
+  String Function(T)? trailingOf,
+}) {
+  return showModalBottomSheet<T>(
+    context: context,
+    useSafeArea: true,
+    isScrollControlled: true,
+    builder: (ctx) {
+      var query = '';
+      return StatefulBuilder(
+        builder: (context, setModalState) {
+          final filtered = items.where((item) {
+            final q = query.trim().toLowerCase();
+            if (q.isEmpty) return true;
+            return labelOf(item).toLowerCase().contains(q) ||
+                subtitleOf(item).toLowerCase().contains(q);
+          }).toList();
+
+          final maxHeight = MediaQuery.sizeOf(ctx).height * 0.85;
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(ctx).bottom,
+            ),
+            child: SizedBox(
+              height: maxHeight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                    child: Text(
+                      title,
+                      style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                    child: TextField(
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        hintText: searchHint,
+                        prefixIcon: const Icon(Icons.search_rounded, size: 22),
+                        isDense: true,
+                      ),
+                      onChanged: (value) => setModalState(() => query = value),
+                    ),
+                  ),
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No matches',
+                              style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.secondaryText(ctx),
+                                  ),
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) => Divider(
+                              height: 1,
+                              indent: 70,
+                              color: AppColors.border(ctx),
+                            ),
+                            itemBuilder: (context, index) {
+                              final item = filtered[index];
+                              final selected = isSelected(item);
+                              return ListTile(
+                                leading: AppIconBox(
+                                  asset: iconAsset,
+                                  color: selected
+                                      ? AppColors.primary
+                                      : AppColors.accent,
+                                  size: 42,
+                                  iconSize: 20,
+                                ),
+                                title: Text(labelOf(item)),
+                                subtitle: Text(subtitleOf(item)),
+                                trailing: trailingOf != null
+                                    ? Text(
+                                        trailingOf(item),
+                                        style: Theme.of(ctx)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color: selected
+                                                  ? AppColors.primary
+                                                  : null,
+                                            ),
+                                      )
+                                    : (selected
+                                        ? const Icon(
+                                            Icons.check_rounded,
+                                            color: AppColors.primary,
+                                          )
+                                        : null),
+                                onTap: () => Navigator.pop(ctx, item),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}

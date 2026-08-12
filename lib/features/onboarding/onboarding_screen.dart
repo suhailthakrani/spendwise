@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/constants/app_icons.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_logo.dart';
 import '../../providers/auth_providers.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -22,19 +21,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   static const _pages = [
     _OnboardPage(
-      icon: AppIcons.expenses,
       title: 'Track every spend',
       body:
           'Log expenses in seconds and keep a clear picture of where your money goes.',
     ),
     _OnboardPage(
-      icon: AppIcons.budget,
       title: 'Budgets & insights',
       body:
           'Set limits, watch progress, and see trends that help you spend with intention.',
     ),
     _OnboardPage(
-      icon: AppIcons.account,
       title: 'Private on your device',
       body:
           'Create a local account for yourself — and others on this phone — with data kept separate.',
@@ -91,29 +87,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 112,
-                          height: 112,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                AppColors.primary.withValues(alpha: 0.18),
-                                AppColors.primaryLight.withValues(alpha: 0.28),
-                              ],
-                            ),
-                          ),
-                          child: Center(
-                            child: AppIcon(
-                              page.icon,
-                              size: 44,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 36),
+                        const AppLogo(size: 96),
+                        const SizedBox(height: 28),
                         Text(
                           'SpendWise',
                           style: theme.textTheme.labelLarge?.copyWith(
@@ -180,12 +155,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
 class _OnboardPage {
   const _OnboardPage({
-    required this.icon,
     required this.title,
     required this.body,
   });
 
-  final String icon;
   final String title;
   final String body;
 }

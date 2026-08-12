@@ -11,6 +11,7 @@ import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/expense_widgets.dart';
+import '../../core/widgets/goal_progress_banner.dart';
 import '../../data/models/category.dart';
 import '../../data/models/recurring_expense.dart';
 import '../../providers/data_providers.dart';
@@ -50,6 +51,11 @@ class BudgetScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
+            tooltip: 'Saving goals',
+            onPressed: () => context.push(AppRoutes.goals),
+            icon: const AppIcon(AppIcons.savings, size: 22),
+          ),
+          IconButton(
             tooltip: 'Add budget',
             onPressed: () => context.push(AppRoutes.addBudget),
             icon: const AppIcon(AppIcons.add, size: 22),
@@ -60,16 +66,6 @@ class BudgetScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('Error: $error')),
         data: (rawBudgets) {
-          if (rawBudgets.isEmpty) {
-            return EmptyState(
-              iconAsset: AppIcons.budget,
-              title: 'No budgets yet',
-              subtitle: 'Create a monthly budget to track your spending.',
-              actionLabel: 'Add budget',
-              onAction: () => context.push(AppRoutes.addBudget),
-            );
-          }
-
           final categories = categoriesAsync.valueOrNull ?? [];
           final recurring = recurringAsync.valueOrNull ?? [];
           final monthlyRaw =
@@ -82,9 +78,27 @@ class BudgetScreen extends ConsumerWidget {
           final categoryBudgets =
               categoryRaws.map(currency.budgetInDisplay).toList();
 
+          if (rawBudgets.isEmpty) {
+            return ListView(
+              padding: const EdgeInsets.only(bottom: AppSpacing.navClearance),
+              children: [
+                const GoalProgressBanner(),
+                const SizedBox(height: 48),
+                EmptyState(
+                  iconAsset: AppIcons.budget,
+                  title: 'No budgets yet',
+                  subtitle: 'Create a monthly budget to track your spending.',
+                  actionLabel: 'Add budget',
+                  onAction: () => context.push(AppRoutes.addBudget),
+                ),
+              ],
+            );
+          }
+
           return ListView(
             padding: const EdgeInsets.only(bottom: AppSpacing.navClearance),
             children: [
+              const GoalProgressBanner(),
               if (monthlyBudget != null && monthlyRaw != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -383,9 +397,43 @@ class BudgetScreen extends ConsumerWidget {
                   ),
                 ),
               ],
+              const _GoalsShortcut(),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _GoalsShortcut extends ConsumerWidget {
+  const _GoalsShortcut();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pace = ref.watch(monthlyGoalsPaceProvider);
+    if (pace.activeCount > 0) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        20,
+        AppSpacing.page,
+        0,
+      ),
+      child: Card(
+        child: ListTile(
+          leading: const AppIconBox(
+            asset: AppIcons.savings,
+            color: AppColors.accent,
+            size: 42,
+            iconSize: 20,
+          ),
+          title: const Text('Set a saving goal'),
+          subtitle: const Text('Track progress toward a wishlist or fund'),
+          trailing: const AppIcon(AppIcons.chevronRight, size: 18),
+          onTap: () => context.push(AppRoutes.goals),
+        ),
       ),
     );
   }
