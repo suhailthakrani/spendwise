@@ -197,7 +197,8 @@ class UserProfileRepository {
     return updated;
   }
 
-  /// Updates country/region only — currency stays independent.
+  /// Updates country/region. Currency is left unchanged here; the UI
+  /// may also update currency when it still matches the previous country default.
   Future<UserProfile> setRegion({
     required String userId,
     required String regionCode,

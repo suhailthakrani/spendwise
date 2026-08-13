@@ -48,6 +48,25 @@ class PreferencesRepository {
     await _upsert(current.copyWith(clearActiveUserId: true));
   }
 
+  Future<void> setNotificationSettings({
+    bool? notificationsEnabled,
+    bool? billRemindersEnabled,
+    bool? budgetAlertsEnabled,
+    bool? goalRemindersEnabled,
+    bool? productUpdatesEnabled,
+  }) async {
+    final current = await getPreferences();
+    await _upsert(
+      current.copyWith(
+        notificationsEnabled: notificationsEnabled,
+        billRemindersEnabled: billRemindersEnabled,
+        budgetAlertsEnabled: budgetAlertsEnabled,
+        goalRemindersEnabled: goalRemindersEnabled,
+        productUpdatesEnabled: productUpdatesEnabled,
+      ),
+    );
+  }
+
   Future<void> _upsert(UserPreferences preferences) async {
     await _db.into(_db.appPreferences).insertOnConflictUpdate(
           PreferencesMapper.toCompanion(preferences),

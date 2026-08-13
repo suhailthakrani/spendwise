@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/router/app_router.dart';
 import '../core/theme/app_theme.dart';
+import '../providers/notification_providers.dart';
 import '../providers/preferences_providers.dart';
 
 class SpendWiseApp extends ConsumerWidget {
@@ -12,6 +13,7 @@ class SpendWiseApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
     final router = ref.watch(appRouterProvider);
+    ref.watch(reminderBindingProvider);
 
     return MaterialApp.router(
       title: 'SpendWise',

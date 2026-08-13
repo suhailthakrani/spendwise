@@ -43,7 +43,17 @@ class PrivacyScreen extends StatelessWidget {
           const _PrivacyBlock(
             title: 'No cloud account',
             body:
-                'This version does not create a cloud account or sync your financial data to SpendWise servers. Sign-in credentials are verified locally.',
+                'This version does not create a cloud account or sync your financial data to SpendWise servers. Sign-in credentials are verified locally. Passwords never leave this device.',
+          ),
+          const _PrivacyBlock(
+            title: 'Crash reports and analytics',
+            body:
+                'If Firebase is configured, SpendWise may send anonymous crash reports and usage events (screens opened, settings toggled). We do not send your email, password, or expense amounts.',
+          ),
+          const _PrivacyBlock(
+            title: 'Notifications',
+            body:
+                'Bill, budget, and goal reminders are scheduled on this device. Product updates use push messaging only if you opt in. You can change this anytime in Settings.',
           ),
           const _PrivacyBlock(
             title: 'Encryption at rest',
@@ -68,7 +78,7 @@ class PrivacyScreen extends StatelessWidget {
           const _PrivacyBlock(
             title: 'Contact',
             body:
-                'SpendWise is built by EvenLogix. For privacy questions about this app, contact the developer through your distribution channel or support email provided with the release.',
+                'SpendWise is built by EvenLogix. The full public policy is at evenlogix.com/spendwise_privacy. For privacy questions, email privacy@evenlogix.com.',
           ),
         ],
       ),

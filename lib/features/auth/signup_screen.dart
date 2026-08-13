@@ -38,6 +38,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   var _regionCode = AppRegion.us.code;
   var _currencyCode = AppCurrency.usd.code;
+  var _currencyManuallyChosen = false;
 
   @override
   void initState() {
@@ -125,7 +126,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       iconAsset: AppIcons.globe,
     );
     if (selected != null) {
-      setState(() => _regionCode = selected.code);
+      setState(() {
+        _regionCode = selected.code;
+        if (!_currencyManuallyChosen) {
+          _currencyCode = AppCurrency.byCode(selected.suggestedCurrencyCode).code;
+        }
+      });
     }
   }
 
@@ -142,7 +148,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       trailingOf: (c) => c.symbol,
     );
     if (selected != null) {
-      setState(() => _currencyCode = selected.code);
+      setState(() {
+        _currencyManuallyChosen = true;
+        _currencyCode = selected.code;
+      });
     }
   }
 
@@ -517,7 +526,8 @@ class _LocaleStep extends StatelessWidget {
       children: [
         const _BrandHeader(
           title: 'Country & currency',
-          subtitle: 'Pick each independently — change anytime later.',
+          subtitle:
+              'Currency follows your country until you pick a different one.',
         ),
         const SizedBox(height: 24),
         FormPickerTile(

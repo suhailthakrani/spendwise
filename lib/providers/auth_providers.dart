@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/utils/avatar_storage.dart';
 import '../data/models/user_profile.dart';
 import '../data/repositories/user_profile_repository.dart';
+import '../data/services/app_crashlytics.dart';
 import 'preferences_providers.dart';
 import 'repository_providers.dart';
 
@@ -58,6 +59,7 @@ class AuthController {
         );
     await _ref.read(preferencesRepositoryProvider).completeOnboarding();
     await _ref.read(preferencesRepositoryProvider).setActiveUserId(profile.id);
+    await AppCrashlytics.setUserId(profile.id);
     return profile;
   }
 
@@ -70,11 +72,13 @@ class AuthController {
           password: password,
         );
     await _ref.read(preferencesRepositoryProvider).setActiveUserId(profile.id);
+    await AppCrashlytics.setUserId(profile.id);
     return profile;
   }
 
   Future<void> signOut() async {
     await _ref.read(preferencesRepositoryProvider).clearSession();
+    await AppCrashlytics.setUserId(null);
   }
 
   Future<UserProfile> updateProfile({
@@ -129,5 +133,6 @@ class AuthController {
         );
     await AvatarStorage.deleteForUser(userId);
     await _ref.read(preferencesRepositoryProvider).clearSession();
+    await AppCrashlytics.setUserId(null);
   }
 }

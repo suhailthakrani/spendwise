@@ -38,15 +38,38 @@ class AppDatabase extends _$AppDatabase {
   /// In-memory database for tests (unencrypted).
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
-  /// Fresh encrypted schema. No upgrade path — new installs only.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (migrator) async {
           await migrator.createAll();
           await seedDatabase(this);
+        },
+        onUpgrade: (migrator, from, to) async {
+          if (from < 2) {
+            await migrator.addColumn(
+              appPreferences,
+              appPreferences.notificationsEnabled,
+            );
+            await migrator.addColumn(
+              appPreferences,
+              appPreferences.billRemindersEnabled,
+            );
+            await migrator.addColumn(
+              appPreferences,
+              appPreferences.budgetAlertsEnabled,
+            );
+            await migrator.addColumn(
+              appPreferences,
+              appPreferences.goalRemindersEnabled,
+            );
+            await migrator.addColumn(
+              appPreferences,
+              appPreferences.productUpdatesEnabled,
+            );
+          }
         },
       );
 

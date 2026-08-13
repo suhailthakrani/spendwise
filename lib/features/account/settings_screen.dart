@@ -14,6 +14,7 @@ import '../../data/models/app_region.dart';
 import '../../data/repositories/user_profile_repository.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/data_providers.dart';
+import '../../providers/notification_providers.dart';
 import '../../providers/preferences_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -76,6 +77,72 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+              const _SectionTitle(title: 'Notifications'),
+              SurfaceGroup(
+                children: [
+                  _NotificationSwitch(
+                    iconAsset: AppIcons.notifications,
+                    title: 'All notifications',
+                    subtitle: prefs.notificationsEnabled
+                        ? 'Reminders and alerts are on'
+                        : 'Off on this device',
+                    value: prefs.notificationsEnabled,
+                    onChanged: (value) => _setNotifications(
+                      context,
+                      ref,
+                      notificationsEnabled: value,
+                    ),
+                  ),
+                  _NotificationSwitch(
+                    iconAsset: AppIcons.repeat,
+                    title: 'Bill reminders',
+                    subtitle: 'The day before and on the due date',
+                    value: prefs.billRemindersActive,
+                    enabled: prefs.notificationsEnabled,
+                    onChanged: (value) => _setNotifications(
+                      context,
+                      ref,
+                      billRemindersEnabled: value,
+                    ),
+                  ),
+                  _NotificationSwitch(
+                    iconAsset: AppIcons.warning,
+                    title: 'Budget alerts',
+                    subtitle: 'When a budget hits 80% or goes over',
+                    value: prefs.budgetAlertsActive,
+                    enabled: prefs.notificationsEnabled,
+                    onChanged: (value) => _setNotifications(
+                      context,
+                      ref,
+                      budgetAlertsEnabled: value,
+                    ),
+                  ),
+                  _NotificationSwitch(
+                    iconAsset: AppIcons.savings,
+                    title: 'Goal reminders',
+                    subtitle: 'A week before and on the deadline',
+                    value: prefs.goalRemindersActive,
+                    enabled: prefs.notificationsEnabled,
+                    onChanged: (value) => _setNotifications(
+                      context,
+                      ref,
+                      goalRemindersEnabled: value,
+                    ),
+                  ),
+                  _NotificationSwitch(
+                    iconAsset: AppIcons.info,
+                    title: 'Product updates',
+                    subtitle: 'Occasional tips and app news',
+                    value: prefs.productUpdatesActive,
+                    enabled: prefs.notificationsEnabled,
+                    onChanged: (value) => _setNotifications(
+                      context,
+                      ref,
+                      productUpdatesEnabled: value,
+                    ),
+                  ),
+                ],
+              ),
               const _SectionTitle(title: 'Locale'),
               SurfaceGroup(
                 children: [
@@ -83,7 +150,12 @@ class SettingsScreen extends ConsumerWidget {
                     iconAsset: AppIcons.globe,
                     title: 'Country',
                     subtitle: region.name,
-                    onTap: () => _pickCountry(context, ref, regionCode),
+                    onTap: () => _pickCountry(
+                      context,
+                      ref,
+                      regionCode,
+                      currencyCodeValue,
+                    ),
                   ),
                   SettingsTile(
                     iconAsset: AppIcons.currency,
@@ -123,10 +195,61 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _setNotifications(
+    BuildContext context,
+    WidgetRef ref, {
+    bool? notificationsEnabled,
+    bool? billRemindersEnabled,
+    bool? budgetAlertsEnabled,
+    bool? goalRemindersEnabled,
+    bool? productUpdatesEnabled,
+  }) async {
+    final enablingMaster = notificationsEnabled == true;
+    if (enablingMaster) {
+      final granted =
+          await ref.read(notificationServiceProvider).requestPermission();
+      if (!granted) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Notification permission is off. Enable it in system settings.',
+              ),
+            ),
+          );
+        }
+      }
+    }
+
+    await ref.read(preferencesRepositoryProvider).setNotificationSettings(
+          notificationsEnabled: notificationsEnabled,
+          billRemindersEnabled: billRemindersEnabled,
+          budgetAlertsEnabled: budgetAlertsEnabled,
+          goalRemindersEnabled: goalRemindersEnabled,
+          productUpdatesEnabled: productUpdatesEnabled,
+        );
+    await ref.read(appAnalyticsProvider).logEvent(
+          'notification_pref_changed',
+          parameters: {
+            if (notificationsEnabled != null)
+              'master': notificationsEnabled ? 1 : 0,
+            if (billRemindersEnabled != null)
+              'bills': billRemindersEnabled ? 1 : 0,
+            if (budgetAlertsEnabled != null)
+              'budgets': budgetAlertsEnabled ? 1 : 0,
+            if (goalRemindersEnabled != null)
+              'goals': goalRemindersEnabled ? 1 : 0,
+            if (productUpdatesEnabled != null)
+              'updates': productUpdatesEnabled ? 1 : 0,
+          },
+        );
+  }
+
   Future<void> _pickCountry(
     BuildContext context,
     WidgetRef ref,
     String currentCode,
+    String currentCurrencyCode,
   ) async {
     final selected = await showSearchablePickerSheet<AppRegion>(
       context: context,
@@ -138,8 +261,19 @@ class SettingsScreen extends ConsumerWidget {
       isSelected: (r) => r.code == currentCode,
       iconAsset: AppIcons.globe,
     );
-    if (selected != null) {
-      await ref.read(authControllerProvider).setRegion(selected.code);
+    if (selected == null) return;
+
+    final auth = ref.read(authControllerProvider);
+    await auth.setRegion(selected.code);
+
+    final previousDefault = AppCurrency.byCode(
+      AppRegion.byCode(currentCode).suggestedCurrencyCode,
+    ).code;
+    final stillUsingCountryDefault = currentCurrencyCode == previousDefault;
+    if (stillUsingCountryDefault) {
+      await auth.setCurrency(
+        AppCurrency.byCode(selected.suggestedCurrencyCode).code,
+      );
     }
   }
 
@@ -329,6 +463,56 @@ class _CloseAccountSheetState extends ConsumerState<_CloseAccountSheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _NotificationSwitch extends StatelessWidget {
+  const _NotificationSwitch({
+    required this.iconAsset,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+    this.enabled = true,
+  });
+
+  final String iconAsset;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SwitchListTile(
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 2,
+      ),
+      secondary: AppIconBox(
+        asset: iconAsset,
+        color: enabled ? AppColors.primary : AppColors.tertiaryText(context),
+        size: 42,
+        iconSize: 20,
+      ),
+      title: Text(
+        title,
+        style: theme.textTheme.bodyLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: AppColors.secondaryText(context),
+        ),
+      ),
+      value: value,
+      onChanged: enabled ? onChanged : null,
     );
   }
 }

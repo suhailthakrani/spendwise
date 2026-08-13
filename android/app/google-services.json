@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "981163576593",
+    "project_id": "spendwise-5a18c",
+    "storage_bucket": "spendwise-5a18c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:981163576593:android:152eb50c730c09d83ed0b0",
+        "android_client_info": {
+          "package_name": "com.evenlogix.spendwise"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC47GWRyKuqDq-iSPHHYcDcy9Kcw0p3Nsc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

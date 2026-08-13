@@ -29,6 +29,7 @@ import '../../features/reports/reports_screen.dart';
 import '../../features/search/search_screen.dart';
 import '../../features/shell/main_shell.dart';
 import '../../features/splash/splash_screen.dart';
+import '../../providers/notification_providers.dart';
 import '../../providers/preferences_providers.dart';
 import '../../data/models/user_preferences.dart';
 
@@ -65,10 +66,15 @@ abstract final class AppRoutes {
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = _RouterRefresh(ref);
+  final analyticsObserver =
+      ref.read(appAnalyticsProvider).navigatorObserver;
 
   final router = GoRouter(
     initialLocation: AppRoutes.splash,
     refreshListenable: refresh,
+    observers: [
+      if (analyticsObserver != null) analyticsObserver,
+    ],
     redirect: (context, state) {
       final prefsAsync = ref.read(preferencesProvider);
       final loc = state.matchedLocation;

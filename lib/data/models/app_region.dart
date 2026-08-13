@@ -14,6 +14,86 @@ class AppRegion {
 
   static const us = AppRegion(code: 'US', name: 'United States', locale: 'en_US');
 
+  /// ISO currency for this country. Falls back to USD when that unit is
+  /// not in [AppCurrency.all].
+  String get suggestedCurrencyCode {
+    const euro = {
+      'AD', 'AT', 'BE', 'CY', 'DE', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR',
+      'IE', 'IT', 'LT', 'LU', 'LV', 'MC', 'ME', 'MT', 'NL', 'PT', 'SI',
+      'SK', 'SM', 'VA',
+    };
+    if (euro.contains(code)) return 'EUR';
+
+    return switch (code) {
+      'AE' => 'AED',
+      'AR' => 'ARS',
+      'AU' => 'AUD',
+      'BD' => 'BDT',
+      'BH' => 'BHD',
+      'BR' => 'BRL',
+      'CA' => 'CAD',
+      'CH' => 'CHF',
+      'CL' => 'CLP',
+      'CN' => 'CNY',
+      'CO' => 'COP',
+      'CZ' => 'CZK',
+      'DK' => 'DKK',
+      'EG' => 'EGP',
+      'GB' => 'GBP',
+      'GH' => 'GHS',
+      'HK' => 'HKD',
+      'HU' => 'HUF',
+      'ID' => 'IDR',
+      'IL' => 'ILS',
+      'IN' => 'INR',
+      'JO' => 'JOD',
+      'JP' => 'JPY',
+      'KE' => 'KES',
+      'KI' => 'AUD',
+      'KR' => 'KRW',
+      'KW' => 'KWD',
+      'LK' => 'LKR',
+      'MA' => 'MAD',
+      'MX' => 'MXN',
+      'MY' => 'MYR',
+      'NG' => 'NGN',
+      'NO' => 'NOK',
+      'NP' => 'NPR',
+      'NR' => 'AUD',
+      'NZ' => 'NZD',
+      'OM' => 'OMR',
+      'PE' => 'PEN',
+      'PH' => 'PHP',
+      'PK' => 'PKR',
+      'PL' => 'PLN',
+      'PS' => 'ILS',
+      'QA' => 'QAR',
+      'RO' => 'RON',
+      'RU' => 'RUB',
+      'SA' => 'SAR',
+      'SE' => 'SEK',
+      'SG' => 'SGD',
+      'TH' => 'THB',
+      'TN' => 'TND',
+      'TR' => 'TRY',
+      'TV' => 'AUD',
+      'TW' => 'TWD',
+      'UA' => 'UAH',
+      'US' => 'USD',
+      'EC' => 'USD',
+      'SV' => 'USD',
+      'FM' => 'USD',
+      'MH' => 'USD',
+      'PA' => 'USD',
+      'PW' => 'USD',
+      'TL' => 'USD',
+      'ZW' => 'USD',
+      'VN' => 'VND',
+      'ZA' => 'ZAR',
+      _ => 'USD',
+    };
+  }
+
   static AppRegion byCode(String code) {
     final upper = code.toUpperCase();
     for (final region in all) {

@@ -1648,9 +1648,68 @@ class $AppPreferencesTable extends AppPreferences
   late final GeneratedColumn<String> activeUserId = GeneratedColumn<String>(
       'active_user_id', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _notificationsEnabledMeta =
+      const VerificationMeta('notificationsEnabled');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, themeMode, hasCompletedOnboarding, activeUserId];
+  late final GeneratedColumn<bool> notificationsEnabled = GeneratedColumn<bool>(
+      'notifications_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("notifications_enabled" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _billRemindersEnabledMeta =
+      const VerificationMeta('billRemindersEnabled');
+  @override
+  late final GeneratedColumn<bool> billRemindersEnabled = GeneratedColumn<bool>(
+      'bill_reminders_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("bill_reminders_enabled" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _budgetAlertsEnabledMeta =
+      const VerificationMeta('budgetAlertsEnabled');
+  @override
+  late final GeneratedColumn<bool> budgetAlertsEnabled = GeneratedColumn<bool>(
+      'budget_alerts_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("budget_alerts_enabled" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _goalRemindersEnabledMeta =
+      const VerificationMeta('goalRemindersEnabled');
+  @override
+  late final GeneratedColumn<bool> goalRemindersEnabled = GeneratedColumn<bool>(
+      'goal_reminders_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("goal_reminders_enabled" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _productUpdatesEnabledMeta =
+      const VerificationMeta('productUpdatesEnabled');
+  @override
+  late final GeneratedColumn<bool> productUpdatesEnabled =
+      GeneratedColumn<bool>('product_updates_enabled', aliasedName, false,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'CHECK ("product_updates_enabled" IN (0, 1))'),
+          defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        themeMode,
+        hasCompletedOnboarding,
+        activeUserId,
+        notificationsEnabled,
+        billRemindersEnabled,
+        budgetAlertsEnabled,
+        goalRemindersEnabled,
+        productUpdatesEnabled
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1682,6 +1741,36 @@ class $AppPreferencesTable extends AppPreferences
           activeUserId.isAcceptableOrUnknown(
               data['active_user_id']!, _activeUserIdMeta));
     }
+    if (data.containsKey('notifications_enabled')) {
+      context.handle(
+          _notificationsEnabledMeta,
+          notificationsEnabled.isAcceptableOrUnknown(
+              data['notifications_enabled']!, _notificationsEnabledMeta));
+    }
+    if (data.containsKey('bill_reminders_enabled')) {
+      context.handle(
+          _billRemindersEnabledMeta,
+          billRemindersEnabled.isAcceptableOrUnknown(
+              data['bill_reminders_enabled']!, _billRemindersEnabledMeta));
+    }
+    if (data.containsKey('budget_alerts_enabled')) {
+      context.handle(
+          _budgetAlertsEnabledMeta,
+          budgetAlertsEnabled.isAcceptableOrUnknown(
+              data['budget_alerts_enabled']!, _budgetAlertsEnabledMeta));
+    }
+    if (data.containsKey('goal_reminders_enabled')) {
+      context.handle(
+          _goalRemindersEnabledMeta,
+          goalRemindersEnabled.isAcceptableOrUnknown(
+              data['goal_reminders_enabled']!, _goalRemindersEnabledMeta));
+    }
+    if (data.containsKey('product_updates_enabled')) {
+      context.handle(
+          _productUpdatesEnabledMeta,
+          productUpdatesEnabled.isAcceptableOrUnknown(
+              data['product_updates_enabled']!, _productUpdatesEnabledMeta));
+    }
     return context;
   }
 
@@ -1700,6 +1789,17 @@ class $AppPreferencesTable extends AppPreferences
           data['${effectivePrefix}has_completed_onboarding'])!,
       activeUserId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}active_user_id']),
+      notificationsEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}notifications_enabled'])!,
+      billRemindersEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}bill_reminders_enabled'])!,
+      budgetAlertsEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}budget_alerts_enabled'])!,
+      goalRemindersEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}goal_reminders_enabled'])!,
+      productUpdatesEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool,
+          data['${effectivePrefix}product_updates_enabled'])!,
     );
   }
 
@@ -1714,11 +1814,21 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
   final String themeMode;
   final bool hasCompletedOnboarding;
   final String? activeUserId;
+  final bool notificationsEnabled;
+  final bool billRemindersEnabled;
+  final bool budgetAlertsEnabled;
+  final bool goalRemindersEnabled;
+  final bool productUpdatesEnabled;
   const PreferencesRow(
       {required this.id,
       required this.themeMode,
       required this.hasCompletedOnboarding,
-      this.activeUserId});
+      this.activeUserId,
+      required this.notificationsEnabled,
+      required this.billRemindersEnabled,
+      required this.budgetAlertsEnabled,
+      required this.goalRemindersEnabled,
+      required this.productUpdatesEnabled});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1728,6 +1838,11 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
     if (!nullToAbsent || activeUserId != null) {
       map['active_user_id'] = Variable<String>(activeUserId);
     }
+    map['notifications_enabled'] = Variable<bool>(notificationsEnabled);
+    map['bill_reminders_enabled'] = Variable<bool>(billRemindersEnabled);
+    map['budget_alerts_enabled'] = Variable<bool>(budgetAlertsEnabled);
+    map['goal_reminders_enabled'] = Variable<bool>(goalRemindersEnabled);
+    map['product_updates_enabled'] = Variable<bool>(productUpdatesEnabled);
     return map;
   }
 
@@ -1739,6 +1854,11 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       activeUserId: activeUserId == null && nullToAbsent
           ? const Value.absent()
           : Value(activeUserId),
+      notificationsEnabled: Value(notificationsEnabled),
+      billRemindersEnabled: Value(billRemindersEnabled),
+      budgetAlertsEnabled: Value(budgetAlertsEnabled),
+      goalRemindersEnabled: Value(goalRemindersEnabled),
+      productUpdatesEnabled: Value(productUpdatesEnabled),
     );
   }
 
@@ -1751,6 +1871,16 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       hasCompletedOnboarding:
           serializer.fromJson<bool>(json['hasCompletedOnboarding']),
       activeUserId: serializer.fromJson<String?>(json['activeUserId']),
+      notificationsEnabled:
+          serializer.fromJson<bool>(json['notificationsEnabled']),
+      billRemindersEnabled:
+          serializer.fromJson<bool>(json['billRemindersEnabled']),
+      budgetAlertsEnabled:
+          serializer.fromJson<bool>(json['budgetAlertsEnabled']),
+      goalRemindersEnabled:
+          serializer.fromJson<bool>(json['goalRemindersEnabled']),
+      productUpdatesEnabled:
+          serializer.fromJson<bool>(json['productUpdatesEnabled']),
     );
   }
   @override
@@ -1761,6 +1891,11 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       'themeMode': serializer.toJson<String>(themeMode),
       'hasCompletedOnboarding': serializer.toJson<bool>(hasCompletedOnboarding),
       'activeUserId': serializer.toJson<String?>(activeUserId),
+      'notificationsEnabled': serializer.toJson<bool>(notificationsEnabled),
+      'billRemindersEnabled': serializer.toJson<bool>(billRemindersEnabled),
+      'budgetAlertsEnabled': serializer.toJson<bool>(budgetAlertsEnabled),
+      'goalRemindersEnabled': serializer.toJson<bool>(goalRemindersEnabled),
+      'productUpdatesEnabled': serializer.toJson<bool>(productUpdatesEnabled),
     };
   }
 
@@ -1768,7 +1903,12 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
           {int? id,
           String? themeMode,
           bool? hasCompletedOnboarding,
-          Value<String?> activeUserId = const Value.absent()}) =>
+          Value<String?> activeUserId = const Value.absent(),
+          bool? notificationsEnabled,
+          bool? billRemindersEnabled,
+          bool? budgetAlertsEnabled,
+          bool? goalRemindersEnabled,
+          bool? productUpdatesEnabled}) =>
       PreferencesRow(
         id: id ?? this.id,
         themeMode: themeMode ?? this.themeMode,
@@ -1776,6 +1916,12 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
             hasCompletedOnboarding ?? this.hasCompletedOnboarding,
         activeUserId:
             activeUserId.present ? activeUserId.value : this.activeUserId,
+        notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+        billRemindersEnabled: billRemindersEnabled ?? this.billRemindersEnabled,
+        budgetAlertsEnabled: budgetAlertsEnabled ?? this.budgetAlertsEnabled,
+        goalRemindersEnabled: goalRemindersEnabled ?? this.goalRemindersEnabled,
+        productUpdatesEnabled:
+            productUpdatesEnabled ?? this.productUpdatesEnabled,
       );
   PreferencesRow copyWithCompanion(AppPreferencesCompanion data) {
     return PreferencesRow(
@@ -1787,6 +1933,21 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       activeUserId: data.activeUserId.present
           ? data.activeUserId.value
           : this.activeUserId,
+      notificationsEnabled: data.notificationsEnabled.present
+          ? data.notificationsEnabled.value
+          : this.notificationsEnabled,
+      billRemindersEnabled: data.billRemindersEnabled.present
+          ? data.billRemindersEnabled.value
+          : this.billRemindersEnabled,
+      budgetAlertsEnabled: data.budgetAlertsEnabled.present
+          ? data.budgetAlertsEnabled.value
+          : this.budgetAlertsEnabled,
+      goalRemindersEnabled: data.goalRemindersEnabled.present
+          ? data.goalRemindersEnabled.value
+          : this.goalRemindersEnabled,
+      productUpdatesEnabled: data.productUpdatesEnabled.present
+          ? data.productUpdatesEnabled.value
+          : this.productUpdatesEnabled,
     );
   }
 
@@ -1796,14 +1957,27 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
           ..write('id: $id, ')
           ..write('themeMode: $themeMode, ')
           ..write('hasCompletedOnboarding: $hasCompletedOnboarding, ')
-          ..write('activeUserId: $activeUserId')
+          ..write('activeUserId: $activeUserId, ')
+          ..write('notificationsEnabled: $notificationsEnabled, ')
+          ..write('billRemindersEnabled: $billRemindersEnabled, ')
+          ..write('budgetAlertsEnabled: $budgetAlertsEnabled, ')
+          ..write('goalRemindersEnabled: $goalRemindersEnabled, ')
+          ..write('productUpdatesEnabled: $productUpdatesEnabled')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, themeMode, hasCompletedOnboarding, activeUserId);
+  int get hashCode => Object.hash(
+      id,
+      themeMode,
+      hasCompletedOnboarding,
+      activeUserId,
+      notificationsEnabled,
+      billRemindersEnabled,
+      budgetAlertsEnabled,
+      goalRemindersEnabled,
+      productUpdatesEnabled);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1811,7 +1985,12 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
           other.id == this.id &&
           other.themeMode == this.themeMode &&
           other.hasCompletedOnboarding == this.hasCompletedOnboarding &&
-          other.activeUserId == this.activeUserId);
+          other.activeUserId == this.activeUserId &&
+          other.notificationsEnabled == this.notificationsEnabled &&
+          other.billRemindersEnabled == this.billRemindersEnabled &&
+          other.budgetAlertsEnabled == this.budgetAlertsEnabled &&
+          other.goalRemindersEnabled == this.goalRemindersEnabled &&
+          other.productUpdatesEnabled == this.productUpdatesEnabled);
 }
 
 class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
@@ -1819,23 +1998,43 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
   final Value<String> themeMode;
   final Value<bool> hasCompletedOnboarding;
   final Value<String?> activeUserId;
+  final Value<bool> notificationsEnabled;
+  final Value<bool> billRemindersEnabled;
+  final Value<bool> budgetAlertsEnabled;
+  final Value<bool> goalRemindersEnabled;
+  final Value<bool> productUpdatesEnabled;
   const AppPreferencesCompanion({
     this.id = const Value.absent(),
     this.themeMode = const Value.absent(),
     this.hasCompletedOnboarding = const Value.absent(),
     this.activeUserId = const Value.absent(),
+    this.notificationsEnabled = const Value.absent(),
+    this.billRemindersEnabled = const Value.absent(),
+    this.budgetAlertsEnabled = const Value.absent(),
+    this.goalRemindersEnabled = const Value.absent(),
+    this.productUpdatesEnabled = const Value.absent(),
   });
   AppPreferencesCompanion.insert({
     this.id = const Value.absent(),
     required String themeMode,
     this.hasCompletedOnboarding = const Value.absent(),
     this.activeUserId = const Value.absent(),
+    this.notificationsEnabled = const Value.absent(),
+    this.billRemindersEnabled = const Value.absent(),
+    this.budgetAlertsEnabled = const Value.absent(),
+    this.goalRemindersEnabled = const Value.absent(),
+    this.productUpdatesEnabled = const Value.absent(),
   }) : themeMode = Value(themeMode);
   static Insertable<PreferencesRow> custom({
     Expression<int>? id,
     Expression<String>? themeMode,
     Expression<bool>? hasCompletedOnboarding,
     Expression<String>? activeUserId,
+    Expression<bool>? notificationsEnabled,
+    Expression<bool>? billRemindersEnabled,
+    Expression<bool>? budgetAlertsEnabled,
+    Expression<bool>? goalRemindersEnabled,
+    Expression<bool>? productUpdatesEnabled,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1843,6 +2042,16 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
       if (hasCompletedOnboarding != null)
         'has_completed_onboarding': hasCompletedOnboarding,
       if (activeUserId != null) 'active_user_id': activeUserId,
+      if (notificationsEnabled != null)
+        'notifications_enabled': notificationsEnabled,
+      if (billRemindersEnabled != null)
+        'bill_reminders_enabled': billRemindersEnabled,
+      if (budgetAlertsEnabled != null)
+        'budget_alerts_enabled': budgetAlertsEnabled,
+      if (goalRemindersEnabled != null)
+        'goal_reminders_enabled': goalRemindersEnabled,
+      if (productUpdatesEnabled != null)
+        'product_updates_enabled': productUpdatesEnabled,
     });
   }
 
@@ -1850,13 +2059,24 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
       {Value<int>? id,
       Value<String>? themeMode,
       Value<bool>? hasCompletedOnboarding,
-      Value<String?>? activeUserId}) {
+      Value<String?>? activeUserId,
+      Value<bool>? notificationsEnabled,
+      Value<bool>? billRemindersEnabled,
+      Value<bool>? budgetAlertsEnabled,
+      Value<bool>? goalRemindersEnabled,
+      Value<bool>? productUpdatesEnabled}) {
     return AppPreferencesCompanion(
       id: id ?? this.id,
       themeMode: themeMode ?? this.themeMode,
       hasCompletedOnboarding:
           hasCompletedOnboarding ?? this.hasCompletedOnboarding,
       activeUserId: activeUserId ?? this.activeUserId,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      billRemindersEnabled: billRemindersEnabled ?? this.billRemindersEnabled,
+      budgetAlertsEnabled: budgetAlertsEnabled ?? this.budgetAlertsEnabled,
+      goalRemindersEnabled: goalRemindersEnabled ?? this.goalRemindersEnabled,
+      productUpdatesEnabled:
+          productUpdatesEnabled ?? this.productUpdatesEnabled,
     );
   }
 
@@ -1876,6 +2096,24 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
     if (activeUserId.present) {
       map['active_user_id'] = Variable<String>(activeUserId.value);
     }
+    if (notificationsEnabled.present) {
+      map['notifications_enabled'] = Variable<bool>(notificationsEnabled.value);
+    }
+    if (billRemindersEnabled.present) {
+      map['bill_reminders_enabled'] =
+          Variable<bool>(billRemindersEnabled.value);
+    }
+    if (budgetAlertsEnabled.present) {
+      map['budget_alerts_enabled'] = Variable<bool>(budgetAlertsEnabled.value);
+    }
+    if (goalRemindersEnabled.present) {
+      map['goal_reminders_enabled'] =
+          Variable<bool>(goalRemindersEnabled.value);
+    }
+    if (productUpdatesEnabled.present) {
+      map['product_updates_enabled'] =
+          Variable<bool>(productUpdatesEnabled.value);
+    }
     return map;
   }
 
@@ -1885,7 +2123,12 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
           ..write('id: $id, ')
           ..write('themeMode: $themeMode, ')
           ..write('hasCompletedOnboarding: $hasCompletedOnboarding, ')
-          ..write('activeUserId: $activeUserId')
+          ..write('activeUserId: $activeUserId, ')
+          ..write('notificationsEnabled: $notificationsEnabled, ')
+          ..write('billRemindersEnabled: $billRemindersEnabled, ')
+          ..write('budgetAlertsEnabled: $budgetAlertsEnabled, ')
+          ..write('goalRemindersEnabled: $goalRemindersEnabled, ')
+          ..write('productUpdatesEnabled: $productUpdatesEnabled')
           ..write(')'))
         .toString();
   }
@@ -4762,6 +5005,11 @@ typedef $$AppPreferencesTableCreateCompanionBuilder = AppPreferencesCompanion
   required String themeMode,
   Value<bool> hasCompletedOnboarding,
   Value<String?> activeUserId,
+  Value<bool> notificationsEnabled,
+  Value<bool> billRemindersEnabled,
+  Value<bool> budgetAlertsEnabled,
+  Value<bool> goalRemindersEnabled,
+  Value<bool> productUpdatesEnabled,
 });
 typedef $$AppPreferencesTableUpdateCompanionBuilder = AppPreferencesCompanion
     Function({
@@ -4769,6 +5017,11 @@ typedef $$AppPreferencesTableUpdateCompanionBuilder = AppPreferencesCompanion
   Value<String> themeMode,
   Value<bool> hasCompletedOnboarding,
   Value<String?> activeUserId,
+  Value<bool> notificationsEnabled,
+  Value<bool> billRemindersEnabled,
+  Value<bool> budgetAlertsEnabled,
+  Value<bool> goalRemindersEnabled,
+  Value<bool> productUpdatesEnabled,
 });
 
 class $$AppPreferencesTableFilterComposer
@@ -4792,6 +5045,26 @@ class $$AppPreferencesTableFilterComposer
 
   ColumnFilters<String> get activeUserId => $composableBuilder(
       column: $table.activeUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get notificationsEnabled => $composableBuilder(
+      column: $table.notificationsEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get billRemindersEnabled => $composableBuilder(
+      column: $table.billRemindersEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get budgetAlertsEnabled => $composableBuilder(
+      column: $table.budgetAlertsEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get goalRemindersEnabled => $composableBuilder(
+      column: $table.goalRemindersEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get productUpdatesEnabled => $composableBuilder(
+      column: $table.productUpdatesEnabled,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$AppPreferencesTableOrderingComposer
@@ -4816,6 +5089,26 @@ class $$AppPreferencesTableOrderingComposer
   ColumnOrderings<String> get activeUserId => $composableBuilder(
       column: $table.activeUserId,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get notificationsEnabled => $composableBuilder(
+      column: $table.notificationsEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get billRemindersEnabled => $composableBuilder(
+      column: $table.billRemindersEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get budgetAlertsEnabled => $composableBuilder(
+      column: $table.budgetAlertsEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get goalRemindersEnabled => $composableBuilder(
+      column: $table.goalRemindersEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get productUpdatesEnabled => $composableBuilder(
+      column: $table.productUpdatesEnabled,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$AppPreferencesTableAnnotationComposer
@@ -4838,6 +5131,21 @@ class $$AppPreferencesTableAnnotationComposer
 
   GeneratedColumn<String> get activeUserId => $composableBuilder(
       column: $table.activeUserId, builder: (column) => column);
+
+  GeneratedColumn<bool> get notificationsEnabled => $composableBuilder(
+      column: $table.notificationsEnabled, builder: (column) => column);
+
+  GeneratedColumn<bool> get billRemindersEnabled => $composableBuilder(
+      column: $table.billRemindersEnabled, builder: (column) => column);
+
+  GeneratedColumn<bool> get budgetAlertsEnabled => $composableBuilder(
+      column: $table.budgetAlertsEnabled, builder: (column) => column);
+
+  GeneratedColumn<bool> get goalRemindersEnabled => $composableBuilder(
+      column: $table.goalRemindersEnabled, builder: (column) => column);
+
+  GeneratedColumn<bool> get productUpdatesEnabled => $composableBuilder(
+      column: $table.productUpdatesEnabled, builder: (column) => column);
 }
 
 class $$AppPreferencesTableTableManager extends RootTableManager<
@@ -4871,24 +5179,44 @@ class $$AppPreferencesTableTableManager extends RootTableManager<
             Value<String> themeMode = const Value.absent(),
             Value<bool> hasCompletedOnboarding = const Value.absent(),
             Value<String?> activeUserId = const Value.absent(),
+            Value<bool> notificationsEnabled = const Value.absent(),
+            Value<bool> billRemindersEnabled = const Value.absent(),
+            Value<bool> budgetAlertsEnabled = const Value.absent(),
+            Value<bool> goalRemindersEnabled = const Value.absent(),
+            Value<bool> productUpdatesEnabled = const Value.absent(),
           }) =>
               AppPreferencesCompanion(
             id: id,
             themeMode: themeMode,
             hasCompletedOnboarding: hasCompletedOnboarding,
             activeUserId: activeUserId,
+            notificationsEnabled: notificationsEnabled,
+            billRemindersEnabled: billRemindersEnabled,
+            budgetAlertsEnabled: budgetAlertsEnabled,
+            goalRemindersEnabled: goalRemindersEnabled,
+            productUpdatesEnabled: productUpdatesEnabled,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required String themeMode,
             Value<bool> hasCompletedOnboarding = const Value.absent(),
             Value<String?> activeUserId = const Value.absent(),
+            Value<bool> notificationsEnabled = const Value.absent(),
+            Value<bool> billRemindersEnabled = const Value.absent(),
+            Value<bool> budgetAlertsEnabled = const Value.absent(),
+            Value<bool> goalRemindersEnabled = const Value.absent(),
+            Value<bool> productUpdatesEnabled = const Value.absent(),
           }) =>
               AppPreferencesCompanion.insert(
             id: id,
             themeMode: themeMode,
             hasCompletedOnboarding: hasCompletedOnboarding,
             activeUserId: activeUserId,
+            notificationsEnabled: notificationsEnabled,
+            billRemindersEnabled: billRemindersEnabled,
+            budgetAlertsEnabled: budgetAlertsEnabled,
+            goalRemindersEnabled: goalRemindersEnabled,
+            productUpdatesEnabled: productUpdatesEnabled,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

@@ -168,7 +168,7 @@ class AccountScreen extends ConsumerWidget {
                   SettingsTile(
                     iconAsset: AppIcons.settings,
                     title: 'Settings',
-                    subtitle: 'Theme, country, currency, account',
+                    subtitle: 'Theme, notifications, locale, account',
                     onTap: () => context.push(AppRoutes.settings),
                   ),
                   SettingsTile(

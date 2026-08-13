@@ -10,7 +10,7 @@ class FaqScreen extends StatelessWidget {
     (
       q: 'Is my data uploaded to a server?',
       a:
-          'No. SpendWise stores your expenses, budgets, and account locally on this device. There is no cloud sync in this version.',
+          'SpendWise stores your expenses, budgets, and account locally on this device. There is no cloud sync in this version. Crash reports and usage analytics, when enabled, do not include your email, password, or amounts.',
     ),
     (
       q: 'Can multiple people use SpendWise on one phone?',
@@ -20,7 +20,7 @@ class FaqScreen extends StatelessWidget {
     (
       q: 'What does Country control?',
       a:
-          'Country mainly affects number and date formatting. Currency is separate — you can pick any display currency regardless of country.',
+          'Country mainly affects number and date formatting. Currency follows the country you pick until you choose a different supported currency.',
     ),
     (
       q: 'How do saving goals work?',
@@ -31,6 +31,11 @@ class FaqScreen extends StatelessWidget {
       q: 'How do I export my expenses?',
       a:
           'Open You → Export CSV or Export Excel. Choose a timeline, preview the rows, then share the file.',
+    ),
+    (
+      q: 'How do reminders work?',
+      a:
+          'In Settings you can turn on bill reminders, budget alerts, and goal deadlines. Those are scheduled on this device. Product updates are optional push messages.',
     ),
     (
       q: 'What happens if I close my account?',

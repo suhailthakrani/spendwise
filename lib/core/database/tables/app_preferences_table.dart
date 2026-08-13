@@ -7,6 +7,16 @@ class AppPreferences extends Table {
   BoolColumn get hasCompletedOnboarding =>
       boolean().withDefault(const Constant(false))();
   TextColumn get activeUserId => text().nullable()();
+  BoolColumn get notificationsEnabled =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get billRemindersEnabled =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get budgetAlertsEnabled =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get goalRemindersEnabled =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get productUpdatesEnabled =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
