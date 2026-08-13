@@ -120,7 +120,7 @@ class SettingsScreen extends ConsumerWidget {
                   _NotificationSwitch(
                     iconAsset: AppIcons.savings,
                     title: 'Goal reminders',
-                    subtitle: 'A week before and on the deadline',
+                    subtitle: 'Monthly save pace, plus a week before the deadline',
                     value: prefs.goalRemindersActive,
                     enabled: prefs.notificationsEnabled,
                     onChanged: (value) => _setNotifications(

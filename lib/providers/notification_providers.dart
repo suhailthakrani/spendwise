@@ -61,8 +61,19 @@ final reminderBindingProvider = Provider<void>((ref) {
   final notifications = ref.watch(notificationServiceProvider);
   final currency = ref.watch(currencyDisplayProvider);
 
+  ref.listen<bool>(
+    preferencesProvider.select(
+      (async) => async.valueOrNull?.productUpdatesActive ?? false,
+    ),
+    (previous, next) {
+      if (previous == next) return;
+      unawaited(notifications.setProductUpdates(next));
+    },
+    fireImmediately: true,
+  );
+
   if (prefs == null || !prefs.isSignedIn) {
-    unawaited(scheduler.cancelAll());
+    scheduler.scheduleCancel();
     return;
   }
 
@@ -70,14 +81,11 @@ final reminderBindingProvider = Provider<void>((ref) {
   final budgets = ref.watch(_reminderBudgetsProvider).valueOrNull ?? const [];
   final goals = ref.watch(_reminderGoalsProvider).valueOrNull ?? const [];
 
-  unawaited(
-    scheduler.sync(
-      prefs: prefs,
-      recurring: recurring,
-      budgets: budgets,
-      goals: goals,
-      formatAmount: currency.format,
-    ),
+  scheduler.scheduleSync(
+    prefs: prefs,
+    recurring: recurring,
+    budgets: budgets,
+    goals: goals,
+    formatAmount: currency.format,
   );
-  unawaited(notifications.setProductUpdates(prefs.productUpdatesActive));
 });

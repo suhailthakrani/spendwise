@@ -35,7 +35,7 @@ class FaqScreen extends StatelessWidget {
     (
       q: 'How do reminders work?',
       a:
-          'In Settings you can turn on bill reminders, budget alerts, and goal deadlines. Those are scheduled on this device. Product updates are optional push messages.',
+          'In Settings you can turn on bill reminders, budget limit alerts, and saving reminders (monthly pace plus deadlines). Those are scheduled on this device. Product updates are optional push messages.',
     ),
     (
       q: 'What happens if I close my account?',

@@ -157,6 +157,31 @@ class NotificationService {
     await _plugin.cancelAll();
   }
 
+  Future<void> cancel(int id) async {
+    if (!_initialized) return;
+    await _plugin.cancel(id: id);
+  }
+
+  Future<Set<int>> pendingIds() async {
+    if (!_initialized) return {};
+    final pending = await _plugin.pendingNotificationRequests();
+    return pending.map((request) => request.id).toSet();
+  }
+
+  Future<void> showNow({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    if (!_initialized) return;
+    await _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: _details,
+    );
+  }
+
   Future<void> scheduleAt({
     required int id,
     required DateTime when,
