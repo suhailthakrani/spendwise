@@ -6,6 +6,7 @@ import '../../core/constants/app_icons.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/common_widgets.dart';
@@ -154,7 +155,8 @@ class SettingsScreen extends ConsumerWidget {
                   _NotificationSwitch(
                     iconAsset: AppIcons.savings,
                     title: 'Goal reminders',
-                    subtitle: 'Monthly save pace, plus a week before the deadline',
+                    subtitle:
+                        'Monthly save pace, plus a week before the deadline',
                     value: prefs.goalRemindersActive,
                     enabled: prefs.notificationsEnabled,
                     onChanged: (value) => _setNotifications(
@@ -195,8 +197,7 @@ class SettingsScreen extends ConsumerWidget {
                     iconAsset: AppIcons.currency,
                     title: 'Currency',
                     subtitle: '${currency.name} (${currency.code})',
-                    onTap: () =>
-                        _pickCurrency(context, ref, currencyCodeValue),
+                    onTap: () => _pickCurrency(context, ref, currencyCodeValue),
                   ),
                 ],
               ),
@@ -263,20 +264,17 @@ class SettingsScreen extends ConsumerWidget {
           productUpdatesEnabled: productUpdatesEnabled,
         );
     await ref.read(appAnalyticsProvider).logEvent(
-          'notification_pref_changed',
-          parameters: {
-            if (notificationsEnabled != null)
-              'master': notificationsEnabled ? 1 : 0,
-            if (billRemindersEnabled != null)
-              'bills': billRemindersEnabled ? 1 : 0,
-            if (budgetAlertsEnabled != null)
-              'budgets': budgetAlertsEnabled ? 1 : 0,
-            if (goalRemindersEnabled != null)
-              'goals': goalRemindersEnabled ? 1 : 0,
-            if (productUpdatesEnabled != null)
-              'updates': productUpdatesEnabled ? 1 : 0,
-          },
-        );
+      'notification_pref_changed',
+      parameters: {
+        if (notificationsEnabled != null)
+          'master': notificationsEnabled ? 1 : 0,
+        if (billRemindersEnabled != null) 'bills': billRemindersEnabled ? 1 : 0,
+        if (budgetAlertsEnabled != null) 'budgets': budgetAlertsEnabled ? 1 : 0,
+        if (goalRemindersEnabled != null) 'goals': goalRemindersEnabled ? 1 : 0,
+        if (productUpdatesEnabled != null)
+          'updates': productUpdatesEnabled ? 1 : 0,
+      },
+    );
   }
 
   Future<void> _setBiometric(
@@ -355,28 +353,16 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmCloseAccount(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Close account?'),
-        content: const Text(
-          'This permanently deletes this account’s expenses, budgets, goals, and profile on this device. Other accounts on this phone are not affected.\n\nYou’ll need to enter your password next.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
+      title: 'Close account?',
+      message:
+          'This permanently deletes this account’s expenses, budgets, goals, and profile on this device. Other accounts on this phone are not affected.',
+      confirmLabel: 'Continue',
+      iconAsset: AppIcons.warning,
     );
 
-    if (confirmed != true || !context.mounted) return;
+    if (!confirmed || !context.mounted) return;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -408,8 +394,10 @@ class _CloseAccountSheetState extends ConsumerState<_CloseAccountSheet> {
   }
 
   Future<void> _submit() async {
-    final password = _passwordController.text;
-    if (password.isEmpty) {
+    final googleOnly =
+        !(ref.read(currentUserProvider).valueOrNull?.hasLocalPassword ?? true);
+
+    if (!googleOnly && _passwordController.text.isEmpty) {
       setState(() => _error = 'Enter your password');
       return;
     }
@@ -420,7 +408,9 @@ class _CloseAccountSheetState extends ConsumerState<_CloseAccountSheet> {
     });
 
     try {
-      await ref.read(authControllerProvider).closeAccount(password: password);
+      await ref.read(authControllerProvider).closeAccount(
+            password: googleOnly ? null : _passwordController.text,
+          );
       if (!mounted) return;
       final messenger = ScaffoldMessenger.of(context);
       Navigator.pop(context);
@@ -446,6 +436,8 @@ class _CloseAccountSheetState extends ConsumerState<_CloseAccountSheet> {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    final googleOnly =
+        !(ref.watch(currentUserProvider).valueOrNull?.hasLocalPassword ?? true);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 8, 20, 20 + bottom),
@@ -461,34 +453,37 @@ class _CloseAccountSheetState extends ConsumerState<_CloseAccountSheet> {
           ),
           const SizedBox(height: 8),
           Text(
-            'This permanently deletes your expenses, budgets, goals, and profile on this device. Enter your password to confirm.',
+            googleOnly
+                ? 'This permanently deletes your expenses, budgets, goals, and profile on this device. Confirm with Google to continue.'
+                : 'This permanently deletes your expenses, budgets, goals, and profile on this device. Enter your password to confirm.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.secondaryText(context),
                   height: 1.4,
                 ),
           ),
           const SizedBox(height: 16),
-          AppTextField(
-            controller: _passwordController,
-            obscureText: _obscure,
-            enabled: !_submitting,
-            autofillHints: const [AutofillHints.password],
-            decoration: InputDecoration(
-              labelText: 'Password',
-              prefixIcon: const Icon(Icons.lock_outline_rounded, size: 22),
-              suffixIcon: IconButton(
-                onPressed: _submitting
-                    ? null
-                    : () => setState(() => _obscure = !_obscure),
-                icon: Icon(
-                  _obscure
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
+          if (!googleOnly)
+            AppTextField(
+              controller: _passwordController,
+              obscureText: _obscure,
+              enabled: !_submitting,
+              autofillHints: const [AutofillHints.password],
+              decoration: InputDecoration(
+                labelText: 'Password',
+                prefixIcon: const Icon(Icons.lock_outline_rounded, size: 22),
+                suffixIcon: IconButton(
+                  onPressed: _submitting
+                      ? null
+                      : () => setState(() => _obscure = !_obscure),
+                  icon: Icon(
+                    _obscure
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
                 ),
               ),
+              onSubmitted: (_) => _submit(),
             ),
-            onSubmitted: (_) => _submit(),
-          ),
           if (_error != null) ...[
             const SizedBox(height: 10),
             Text(
@@ -512,7 +507,8 @@ class _CloseAccountSheetState extends ConsumerState<_CloseAccountSheet> {
                       color: Colors.white,
                     ),
                   )
-                : const Text('Delete my account'),
+                : Text(
+                    googleOnly ? 'Confirm with Google' : 'Delete my account'),
           ),
           TextButton(
             onPressed: _submitting ? null : () => Navigator.pop(context),

@@ -10,6 +10,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/continue_with_google_button.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/models/app_currency.dart';
 import '../../data/models/app_region.dart';
@@ -37,8 +38,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   var _submitting = false;
   String? _error;
 
-  var _regionCode = AppRegion.us.code;
-  var _currencyCode = AppCurrency.usd.code;
+  var _regionCode = AppRegion.pk.code;
+  var _currencyCode = AppCurrency.pkr.code;
   var _currencyManuallyChosen = false;
 
   @override
@@ -115,6 +116,29 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     }
   }
 
+  Future<void> _continueWithGoogle() async {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+
+    try {
+      final profile =
+          await ref.read(authControllerProvider).continueWithGoogle();
+      if (profile == null) return;
+      if (mounted) context.go(AppRoutes.dashboard);
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Could not continue with Google. Try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
   Future<void> _pickCountry() async {
     final selected = await showSearchablePickerSheet(
       context: context,
@@ -130,7 +154,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       setState(() {
         _regionCode = selected.code;
         if (!_currencyManuallyChosen) {
-          _currencyCode = AppCurrency.byCode(selected.suggestedCurrencyCode).code;
+          _currencyCode =
+              AppCurrency.byCode(selected.suggestedCurrencyCode).code;
         }
       });
     }
@@ -299,7 +324,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               )
                             : Text(_step == 0 ? 'Continue' : 'Create account'),
                       ),
-                      if (_step == 0)
+                      if (_step == 0) ...[
+                        const SizedBox(height: 16),
+                        const AuthOrDivider(),
+                        const SizedBox(height: 16),
+                        ContinueWithGoogleButton(
+                          busy: _submitting,
+                          onPressed: _continueWithGoogle,
+                        ),
                         TextButton(
                           onPressed: _submitting
                               ? null
@@ -322,6 +354,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             ),
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ),
@@ -629,7 +662,8 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
+          const Icon(Icons.error_outline_rounded,
+              color: AppColors.error, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

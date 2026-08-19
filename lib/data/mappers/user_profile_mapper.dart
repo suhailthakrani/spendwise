@@ -10,6 +10,8 @@ abstract final class UserProfileMapper {
       regionCode: row.regionCode,
       currencyCode: row.currencyCode,
       avatarUrl: row.avatarUrl,
+      googleId: row.googleId,
+      hasLocalPassword: row.passwordHash.isNotEmpty,
       memberSince: row.memberSince,
     );
   }

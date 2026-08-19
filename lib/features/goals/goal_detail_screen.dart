@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/goal_pace_calculator.dart';
+import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/goal_status.dart';
@@ -65,8 +66,7 @@ class GoalDetailScreen extends ConsumerWidget {
           floatingActionButton: goal.status == GoalStatus.active &&
                   !goal.isAchieved
               ? FloatingActionButton.extended(
-                  onPressed: () =>
-                      context.push('/goals/$goalId/contribute'),
+                  onPressed: () => context.push('/goals/$goalId/contribute'),
                   icon: const AppIcon(AppIcons.add, size: 20),
                   label: const Text('Log savings'),
                 )
@@ -261,31 +261,16 @@ class GoalDetailScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete goal?'),
-        content: const Text(
-          'This removes the goal and all contribution history.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete goal?',
+      message: 'This removes the goal and all contribution history.',
+      confirmLabel: 'Delete',
+      iconAsset: AppIcons.delete,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     await ref.read(savingGoalRepositoryProvider).delete(goalId);
-    if (context.mounted) {
-      context.go(AppRoutes.goals);
-    }
+    if (context.mounted) context.go(AppRoutes.goals);
   }
 }
 

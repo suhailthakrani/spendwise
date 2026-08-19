@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/category_lookup.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/expense_widgets.dart';
@@ -145,8 +146,8 @@ class ExpensesScreen extends ConsumerWidget {
                                     category: category,
                                     showDate: false,
                                     dense: true,
-                                    onTap: () => context
-                                        .push('/expenses/${expense.id}'),
+                                    onTap: () =>
+                                        context.push('/expenses/${expense.id}'),
                                   ),
                                 );
                               },
@@ -184,8 +185,7 @@ class ExpensesScreen extends ConsumerWidget {
 
     final keys = map.keys.toList()..sort((a, b) => b.compareTo(a));
     return [
-      for (final key in keys)
-        _ExpenseDayGroup(date: key, expenses: map[key]!),
+      for (final key in keys) _ExpenseDayGroup(date: key, expenses: map[key]!),
     ];
   }
 }
@@ -197,29 +197,14 @@ class _ExpenseDayGroup {
   final List<Expense> expenses;
 }
 
-Future<bool> _confirmDeleteExpense(BuildContext context) async {
-  final confirmed = await showDialog<bool>(
+Future<bool> _confirmDeleteExpense(BuildContext context) {
+  return showAppConfirmDialog(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('Delete Expense'),
-      content: const Text(
-        'Are you sure you want to delete this expense? This action cannot be undone.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-          child: const Text('Delete'),
-        ),
-      ],
-    ),
+    title: 'Delete expense?',
+    message: 'This expense will be removed permanently. This can’t be undone.',
+    confirmLabel: 'Delete',
+    iconAsset: AppIcons.delete,
   );
-
-  return confirmed ?? false;
 }
 
 class _SwipeDeleteBackground extends StatelessWidget {

@@ -7,6 +7,7 @@ import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
 
 import '../models/backup_snapshot.dart';
+import 'google_auth_service.dart';
 
 class DriveBackupException implements Exception {
   DriveBackupException(this.message, {this.signInUnavailable = false});
@@ -29,6 +30,8 @@ class DriveBackupResult {
 
 /// Uploads / downloads one SpendWise backup on the signed-in Google Drive.
 class GoogleDriveBackupClient {
+  GoogleDriveBackupClient({GoogleSignIn? signIn}) : _injected = signIn;
+
   static const _scopes = [
     'email',
     'https://www.googleapis.com/auth/drive.file',
@@ -38,10 +41,15 @@ class GoogleDriveBackupClient {
   static const _mimeJson = 'application/json';
   static const _mimeFolder = 'application/vnd.google-apps.folder';
 
+  final GoogleSignIn? _injected;
   GoogleSignIn? _signIn;
 
   GoogleSignIn get _client {
-    return _signIn ??= GoogleSignIn(scopes: _scopes);
+    return _injected ??
+        (_signIn ??= GoogleSignIn(
+          scopes: _scopes,
+          serverClientId: GoogleAuthService.serverClientId,
+        ));
   }
 
   /// Opens the Google account picker and returns the chosen Drive email.

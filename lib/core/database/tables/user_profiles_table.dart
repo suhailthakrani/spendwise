@@ -10,6 +10,7 @@ class UserProfiles extends Table {
   TextColumn get regionCode => text().withDefault(const Constant('US'))();
   TextColumn get currencyCode => text().withDefault(const Constant('USD'))();
   TextColumn get avatarUrl => text().nullable()();
+  TextColumn get googleId => text().nullable()();
   DateTimeColumn get memberSince => dateTime().nullable()();
 
   @override

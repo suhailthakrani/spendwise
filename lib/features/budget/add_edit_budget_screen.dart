@@ -8,6 +8,7 @@ import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/category_lookup.dart';
+import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../data/models/budget.dart';
@@ -61,7 +62,8 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
 
     Budget? budget;
     if (widget.budgetId != null) {
-      budget = await ref.read(budgetRepositoryProvider).getById(widget.budgetId!);
+      budget =
+          await ref.read(budgetRepositoryProvider).getById(widget.budgetId!);
     }
 
     if (!mounted) return;
@@ -111,8 +113,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     final repo = ref.read(budgetRepositoryProvider);
     final name = _nameController.text.trim();
     final limit = currency.toStorageAmount(limitDisplay);
-    final categoryId =
-        _type == BudgetFormType.category ? _categoryId : null;
+    final categoryId = _type == BudgetFormType.category ? _categoryId : null;
     final isMonthly = _type == BudgetFormType.monthly;
 
     if (isEditing) {
@@ -186,9 +187,8 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
         : 0.0;
     final progress = limit > 0 ? (spent / limit).clamp(0.0, 1.0) : 0.0;
 
-    final category = _categoryId != null
-        ? categoryById(categories, _categoryId!)
-        : null;
+    final category =
+        _categoryId != null ? categoryById(categories, _categoryId!) : null;
     final accent = category?.color ?? AppColors.primary;
 
     return Scaffold(
@@ -199,7 +199,8 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
         ),
         title: Text(isEditing ? 'Edit Budget' : 'Add Budget'),
         actions: [
-          TextButton(onPressed: () => _save(context), child: const Text('Save')),
+          TextButton(
+              onPressed: () => _save(context), child: const Text('Save')),
         ],
       ),
       body: SafeArea(
@@ -349,18 +350,15 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                             vertical: 12,
                           ),
                           border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(_kFieldRadius),
+                            borderRadius: BorderRadius.circular(_kFieldRadius),
                             borderSide: BorderSide.none,
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(_kFieldRadius),
+                            borderRadius: BorderRadius.circular(_kFieldRadius),
                             borderSide: BorderSide.none,
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(_kFieldRadius),
+                            borderRadius: BorderRadius.circular(_kFieldRadius),
                             borderSide:
                                 const BorderSide(color: AppColors.primary),
                           ),
@@ -374,8 +372,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: _alertPresets.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 8),
+                          separatorBuilder: (_, __) => const SizedBox(width: 8),
                           itemBuilder: (context, index) {
                             final preset = _alertPresets[index];
                             final label = '${(preset * 100).toInt()}%';
@@ -420,37 +417,20 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context) {
-    showDialog(
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Budget'),
-        content: const Text(
-          'Are you sure you want to delete this budget?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await ref
-                  .read(budgetRepositoryProvider)
-                  .delete(widget.budgetId!);
-              if (context.mounted) {
-                context.go(AppRoutes.budget);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Budget deleted')),
-                );
-              }
-            },
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete budget?',
+      message: 'This budget will be removed. Your expenses stay on the device.',
+      confirmLabel: 'Delete',
+      iconAsset: AppIcons.delete,
+    );
+    if (!confirmed || !context.mounted) return;
+    await ref.read(budgetRepositoryProvider).delete(widget.budgetId!);
+    if (!context.mounted) return;
+    context.go(AppRoutes.budget);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Budget deleted')),
     );
   }
 }
@@ -497,7 +477,8 @@ class _TypeChip extends StatelessWidget {
         color: selected
             ? AppColors.primary.withValues(alpha: 0.12)
             : Theme.of(context).inputDecorationTheme.fillColor,
-        borderRadius: BorderRadius.circular(_AddEditBudgetScreenState._kChipRadius),
+        borderRadius:
+            BorderRadius.circular(_AddEditBudgetScreenState._kChipRadius),
       ),
       child: Material(
         color: Colors.transparent,
@@ -553,7 +534,8 @@ class _CompactCategoryChip extends StatelessWidget {
         color: selected
             ? category.color.withValues(alpha: 0.15)
             : Theme.of(context).inputDecorationTheme.fillColor,
-        borderRadius: BorderRadius.circular(_AddEditBudgetScreenState._kChipRadius),
+        borderRadius:
+            BorderRadius.circular(_AddEditBudgetScreenState._kChipRadius),
       ),
       child: Material(
         color: Colors.transparent,

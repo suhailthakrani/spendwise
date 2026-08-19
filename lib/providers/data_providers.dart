@@ -5,10 +5,12 @@ import '../data/models/budget.dart';
 import '../data/models/category.dart';
 import '../data/models/dashboard_stats.dart';
 import '../data/models/expense.dart';
+import '../data/models/insights_period.dart';
 import '../data/models/monthly_summary.dart';
 import '../data/models/recurring_expense.dart';
 import '../data/models/saving_contribution.dart';
 import '../data/models/saving_goal.dart';
+import '../data/repositories/report_repository.dart';
 import 'preferences_providers.dart';
 import 'repository_providers.dart';
 import 'auth_providers.dart';
@@ -34,8 +36,7 @@ final categoriesByUsageProvider = Provider<List<ExpenseCategory>>((ref) {
   }
 
   final ranked = [...categories]..sort((a, b) {
-      final countCompare =
-          (counts[b.id] ?? 0).compareTo(counts[a.id] ?? 0);
+      final countCompare = (counts[b.id] ?? 0).compareTo(counts[a.id] ?? 0);
       if (countCompare != 0) return countCompare;
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
@@ -59,11 +60,18 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   return ref.watch(reportRepositoryProvider).dashboardStats(currency);
 });
 
-final monthlySummariesProvider =
-    FutureProvider<List<MonthlySummary>>((ref) async {
+final insightsPeriodProvider =
+    StateProvider<InsightsPeriod>((ref) => InsightsPeriod.oneYear);
+
+final insightsReportProvider = Provider<InsightsReport>((ref) {
+  final expenses = ref.watch(expensesProvider).valueOrNull ?? [];
   final currency = ref.watch(currencyDisplayProvider);
-  ref.watch(expensesProvider);
-  return ref.watch(reportRepositoryProvider).monthlySummaries(currency);
+  final period = ref.watch(insightsPeriodProvider);
+  return ReportRepository.summarizePeriods(
+    period: period,
+    expenses: expenses,
+    currency: currency,
+  );
 });
 
 final currentMonthSummaryProvider = FutureProvider<MonthlySummary>((ref) async {
@@ -116,12 +124,13 @@ final goalContributionsProvider =
 });
 
 /// Monthly save requirement for budget banner (display currency).
-final monthlyGoalsPaceProvider = Provider<({
-  SavingGoal? primary,
-  int activeCount,
-  double requiredDisplay,
-  double primaryRequiredDisplay,
-})>((ref) {
+final monthlyGoalsPaceProvider = Provider<
+    ({
+      SavingGoal? primary,
+      int activeCount,
+      double requiredDisplay,
+      double primaryRequiredDisplay,
+    })>((ref) {
   final goals = ref.watch(activeSavingGoalsProvider).valueOrNull ?? [];
   final currency = ref.watch(currencyDisplayProvider);
   final primary = GoalPaceCalculator.primaryGoal(goals);

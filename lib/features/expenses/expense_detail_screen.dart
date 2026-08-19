@@ -7,6 +7,7 @@ import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/category_lookup.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../providers/data_providers.dart';
@@ -63,8 +64,7 @@ class ExpenseDetailScreen extends ConsumerWidget {
             actions: [
               SoftIconButton(
                 asset: AppIcons.edit,
-                onPressed: () =>
-                    context.push('/expenses/${expense.id}/edit'),
+                onPressed: () => context.push('/expenses/${expense.id}/edit'),
                 size: 40,
                 iconSize: 18,
               ),
@@ -136,21 +136,30 @@ class ExpenseDetailScreen extends ConsumerWidget {
                         label: 'Date',
                         value: DateFormatter.medium(expense.date),
                       ),
-                      Divider(height: 1, indent: 68, color: AppColors.border(context)),
+                      Divider(
+                          height: 1,
+                          indent: 68,
+                          color: AppColors.border(context)),
                       _DetailRow(
                         iconAsset: AppIcons.clock,
                         label: 'Time',
                         value: DateFormatter.time(expense.date),
                       ),
-                      Divider(height: 1, indent: 68, color: AppColors.border(context)),
+                      Divider(
+                          height: 1,
+                          indent: 68,
+                          color: AppColors.border(context)),
                       _DetailRow(
-                        iconAsset:
-                            AppIcons.paymentIcon(expense.paymentMethod.iconName),
+                        iconAsset: AppIcons.paymentIcon(
+                            expense.paymentMethod.iconName),
                         label: 'Payment',
                         value: expense.paymentMethod.label,
                       ),
                       if (expense.isRecurring) ...[
-                        Divider(height: 1, indent: 68, color: AppColors.border(context)),
+                        Divider(
+                            height: 1,
+                            indent: 68,
+                            color: AppColors.border(context)),
                         const _DetailRow(
                           iconAsset: AppIcons.repeat,
                           label: 'Type',
@@ -164,8 +173,7 @@ class ExpenseDetailScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: () =>
-                    context.push('/expenses/${expense.id}/edit'),
+                onPressed: () => context.push('/expenses/${expense.id}/edit'),
                 child: const Text('Edit expense'),
               ),
             ],
@@ -175,35 +183,21 @@ class ExpenseDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _showDeleteDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+  Future<void> _showDeleteDialog(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete expense'),
-        content: const Text(
-          'Are you sure you want to delete this expense? This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await ref.read(expenseRepositoryProvider).delete(expenseId);
-              if (context.mounted) {
-                context.go(AppRoutes.expenses);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Expense deleted')),
-                );
-              }
-            },
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete expense?',
+      message:
+          'This expense will be removed permanently. This can’t be undone.',
+      confirmLabel: 'Delete',
+      iconAsset: AppIcons.delete,
+    );
+    if (!confirmed || !context.mounted) return;
+    await ref.read(expenseRepositoryProvider).delete(expenseId);
+    if (!context.mounted) return;
+    context.go(AppRoutes.expenses);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Expense deleted')),
     );
   }
 }

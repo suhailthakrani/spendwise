@@ -10,6 +10,7 @@ import '../data/repositories/user_profile_repository.dart';
 import '../data/services/backup_service.dart';
 import '../data/services/biometric_auth_service.dart';
 import '../data/services/export_service.dart';
+import '../data/services/google_auth_service.dart';
 import '../data/services/google_drive_backup_client.dart';
 import 'database_provider.dart';
 import 'preferences_providers.dart';
@@ -76,8 +77,15 @@ final backupServiceProvider = Provider<BackupService>((ref) {
   return BackupService(ref.watch(databaseProvider));
 });
 
-final googleDriveBackupClientProvider = Provider<GoogleDriveBackupClient>((ref) {
-  return GoogleDriveBackupClient();
+final googleAuthServiceProvider = Provider<GoogleAuthService>((ref) {
+  return GoogleAuthService();
+});
+
+final googleDriveBackupClientProvider =
+    Provider<GoogleDriveBackupClient>((ref) {
+  return GoogleDriveBackupClient(
+    signIn: ref.watch(googleAuthServiceProvider).signInClient,
+  );
 });
 
 final biometricAuthServiceProvider = Provider<BiometricAuthService>((ref) {

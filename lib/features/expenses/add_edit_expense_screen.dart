@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../data/models/category.dart';
@@ -54,8 +55,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   Future<void> _loadInitial() async {
     final categories =
         await ref.read(categoryRepositoryProvider).watchAll().first;
-    final expenses =
-        await ref.read(expenseRepositoryProvider).watchAll().first;
+    final expenses = await ref.read(expenseRepositoryProvider).watchAll().first;
     final currency = ref.read(currencyDisplayProvider);
 
     final counts = <String, int>{};
@@ -261,7 +261,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                               categories,
                             ),
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
@@ -330,8 +331,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                     LayoutBuilder(
                       builder: (context, constraints) {
                         const gap = 8.0;
-                        final chipWidth =
-                            (constraints.maxWidth - gap) / 2;
+                        final chipWidth = (constraints.maxWidth - gap) / 2;
                         return Wrap(
                           spacing: gap,
                           runSpacing: gap,
@@ -418,31 +418,20 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     }
   }
 
-  void _confirmDelete(BuildContext context) {
-    showDialog(
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Expense'),
-        content: const Text('Are you sure you want to delete this expense?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ref.read(expenseRepositoryProvider).delete(widget.expenseId!);
-              context.go(AppRoutes.expenses);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Expense deleted')),
-              );
-            },
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete expense?',
+      message:
+          'This expense will be removed permanently. This can’t be undone.',
+      confirmLabel: 'Delete',
+      iconAsset: AppIcons.delete,
+    );
+    if (!confirmed || !context.mounted) return;
+    ref.read(expenseRepositoryProvider).delete(widget.expenseId!);
+    context.go(AppRoutes.expenses);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Expense deleted')),
     );
   }
 }
@@ -625,8 +614,7 @@ class _AllCategoriesSheetState extends State<_AllCategoriesSheet> {
                                 )
                               : null,
                           selected: selected,
-                          selectedTileColor:
-                              cat.color.withValues(alpha: 0.08),
+                          selectedTileColor: cat.color.withValues(alpha: 0.08),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppRadii.md),
                           ),
@@ -662,9 +650,7 @@ class _CategoryStrip extends StatelessWidget {
 
     // One row when a single chip; otherwise pack into at most two rows.
     final rows = categories.length == 1 ? 1 : 2;
-    final height = rows == 1
-        ? _chipHeight
-        : (_chipHeight * 2) + _rowGap;
+    final height = rows == 1 ? _chipHeight : (_chipHeight * 2) + _rowGap;
 
     return SizedBox(
       height: height,

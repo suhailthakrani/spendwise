@@ -104,9 +104,8 @@ class _CategoryPieChartState extends State<CategoryPieChart> {
                     final label = touched
                         ? _categoryFor(entries[_touchedIndex!].key).name
                         : 'Total';
-                    final amount = touched
-                        ? entries[_touchedIndex!].value
-                        : total;
+                    final amount =
+                        touched ? entries[_touchedIndex!].value : total;
 
                     return Column(
                       mainAxisSize: MainAxisSize.min,
@@ -290,10 +289,14 @@ class MonthlyTrendChart extends ConsumerStatefulWidget {
     super.key,
     this.height = 220,
     this.showHeader = true,
+    this.values,
+    this.labels,
   });
 
   final double height;
   final bool showHeader;
+  final List<double>? values;
+  final List<String>? labels;
 
   @override
   ConsumerState<MonthlyTrendChart> createState() => _MonthlyTrendChartState();
@@ -304,11 +307,18 @@ class _MonthlyTrendChartState extends ConsumerState<MonthlyTrendChart> {
 
   @override
   Widget build(BuildContext context) {
+    final providedValues = widget.values;
+    final providedLabels = widget.labels;
+    if (providedValues != null && providedLabels != null) {
+      return _chart(
+        context,
+        providedValues,
+        providedLabels,
+      );
+    }
+
     final trendAsync = ref.watch(monthlyTrendProvider);
     final labels = ref.watch(monthlyTrendLabelsProvider);
-    final currency = ref.watch(currencyDisplayProvider);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return trendAsync.when(
       loading: () => SizedBox(
@@ -316,209 +326,228 @@ class _MonthlyTrendChartState extends ConsumerState<MonthlyTrendChart> {
         child: const Center(child: CircularProgressIndicator()),
       ),
       error: (_, __) => const SizedBox.shrink(),
-      data: (data) {
-        if (data.isEmpty) {
-          return _ChartEmptyState(
-            title: 'No trend yet',
-            subtitle: 'Spend over a few months to unlock trends',
-            height: widget.height,
-          );
-        }
+      data: (data) => _chart(context, data, labels),
+    );
+  }
 
-        final peak = data.reduce((a, b) => a > b ? a : b);
-        if (peak <= 0) {
-          return _ChartEmptyState(
-            title: 'No spending yet',
-            subtitle: 'Your monthly trend will appear here',
-            height: widget.height,
-          );
-        }
+  Widget _chart(
+    BuildContext context,
+    List<double> data,
+    List<String> labels,
+  ) {
+    final currency = ref.watch(currencyDisplayProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-        final maxY = peak * 1.25;
-        final lastIndex = data.length - 1;
-        final touched = _touchedIndex ?? lastIndex;
+    if (data.isEmpty) {
+      return _ChartEmptyState(
+        title: 'No trend yet',
+        subtitle: 'Spend over a few months to unlock trends',
+        height: widget.height,
+      );
+    }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (widget.showHeader) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          labels[touched.clamp(0, labels.length - 1)],
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: AppColors.secondaryText(context),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          currency.formatInUserCurrency(
-                            data[touched.clamp(0, data.length - 1)],
-                          ),
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (data.length >= 2) _TrendDeltaChip(data: data),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
-            SizedBox(
-              height: widget.showHeader ? widget.height - 56 : widget.height,
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: maxY,
-                  minY: 0,
-                  groupsSpace: 14,
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    handleBuiltInTouches: false,
-                    touchCallback: (event, response) {
-                      setState(() {
-                        if (!event.isInterestedForInteractions ||
-                            response == null ||
-                            response.spot == null) {
-                          return;
-                        }
-                        _touchedIndex = response.spot!.touchedBarGroupIndex;
-                      });
-                    },
-                    touchTooltipData: BarTouchTooltipData(
-                      getTooltipColor: (_) => Colors.transparent,
-                      tooltipPadding: EdgeInsets.zero,
-                      tooltipMargin: 0,
-                      getTooltipItem: (_, __, ___, ____) => null,
-                    ),
-                  ),
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    horizontalInterval: maxY / 3,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.06)
-                          : const Color(0xFF0A0F1A).withValues(alpha: 0.05),
-                      strokeWidth: 1,
-                      dashArray: [4, 4],
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  titlesData: FlTitlesData(
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        interval: maxY / 3,
-                        getTitlesWidget: (value, meta) {
-                          if (value <= 0 || value >= maxY) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: Text(
-                              currency.formatInUserCurrency(
-                                value,
-                                compact: true,
-                              ),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: AppColors.tertiaryText(context),
-                                fontSize: 10,
-                              ),
-                              textAlign: TextAlign.right,
-                            ),
-                          );
-                        },
+    final peak = data.reduce((a, b) => a > b ? a : b);
+    if (peak <= 0) {
+      return _ChartEmptyState(
+        title: 'No spending yet',
+        subtitle: 'Your spending trend will appear here',
+        height: widget.height,
+      );
+    }
+
+    final maxY = peak * 1.25;
+    final lastIndex = data.length - 1;
+    final touched = _touchedIndex ?? lastIndex;
+    final dense = data.length >= 10;
+    final compact = data.length >= 8;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.showHeader) ...[
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      labels[touched.clamp(0, labels.length - 1)],
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: AppColors.secondaryText(context),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 28,
-                        getTitlesWidget: (value, meta) {
-                          final index = value.toInt();
-                          if (index < 0 || index >= labels.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final active = index == touched;
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 10),
-                            child: Text(
-                              labels[index],
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: active
-                                    ? AppColors.primary
-                                    : AppColors.tertiaryText(context),
-                                fontWeight:
-                                    active ? FontWeight.w700 : FontWeight.w500,
-                              ),
-                            ),
-                          );
-                        },
+                    const SizedBox(height: 2),
+                    Text(
+                      currency.formatInUserCurrency(
+                        data[touched.clamp(0, data.length - 1)],
+                      ),
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
-                  ),
-                  barGroups: List.generate(data.length, (i) {
-                    final active = i == touched;
-                    final isLatest = i == lastIndex;
-                    return BarChartGroupData(
-                      x: i,
-                      barRods: [
-                        BarChartRodData(
-                          toY: data[i] <= 0 ? 0.001 : data[i],
-                          width: active ? 22 : 16,
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(8),
-                          ),
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: active || isLatest
-                                ? [
-                                    AppColors.primary.withValues(alpha: 0.75),
-                                    AppColors.primary,
-                                  ]
-                                : [
-                                    AppColors.primary.withValues(alpha: 0.18),
-                                    AppColors.primary.withValues(alpha: 0.42),
-                                  ],
-                          ),
-                          backDrawRodData: BackgroundBarChartRodData(
-                            show: true,
-                            toY: maxY,
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.04)
-                                : const Color(0xFF0A0F1A).withValues(alpha: 0.04),
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
+                  ],
                 ),
-                duration: const Duration(milliseconds: 280),
-                curve: Curves.easeOutCubic,
               ),
+              if (data.length >= 2) _TrendDeltaChip(data: data),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+        SizedBox(
+          height: widget.showHeader ? widget.height - 56 : widget.height,
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: maxY,
+              minY: 0,
+              groupsSpace: dense ? 6 : (compact ? 10 : 14),
+              barTouchData: BarTouchData(
+                enabled: true,
+                handleBuiltInTouches: false,
+                touchCallback: (event, response) {
+                  setState(() {
+                    if (!event.isInterestedForInteractions ||
+                        response == null ||
+                        response.spot == null) {
+                      return;
+                    }
+                    _touchedIndex = response.spot!.touchedBarGroupIndex;
+                  });
+                },
+                touchTooltipData: BarTouchTooltipData(
+                  getTooltipColor: (_) => Colors.transparent,
+                  tooltipPadding: EdgeInsets.zero,
+                  tooltipMargin: 0,
+                  getTooltipItem: (_, __, ___, ____) => null,
+                ),
+              ),
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: maxY / 3,
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : const Color(0xFF0A0F1A).withValues(alpha: 0.05),
+                  strokeWidth: 1,
+                  dashArray: [4, 4],
+                ),
+              ),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 40,
+                    interval: maxY / 3,
+                    getTitlesWidget: (value, meta) {
+                      if (value <= 0 || value >= maxY) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Text(
+                          currency.formatInUserCurrency(
+                            value,
+                            compact: true,
+                          ),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: AppColors.tertiaryText(context),
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 28,
+                    getTitlesWidget: (value, meta) {
+                      final index = value.toInt();
+                      if (index < 0 || index >= labels.length) {
+                        return const SizedBox.shrink();
+                      }
+                      final active = index == touched;
+                      final skip = dense && index.isOdd && !active;
+                      if (skip) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(
+                          labels[index],
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: active
+                                ? AppColors.primary
+                                : AppColors.tertiaryText(context),
+                            fontWeight:
+                                active ? FontWeight.w700 : FontWeight.w500,
+                            fontSize: dense ? 9 : 11,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              barGroups: List.generate(data.length, (i) {
+                final active = i == touched;
+                final isLatest = i == lastIndex;
+                return BarChartGroupData(
+                  x: i,
+                  barRods: [
+                    BarChartRodData(
+                      toY: data[i] <= 0 ? 0.001 : data[i],
+                      width: dense
+                          ? (active ? 12 : 8)
+                          : compact
+                              ? (active ? 16 : 12)
+                              : (active ? 22 : 16),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(8),
+                      ),
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: active || isLatest
+                            ? [
+                                AppColors.primary.withValues(alpha: 0.75),
+                                AppColors.primary,
+                              ]
+                            : [
+                                AppColors.primary.withValues(alpha: 0.18),
+                                AppColors.primary.withValues(alpha: 0.42),
+                              ],
+                      ),
+                      backDrawRodData: BackgroundBarChartRodData(
+                        show: true,
+                        toY: maxY,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.04)
+                            : const Color(0xFF0A0F1A).withValues(alpha: 0.04),
+                      ),
+                    ),
+                  ],
+                );
+              }),
             ),
-          ],
-        );
-      },
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -534,9 +563,8 @@ class _TrendDeltaChip extends StatelessWidget {
     final previous = data[data.length - 2];
     if (previous <= 0 && current <= 0) return const SizedBox.shrink();
 
-    final delta = previous == 0
-        ? 100.0
-        : ((current - previous) / previous) * 100;
+    final delta =
+        previous == 0 ? 100.0 : ((current - previous) / previous) * 100;
     final up = delta > 0.5;
     final flat = delta.abs() <= 0.5;
     final color = flat
@@ -545,8 +573,8 @@ class _TrendDeltaChip extends StatelessWidget {
             ? AppColors.error
             : AppColors.success;
     final label = flat
-        ? 'Same as last month'
-        : '${up ? '+' : ''}${delta.toStringAsFixed(0)}% vs last month';
+        ? 'Same as previous'
+        : '${up ? '+' : ''}${delta.toStringAsFixed(0)}% vs previous';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

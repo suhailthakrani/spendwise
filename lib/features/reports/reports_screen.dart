@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,32 +10,18 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/chart_widgets.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../data/models/insights_period.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
 
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
 
-  static const _months = [
-    '',
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final summaryAsync = ref.watch(currentMonthSummaryProvider);
-    final summariesAsync = ref.watch(monthlySummariesProvider);
+    final period = ref.watch(insightsPeriodProvider);
+    final expensesAsync = ref.watch(expensesProvider);
+    final report = ref.watch(insightsReportProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
     final currency = ref.watch(currencyDisplayProvider);
     final currencyCode = ref.watch(displayCurrencyCodeProvider);
@@ -61,224 +48,235 @@ class ReportsScreen extends ConsumerWidget {
           ],
         ),
       ),
-      body: summaryAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error: $error')),
-        data: (summary) {
-          final categories = categoriesAsync.valueOrNull ?? [];
-          final monthlySummaries = summariesAsync.valueOrNull ?? [];
-          final tracksIncome = summary.totalIncome > 0;
+      body: Column(
+        children: [
+          _InsightsPeriodFilter(
+            selected: period,
+            onSelected: (next) {
+              if (next == period) return;
+              HapticFeedback.selectionClick();
+              ref.read(insightsPeriodProvider.notifier).state = next;
+            },
+          ),
+          Expanded(
+            child: expensesAsync.when(
+              skipLoadingOnReload: true,
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Center(child: Text('Error: $error')),
+              data: (_) {
+                final categories = categoriesAsync.valueOrNull ?? [];
+                final range = report.range;
+                final history = report.history.reversed.toList();
+                final trendValues = [
+                  for (final summary in report.history) summary.totalExpenses,
+                ];
+                final trendLabels = [
+                  for (final summary in report.history) summary.shortLabel,
+                ];
 
-          return ListView(
-            padding: const EdgeInsets.only(bottom: AppSpacing.navClearance),
-            children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: AppSpacing.page),
-                child: tracksIncome
-                    ? Row(
-                        children: [
-                          Expanded(
-                            child: _SummaryTile(
-                              label: 'Income',
-                              amount: currency.formatInUserCurrency(
-                                summary.totalIncome,
-                              ),
-                              color: AppColors.success,
-                              iconAsset: AppIcons.arrowDown,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _SummaryTile(
-                              label: 'Expenses',
-                              amount: currency.formatInUserCurrency(
-                                summary.totalExpenses,
-                              ),
-                              color: AppColors.error,
-                              iconAsset: AppIcons.arrowUp,
-                            ),
-                          ),
-                        ],
-                      )
-                    : _SummaryTile(
-                        label: 'Spent this month',
+                return ListView(
+                  key: ValueKey(period),
+                  padding: const EdgeInsets.only(
+                    bottom: AppSpacing.navClearance,
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.page,
+                      ),
+                      child: _SummaryTile(
+                        label: period.spendLabel,
                         amount: currency.formatInUserCurrency(
-                          summary.totalExpenses,
+                          range.totalExpenses,
                         ),
                         color: AppColors.primary,
                         iconAsset: AppIcons.expenses,
                       ),
-              ),
-              if (tracksIncome) ...[
-                const SizedBox(height: 12),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.page),
-                  child: Card(
-                    color: summary.balance >= 0
-                        ? AppColors.success.withValues(alpha: 0.1)
-                        : AppColors.error.withValues(alpha: 0.1),
-                    child: ListTile(
-                      leading: AppIconBox(
-                        asset: summary.balance >= 0
-                            ? AppIcons.savings
-                            : AppIcons.warning,
-                        color: summary.balance >= 0
-                            ? AppColors.success
-                            : AppColors.error,
-                        size: 42,
-                        iconSize: 20,
-                      ),
-                      title: const Text('Balance'),
-                      subtitle: Text(
-                        summary.balance >= 0
-                            ? "You're in the green"
-                            : 'Spending exceeds income',
-                      ),
-                      trailing: Text(
-                        currency.formatInUserCurrency(summary.balance),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: summary.balance >= 0
-                              ? AppColors.success
-                              : AppColors.error,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                      onTap: () => context.push(AppRoutes.monthlySummary),
                     ),
-                  ),
-                ),
-              ],
-              SectionHeader(
-                title: 'By category',
-                actionLabel: 'Details',
-                onActionTap: () => context.push(AppRoutes.monthlySummary),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: AppSpacing.page),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
-                    child: CategoryPieChart(
-                      breakdown: summary.categoryBreakdown,
-                      categories: categories,
+                    SectionHeader(
+                      title: 'By category',
+                      actionLabel: 'Details',
+                      onActionTap: () => context.push(
+                        AppRoutes.monthlySummary,
+                        extra: range,
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              const SectionHeader(title: 'Spending trend'),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: AppSpacing.page),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Last 6 months',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.secondaryText(context),
-                            fontWeight: FontWeight.w500,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.page,
+                      ),
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
+                          child: CategoryPieChart(
+                            breakdown: range.categoryBreakdown,
+                            categories: categories,
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        const MonthlyTrendChart(height: 240),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              const SectionHeader(title: 'Monthly history'),
-              if (summariesAsync.isLoading && monthlySummaries.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.page,
-                  ),
-                  child: Card(
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < monthlySummaries.length; i++) ...[
-                          Builder(
-                            builder: (context) {
-                              final m = monthlySummaries[i];
-                              return ListTile(
-                                onTap: () =>
-                                    context.push(AppRoutes.monthlySummary),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 4,
+                    const SectionHeader(title: 'Spending trend'),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.page,
+                      ),
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                period.rangeCaption,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.secondaryText(context),
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                leading: Container(
-                                  width: 44,
-                                  height: 44,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary
-                                        .withValues(alpha: 0.12),
-                                    borderRadius:
-                                        BorderRadius.circular(AppRadii.sm),
-                                  ),
-                                  child: Text(
-                                    _months[m.month].substring(0, 3),
-                                    style: const TextStyle(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                                title: Text('${_months[m.month]} ${m.year}'),
-                                subtitle: Text(
-                                  m.totalIncome > 0
-                                      ? 'Income ${currency.formatInUserCurrency(m.totalIncome)}'
-                                      : 'Expenses ${currency.formatInUserCurrency(m.totalExpenses)}',
-                                ),
-                                trailing: Text(
-                                  m.totalIncome > 0
-                                      ? currency
-                                          .formatInUserCurrency(m.balance)
-                                      : currency.formatInUserCurrency(
-                                          m.totalExpenses,
-                                        ),
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: m.totalIncome > 0
-                                        ? (m.balance >= 0
-                                            ? AppColors.success
-                                            : AppColors.error)
-                                        : null,
-                                    fontFeatures: const [
-                                      FontFeature.tabularFigures(),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
+                              ),
+                              const SizedBox(height: 12),
+                              MonthlyTrendChart(
+                                key: ValueKey(period),
+                                height: 240,
+                                values: trendValues,
+                                labels: trendLabels,
+                              ),
+                            ],
                           ),
-                          if (i < monthlySummaries.length - 1)
-                            Divider(
-                              height: 1,
-                              indent: 76,
-                              color: AppColors.border(context),
-                            ),
-                        ],
-                      ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-            ],
+                    SectionHeader(title: report.historyTitle),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.page,
+                      ),
+                      child: Card(
+                        child: Column(
+                          children: [
+                            if (history.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Text(
+                                  'No history in this range',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.secondaryText(context),
+                                  ),
+                                ),
+                              )
+                            else
+                              for (var i = 0; i < history.length; i++) ...[
+                                _HistoryTile(
+                                  summary: history[i],
+                                  amount: currency.formatInUserCurrency(
+                                    history[i].totalExpenses,
+                                  ),
+                                ),
+                                if (i < history.length - 1)
+                                  Divider(
+                                    height: 1,
+                                    indent: 76,
+                                    color: AppColors.border(context),
+                                  ),
+                              ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InsightsPeriodFilter extends StatelessWidget {
+  const _InsightsPeriodFilter({
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final InsightsPeriod selected;
+  final ValueChanged<InsightsPeriod> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.page,
+          4,
+          AppSpacing.page,
+          8,
+        ),
+        itemCount: InsightsPeriod.values.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final value = InsightsPeriod.values[index];
+          return ChoiceChip(
+            showCheckmark: false,
+            label: Text(value.shortLabel),
+            selected: selected == value,
+            onSelected: (isSelected) {
+              if (isSelected) onSelected(value);
+            },
           );
         },
+      ),
+    );
+  }
+}
+
+class _HistoryTile extends StatelessWidget {
+  const _HistoryTile({
+    required this.summary,
+    required this.amount,
+  });
+
+  final PeriodSummary summary;
+  final String amount;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ListTile(
+      onTap: () => context.push(AppRoutes.monthlySummary, extra: summary),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 4,
+      ),
+      leading: Container(
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+        ),
+        child: Text(
+          summary.leadingLabel,
+          style: const TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+      title: Text(summary.label),
+      subtitle: Text('Expenses $amount'),
+      trailing: Text(
+        amount,
+        style: theme.textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
       ),
     );
   }

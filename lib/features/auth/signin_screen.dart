@@ -9,6 +9,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/continue_with_google_button.dart';
 import '../../data/repositories/user_profile_repository.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/preferences_providers.dart';
@@ -82,6 +83,29 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     }
   }
 
+  Future<void> _continueWithGoogle() async {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+
+    try {
+      final profile =
+          await ref.read(authControllerProvider).continueWithGoogle();
+      if (profile == null) return;
+      if (mounted) context.go(AppRoutes.dashboard);
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Could not continue with Google. Try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -145,8 +169,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     decoration: InputDecoration(
                       labelText: 'Password',
                       suffixIcon: IconButton(
-                        onPressed: () =>
-                            setState(() => _obscure = !_obscure),
+                        onPressed: () => setState(() => _obscure = !_obscure),
                         icon: AppIcon(
                           _obscure ? AppIcons.info : AppIcons.clear,
                           size: 20,
@@ -173,6 +196,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     onPressed: _submitting ? null : _submit,
                     child: Text(_submitting ? 'Signing in…' : 'Sign in'),
                   ),
+                  const SizedBox(height: 16),
+                  const AuthOrDivider(),
+                  const SizedBox(height: 16),
+                  ContinueWithGoogleButton(
+                    busy: _submitting,
+                    onPressed: _continueWithGoogle,
+                  ),
                   const SizedBox(height: 12),
                   if (canBiometric) ...[
                     OutlinedButton.icon(
@@ -185,13 +215,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   TextButton(
                     onPressed: _submitting
                         ? null
-                        : () => context.go(AppRoutes.restore),
+                        : () => context.push(AppRoutes.restore),
                     child: const Text('Restore from Google Drive'),
                   ),
                   TextButton(
-                    onPressed: _submitting
-                        ? null
-                        : () => context.go(AppRoutes.signup),
+                    onPressed:
+                        _submitting ? null : () => context.go(AppRoutes.signup),
                     child: const Text('Create an account'),
                   ),
                 ],

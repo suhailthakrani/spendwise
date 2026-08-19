@@ -6,6 +6,8 @@ class UserProfile {
     this.regionCode = 'US',
     this.currencyCode = 'USD',
     this.avatarUrl,
+    this.googleId,
+    this.hasLocalPassword = true,
     this.memberSince,
   });
 
@@ -15,7 +17,11 @@ class UserProfile {
   final String regionCode;
   final String currencyCode;
   final String? avatarUrl;
+  final String? googleId;
+  final bool hasLocalPassword;
   final DateTime? memberSince;
+
+  bool get isGoogleLinked => googleId != null && googleId!.isNotEmpty;
 
   UserProfile copyWith({
     String? id,
@@ -24,6 +30,8 @@ class UserProfile {
     String? regionCode,
     String? currencyCode,
     String? avatarUrl,
+    String? googleId,
+    bool? hasLocalPassword,
     DateTime? memberSince,
   }) {
     return UserProfile(
@@ -33,6 +41,8 @@ class UserProfile {
       regionCode: regionCode ?? this.regionCode,
       currencyCode: currencyCode ?? this.currencyCode,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      googleId: googleId ?? this.googleId,
+      hasLocalPassword: hasLocalPassword ?? this.hasLocalPassword,
       memberSince: memberSince ?? this.memberSince,
     );
   }

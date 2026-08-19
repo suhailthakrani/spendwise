@@ -1,6 +1,10 @@
+import 'dart:ui';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/utils/avatar_storage.dart';
+import '../data/models/app_currency.dart';
+import '../data/models/app_region.dart';
 import '../data/models/user_profile.dart';
 import '../data/repositories/user_profile_repository.dart';
 import '../data/services/app_crashlytics.dart';
@@ -76,8 +80,37 @@ class AuthController {
     return profile;
   }
 
+  /// Signs in or creates a local profile from a Google account.
+  /// Returns null when the user cancels the Google picker.
+  Future<UserProfile?> continueWithGoogle({
+    String? regionCode,
+    String? currencyCode,
+  }) async {
+    final identity = await _ref.read(googleAuthServiceProvider).pickAccount();
+    if (identity == null) return null;
+
+    final region = AppRegion.fromDeviceLocale(
+      regionCode ?? PlatformDispatcher.instance.locale.countryCode,
+    );
+    final currency = AppCurrency.byCode(
+      currencyCode ?? region.suggestedCurrencyCode,
+    );
+
+    final profile =
+        await _ref.read(userProfileRepositoryProvider).signInOrSignUpWithGoogle(
+              identity: identity,
+              regionCode: region.code,
+              currencyCode: currency.code,
+            );
+    await _ref.read(preferencesRepositoryProvider).completeOnboarding();
+    await _ref.read(preferencesRepositoryProvider).setActiveUserId(profile.id);
+    await AppCrashlytics.setUserId(profile.id);
+    return profile;
+  }
+
   Future<void> signOut() async {
     await _ref.read(preferencesRepositoryProvider).clearSession();
+    await _ref.read(googleAuthServiceProvider).signOut();
     await AppCrashlytics.setUserId(null);
   }
 
@@ -120,7 +153,8 @@ class AuthController {
     if (enabled) {
       final available = await biometric.isAvailable();
       if (!available) {
-        throw AuthException('Set up Face ID or a fingerprint in device settings first');
+        throw AuthException(
+            'Set up Face ID or a fingerprint in device settings first');
       }
       final label = await biometric.label();
       final ok = await biometric.authenticate(
@@ -179,19 +213,44 @@ class AuthController {
   }
 
   /// Password-gated deletion of the signed-in user's local data only.
-  Future<void> closeAccount({required String password}) async {
+  Future<void> closeAccount({String? password}) async {
     final userId = _ref.read(currentUserIdProvider);
     if (userId == null) throw AuthException('Not signed in');
 
-    await _ref.read(userProfileRepositoryProvider).deleteAccount(
-          userId: userId,
-          password: password,
-        );
+    final profile =
+        await _ref.read(userProfileRepositoryProvider).getById(userId);
+    if (profile == null) throw AuthException('Account not found');
+
+    if (profile.hasLocalPassword) {
+      if (password == null || password.isEmpty) {
+        throw AuthException('Enter your password');
+      }
+      await _ref.read(userProfileRepositoryProvider).deleteAccount(
+            userId: userId,
+            password: password,
+          );
+    } else {
+      final identity =
+          await _ref.read(googleAuthServiceProvider).confirmAccount();
+      if (identity == null) {
+        throw AuthException('Google confirmation cancelled');
+      }
+      final sameAccount = identity.email == profile.email ||
+          (profile.googleId != null && identity.id == profile.googleId);
+      if (!sameAccount) {
+        throw AuthException('Confirm with the same Google account');
+      }
+      await _ref.read(userProfileRepositoryProvider).deleteGoogleAccount(
+            userId: userId,
+          );
+    }
+
     await AvatarStorage.deleteForUser(userId);
     await _ref.read(preferencesRepositoryProvider).setBiometricUnlock(
           enabled: false,
         );
     await _ref.read(preferencesRepositoryProvider).clearSession();
+    await _ref.read(googleAuthServiceProvider).signOut();
     await AppCrashlytics.setUserId(null);
   }
 }

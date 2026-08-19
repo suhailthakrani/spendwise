@@ -2427,6 +2427,12 @@ class $UserProfilesTable extends UserProfiles
   late final GeneratedColumn<String> avatarUrl = GeneratedColumn<String>(
       'avatar_url', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _googleIdMeta =
+      const VerificationMeta('googleId');
+  @override
+  late final GeneratedColumn<String> googleId = GeneratedColumn<String>(
+      'google_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _memberSinceMeta =
       const VerificationMeta('memberSince');
   @override
@@ -2443,6 +2449,7 @@ class $UserProfilesTable extends UserProfiles
         regionCode,
         currencyCode,
         avatarUrl,
+        googleId,
         memberSince
       ];
   @override
@@ -2500,6 +2507,10 @@ class $UserProfilesTable extends UserProfiles
       context.handle(_avatarUrlMeta,
           avatarUrl.isAcceptableOrUnknown(data['avatar_url']!, _avatarUrlMeta));
     }
+    if (data.containsKey('google_id')) {
+      context.handle(_googleIdMeta,
+          googleId.isAcceptableOrUnknown(data['google_id']!, _googleIdMeta));
+    }
     if (data.containsKey('member_since')) {
       context.handle(
           _memberSinceMeta,
@@ -2531,6 +2542,8 @@ class $UserProfilesTable extends UserProfiles
           .read(DriftSqlType.string, data['${effectivePrefix}currency_code'])!,
       avatarUrl: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}avatar_url']),
+      googleId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}google_id']),
       memberSince: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}member_since']),
     );
@@ -2551,6 +2564,7 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
   final String regionCode;
   final String currencyCode;
   final String? avatarUrl;
+  final String? googleId;
   final DateTime? memberSince;
   const UserProfileRow(
       {required this.id,
@@ -2561,6 +2575,7 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
       required this.regionCode,
       required this.currencyCode,
       this.avatarUrl,
+      this.googleId,
       this.memberSince});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2574,6 +2589,9 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
     map['currency_code'] = Variable<String>(currencyCode);
     if (!nullToAbsent || avatarUrl != null) {
       map['avatar_url'] = Variable<String>(avatarUrl);
+    }
+    if (!nullToAbsent || googleId != null) {
+      map['google_id'] = Variable<String>(googleId);
     }
     if (!nullToAbsent || memberSince != null) {
       map['member_since'] = Variable<DateTime>(memberSince);
@@ -2593,6 +2611,9 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
       avatarUrl: avatarUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(avatarUrl),
+      googleId: googleId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(googleId),
       memberSince: memberSince == null && nullToAbsent
           ? const Value.absent()
           : Value(memberSince),
@@ -2611,6 +2632,7 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
       regionCode: serializer.fromJson<String>(json['regionCode']),
       currencyCode: serializer.fromJson<String>(json['currencyCode']),
       avatarUrl: serializer.fromJson<String?>(json['avatarUrl']),
+      googleId: serializer.fromJson<String?>(json['googleId']),
       memberSince: serializer.fromJson<DateTime?>(json['memberSince']),
     );
   }
@@ -2626,6 +2648,7 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
       'regionCode': serializer.toJson<String>(regionCode),
       'currencyCode': serializer.toJson<String>(currencyCode),
       'avatarUrl': serializer.toJson<String?>(avatarUrl),
+      'googleId': serializer.toJson<String?>(googleId),
       'memberSince': serializer.toJson<DateTime?>(memberSince),
     };
   }
@@ -2639,6 +2662,7 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
           String? regionCode,
           String? currencyCode,
           Value<String?> avatarUrl = const Value.absent(),
+          Value<String?> googleId = const Value.absent(),
           Value<DateTime?> memberSince = const Value.absent()}) =>
       UserProfileRow(
         id: id ?? this.id,
@@ -2649,6 +2673,7 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
         regionCode: regionCode ?? this.regionCode,
         currencyCode: currencyCode ?? this.currencyCode,
         avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
+        googleId: googleId.present ? googleId.value : this.googleId,
         memberSince: memberSince.present ? memberSince.value : this.memberSince,
       );
   UserProfileRow copyWithCompanion(UserProfilesCompanion data) {
@@ -2668,6 +2693,7 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
           ? data.currencyCode.value
           : this.currencyCode,
       avatarUrl: data.avatarUrl.present ? data.avatarUrl.value : this.avatarUrl,
+      googleId: data.googleId.present ? data.googleId.value : this.googleId,
       memberSince:
           data.memberSince.present ? data.memberSince.value : this.memberSince,
     );
@@ -2684,6 +2710,7 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
           ..write('regionCode: $regionCode, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('avatarUrl: $avatarUrl, ')
+          ..write('googleId: $googleId, ')
           ..write('memberSince: $memberSince')
           ..write(')'))
         .toString();
@@ -2691,7 +2718,7 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
 
   @override
   int get hashCode => Object.hash(id, name, email, passwordHash, passwordSalt,
-      regionCode, currencyCode, avatarUrl, memberSince);
+      regionCode, currencyCode, avatarUrl, googleId, memberSince);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2704,6 +2731,7 @@ class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
           other.regionCode == this.regionCode &&
           other.currencyCode == this.currencyCode &&
           other.avatarUrl == this.avatarUrl &&
+          other.googleId == this.googleId &&
           other.memberSince == this.memberSince);
 }
 
@@ -2716,6 +2744,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
   final Value<String> regionCode;
   final Value<String> currencyCode;
   final Value<String?> avatarUrl;
+  final Value<String?> googleId;
   final Value<DateTime?> memberSince;
   final Value<int> rowid;
   const UserProfilesCompanion({
@@ -2727,6 +2756,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
     this.regionCode = const Value.absent(),
     this.currencyCode = const Value.absent(),
     this.avatarUrl = const Value.absent(),
+    this.googleId = const Value.absent(),
     this.memberSince = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2739,6 +2769,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
     this.regionCode = const Value.absent(),
     this.currencyCode = const Value.absent(),
     this.avatarUrl = const Value.absent(),
+    this.googleId = const Value.absent(),
     this.memberSince = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
@@ -2753,6 +2784,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
     Expression<String>? regionCode,
     Expression<String>? currencyCode,
     Expression<String>? avatarUrl,
+    Expression<String>? googleId,
     Expression<DateTime>? memberSince,
     Expression<int>? rowid,
   }) {
@@ -2765,6 +2797,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
       if (regionCode != null) 'region_code': regionCode,
       if (currencyCode != null) 'currency_code': currencyCode,
       if (avatarUrl != null) 'avatar_url': avatarUrl,
+      if (googleId != null) 'google_id': googleId,
       if (memberSince != null) 'member_since': memberSince,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2779,6 +2812,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
       Value<String>? regionCode,
       Value<String>? currencyCode,
       Value<String?>? avatarUrl,
+      Value<String?>? googleId,
       Value<DateTime?>? memberSince,
       Value<int>? rowid}) {
     return UserProfilesCompanion(
@@ -2790,6 +2824,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
       regionCode: regionCode ?? this.regionCode,
       currencyCode: currencyCode ?? this.currencyCode,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      googleId: googleId ?? this.googleId,
       memberSince: memberSince ?? this.memberSince,
       rowid: rowid ?? this.rowid,
     );
@@ -2822,6 +2857,9 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
     if (avatarUrl.present) {
       map['avatar_url'] = Variable<String>(avatarUrl.value);
     }
+    if (googleId.present) {
+      map['google_id'] = Variable<String>(googleId.value);
+    }
     if (memberSince.present) {
       map['member_since'] = Variable<DateTime>(memberSince.value);
     }
@@ -2842,6 +2880,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
           ..write('regionCode: $regionCode, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('avatarUrl: $avatarUrl, ')
+          ..write('googleId: $googleId, ')
           ..write('memberSince: $memberSince, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5568,6 +5607,7 @@ typedef $$UserProfilesTableCreateCompanionBuilder = UserProfilesCompanion
   Value<String> regionCode,
   Value<String> currencyCode,
   Value<String?> avatarUrl,
+  Value<String?> googleId,
   Value<DateTime?> memberSince,
   Value<int> rowid,
 });
@@ -5581,6 +5621,7 @@ typedef $$UserProfilesTableUpdateCompanionBuilder = UserProfilesCompanion
   Value<String> regionCode,
   Value<String> currencyCode,
   Value<String?> avatarUrl,
+  Value<String?> googleId,
   Value<DateTime?> memberSince,
   Value<int> rowid,
 });
@@ -5617,6 +5658,9 @@ class $$UserProfilesTableFilterComposer
 
   ColumnFilters<String> get avatarUrl => $composableBuilder(
       column: $table.avatarUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get googleId => $composableBuilder(
+      column: $table.googleId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get memberSince => $composableBuilder(
       column: $table.memberSince, builder: (column) => ColumnFilters(column));
@@ -5658,6 +5702,9 @@ class $$UserProfilesTableOrderingComposer
   ColumnOrderings<String> get avatarUrl => $composableBuilder(
       column: $table.avatarUrl, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get googleId => $composableBuilder(
+      column: $table.googleId, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get memberSince => $composableBuilder(
       column: $table.memberSince, builder: (column) => ColumnOrderings(column));
 }
@@ -5694,6 +5741,9 @@ class $$UserProfilesTableAnnotationComposer
 
   GeneratedColumn<String> get avatarUrl =>
       $composableBuilder(column: $table.avatarUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get googleId =>
+      $composableBuilder(column: $table.googleId, builder: (column) => column);
 
   GeneratedColumn<DateTime> get memberSince => $composableBuilder(
       column: $table.memberSince, builder: (column) => column);
@@ -5733,6 +5783,7 @@ class $$UserProfilesTableTableManager extends RootTableManager<
             Value<String> regionCode = const Value.absent(),
             Value<String> currencyCode = const Value.absent(),
             Value<String?> avatarUrl = const Value.absent(),
+            Value<String?> googleId = const Value.absent(),
             Value<DateTime?> memberSince = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -5745,6 +5796,7 @@ class $$UserProfilesTableTableManager extends RootTableManager<
             regionCode: regionCode,
             currencyCode: currencyCode,
             avatarUrl: avatarUrl,
+            googleId: googleId,
             memberSince: memberSince,
             rowid: rowid,
           ),
@@ -5757,6 +5809,7 @@ class $$UserProfilesTableTableManager extends RootTableManager<
             Value<String> regionCode = const Value.absent(),
             Value<String> currencyCode = const Value.absent(),
             Value<String?> avatarUrl = const Value.absent(),
+            Value<String?> googleId = const Value.absent(),
             Value<DateTime?> memberSince = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -5769,6 +5822,7 @@ class $$UserProfilesTableTableManager extends RootTableManager<
             regionCode: regionCode,
             currencyCode: currencyCode,
             avatarUrl: avatarUrl,
+            googleId: googleId,
             memberSince: memberSince,
             rowid: rowid,
           ),

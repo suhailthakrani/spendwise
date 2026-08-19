@@ -6,6 +6,7 @@ import '../../core/constants/app_icons.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/common_widgets.dart';
@@ -225,33 +226,18 @@ class AccountScreen extends ConsumerWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+  Future<void> _showLogoutDialog(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Log out?'),
-        content: const Text(
+      title: 'Log out?',
+      message:
           'You’ll need to sign in again to access this account on this device.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await ref.read(authControllerProvider).signOut();
-              if (context.mounted) {
-                context.go(AppRoutes.signin);
-              }
-            },
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Log out'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Log out',
+      iconAsset: AppIcons.logout,
     );
+    if (!confirmed || !context.mounted) return;
+    await ref.read(authControllerProvider).signOut();
+    if (context.mounted) context.go(AppRoutes.signin);
   }
 }
 

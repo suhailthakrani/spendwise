@@ -7,6 +7,7 @@ import '../../core/utils/password_hasher.dart';
 import '../mappers/user_profile_mapper.dart';
 import '../models/app_currency.dart';
 import '../models/app_region.dart';
+import '../models/google_identity.dart';
 import '../models/user_profile.dart';
 
 class AuthException implements Exception {
@@ -109,16 +110,114 @@ class UserProfileRepository {
           ..where((t) => t.email.equals(normalizedEmail)))
         .getSingleOrNull();
 
-    if (row == null ||
-        !PasswordHasher.verify(
-          password: password,
-          salt: row.passwordSalt,
-          expectedHash: row.passwordHash,
-        )) {
+    if (row == null) {
+      throw AuthException('Incorrect email or password');
+    }
+    if (row.passwordHash.isEmpty) {
+      throw AuthException(
+        'This account uses Google. Continue with Google instead.',
+      );
+    }
+    if (!PasswordHasher.verify(
+      password: password,
+      salt: row.passwordSalt,
+      expectedHash: row.passwordHash,
+    )) {
       throw AuthException('Incorrect email or password');
     }
 
     return UserProfileMapper.fromRow(row);
+  }
+
+  /// Signs into an existing local profile or creates one from Google identity.
+  Future<UserProfile> signInOrSignUpWithGoogle({
+    required GoogleIdentity identity,
+    required String regionCode,
+    required String currencyCode,
+  }) async {
+    if (!_isValidEmail(identity.email)) {
+      throw AuthException('Google did not return a valid email');
+    }
+
+    final existing = await findByEmail(identity.email);
+    if (existing != null) {
+      await _linkGoogleAccount(
+        userId: existing.id,
+        identity: identity,
+        fillEmptyProfile: true,
+      );
+      final updated = await getById(existing.id);
+      if (updated == null) {
+        throw AuthException('Could not sign in with Google');
+      }
+      return updated;
+    }
+
+    return _createGoogleAccount(
+      identity: identity,
+      regionCode: regionCode,
+      currencyCode: currencyCode,
+    );
+  }
+
+  Future<UserProfile> _createGoogleAccount({
+    required GoogleIdentity identity,
+    required String regionCode,
+    required String currencyCode,
+  }) async {
+    final region = AppRegion.byCode(regionCode);
+    final currency = AppCurrency.byCode(currencyCode);
+    final userId = _uuid.v4();
+    final now = DateTime.now();
+    final name = identity.displayName.trim().isEmpty
+        ? identity.email.split('@').first
+        : identity.displayName.trim();
+
+    await _db.into(_db.userProfiles).insert(
+          UserProfilesCompanion.insert(
+            id: userId,
+            name: name,
+            email: identity.email,
+            googleId: Value(identity.id),
+            avatarUrl: Value(identity.photoUrl),
+            regionCode: Value(region.code),
+            currencyCode: Value(currency.code),
+            memberSince: Value(now),
+          ),
+        );
+    await seedCategoriesForUser(_db, userId);
+
+    final profile = await getById(userId);
+    if (profile == null) {
+      throw AuthException('Could not create account');
+    }
+    return profile;
+  }
+
+  Future<void> _linkGoogleAccount({
+    required String userId,
+    required GoogleIdentity identity,
+    required bool fillEmptyProfile,
+  }) async {
+    final row = await (_db.select(_db.userProfiles)
+          ..where((t) => t.id.equals(userId)))
+        .getSingleOrNull();
+    if (row == null) return;
+
+    await (_db.update(_db.userProfiles)..where((t) => t.id.equals(userId)))
+        .write(
+      UserProfilesCompanion(
+        googleId: Value(identity.id),
+        name: fillEmptyProfile && row.name.trim().isEmpty
+            ? Value(identity.displayName.trim())
+            : const Value.absent(),
+        avatarUrl: fillEmptyProfile &&
+                (row.avatarUrl == null || row.avatarUrl!.trim().isEmpty) &&
+                identity.photoUrl != null
+            ? Value(identity.photoUrl)
+            : const Value.absent(),
+      ),
+    );
   }
 
   Future<UserProfile> updateProfile({
@@ -160,15 +259,17 @@ class UserProfileRepository {
     final wantsPasswordChange =
         newPassword != null && newPassword.trim().isNotEmpty;
     if (wantsPasswordChange) {
-      if (currentPassword == null || currentPassword.isEmpty) {
-        throw AuthException('Enter your current password');
-      }
-      if (!PasswordHasher.verify(
-        password: currentPassword,
-        salt: row.passwordSalt,
-        expectedHash: row.passwordHash,
-      )) {
-        throw AuthException('Current password is incorrect');
+      if (row.passwordHash.isNotEmpty) {
+        if (currentPassword == null || currentPassword.isEmpty) {
+          throw AuthException('Enter your current password');
+        }
+        if (!PasswordHasher.verify(
+          password: currentPassword,
+          salt: row.passwordSalt,
+          expectedHash: row.passwordHash,
+        )) {
+          throw AuthException('Current password is incorrect');
+        }
       }
       if (newPassword.length < 6) {
         throw AuthException('New password must be at least 6 characters');
@@ -239,6 +340,9 @@ class UserProfileRepository {
     if (row == null) {
       throw AuthException('Account not found');
     }
+    if (row.passwordHash.isEmpty) {
+      throw AuthException('Confirm with Google to close this account');
+    }
     if (!PasswordHasher.verify(
       password: password,
       salt: row.passwordSalt,
@@ -247,12 +351,26 @@ class UserProfileRepository {
       throw AuthException('Incorrect password');
     }
 
+    await _wipeUser(userId);
+  }
+
+  /// Deletes a Google-only account after the caller has verified identity.
+  Future<void> deleteGoogleAccount({required String userId}) async {
+    final row = await (_db.select(_db.userProfiles)
+          ..where((t) => t.id.equals(userId)))
+        .getSingleOrNull();
+    if (row == null) {
+      throw AuthException('Account not found');
+    }
+    await _wipeUser(userId);
+  }
+
+  Future<void> _wipeUser(String userId) async {
     await _db.transaction(() async {
       await (_db.delete(_db.savingContributions)
             ..where((t) => t.userId.equals(userId)))
           .go();
-      await (_db.delete(_db.savingGoals)
-            ..where((t) => t.userId.equals(userId)))
+      await (_db.delete(_db.savingGoals)..where((t) => t.userId.equals(userId)))
           .go();
       await (_db.delete(_db.expenses)..where((t) => t.userId.equals(userId)))
           .go();

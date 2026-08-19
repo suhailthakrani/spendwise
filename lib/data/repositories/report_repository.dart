@@ -1,5 +1,7 @@
 import '../../core/utils/currency_display.dart';
 import '../models/dashboard_stats.dart';
+import '../models/expense.dart';
+import '../models/insights_period.dart';
 import '../models/monthly_summary.dart';
 import 'budget_repository.dart';
 import 'expense_repository.dart';
@@ -10,10 +12,7 @@ class ReportRepository {
   final ExpenseRepository _expenses;
   final BudgetRepository _budgets;
 
-  static const _monthLabels = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
+  static const _monthLabels = InsightsPeriod.monthNames;
 
   Future<DashboardStats> dashboardStats(CurrencyDisplay currency) async {
     final now = DateTime.now();
@@ -41,9 +40,8 @@ class ReportRepository {
           (e) => CategorySpending(
             categoryId: e.key,
             amount: e.value,
-            percentage: totalMonthDisplay > 0
-                ? (e.value / totalMonthDisplay) * 100
-                : 0,
+            percentage:
+                totalMonthDisplay > 0 ? (e.value / totalMonthDisplay) * 100 : 0,
           ),
         )
         .toList()
@@ -80,8 +78,7 @@ class ReportRepository {
     required CurrencyDisplay currency,
   }) async {
     final reference = DateTime(year, month, 1);
-    final totalExpensesUsd =
-        await _expenses.sumForMonth(month: reference);
+    final totalExpensesUsd = await _expenses.sumForMonth(month: reference);
 
     final monthStart = DateTime(year, month, 1);
     final monthEnd = DateTime(year, month + 1, 0, 23, 59, 59);
@@ -107,10 +104,13 @@ class ReportRepository {
     );
   }
 
-  Future<List<MonthlySummary>> monthlySummaries(CurrencyDisplay currency) async {
+  Future<List<MonthlySummary>> monthlySummaries(
+    CurrencyDisplay currency, {
+    int months = 12,
+  }) async {
     final now = DateTime.now();
     final summaries = <MonthlySummary>[];
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < months; i++) {
       final date = DateTime(now.year, now.month - i, 1);
       summaries.add(
         await monthSummary(
@@ -123,14 +123,97 @@ class ReportRepository {
     return summaries;
   }
 
-  Future<List<double>> monthlyTrend(CurrencyDisplay currency) async {
-    final summaries = await monthlySummaries(currency);
+  /// Spending for a lookback window, plus oldest-first history buckets.
+  static InsightsReport summarizePeriods({
+    required InsightsPeriod period,
+    required List<Expense> expenses,
+    required CurrencyDisplay currency,
+    DateTime? now,
+  }) {
+    final n = now ?? DateTime.now();
+    DateTime? earliest;
+    for (final expense in expenses) {
+      if (earliest == null || expense.date.isBefore(earliest)) {
+        earliest = expense.date;
+      }
+    }
+
+    final buckets = period.historyBuckets(now: n, earliestExpense: earliest);
+    final history = [
+      for (final bucket in buckets)
+        _summarizeBucket(
+          period: period,
+          bucket: bucket,
+          expenses: expenses,
+          currency: currency,
+        ),
+    ];
+
+    final rangeStart =
+        buckets.isEmpty ? DateTime(n.year, n.month, 1) : buckets.first.start;
+    final rangeEnd = buckets.isEmpty
+        ? DateTime(n.year, n.month + 1, 0, 23, 59, 59)
+        : buckets.last.end;
+
+    return InsightsReport(
+      period: period,
+      range: _summarizeBucket(
+        period: period,
+        bucket: PeriodBucket(
+          label: period.rangeCaption,
+          shortLabel: period.shortLabel,
+          leadingLabel: period.shortLabel,
+          start: rangeStart,
+          end: rangeEnd,
+        ),
+        expenses: expenses,
+        currency: currency,
+      ),
+      history: history,
+    );
+  }
+
+  static PeriodSummary _summarizeBucket({
+    required InsightsPeriod period,
+    required PeriodBucket bucket,
+    required List<Expense> expenses,
+    required CurrencyDisplay currency,
+  }) {
+    var totalUsd = 0.0;
+    final breakdownUsd = <String, double>{};
+    for (final expense in expenses) {
+      if (!bucket.contains(expense.date)) continue;
+      totalUsd += expense.amount;
+      breakdownUsd[expense.categoryId] =
+          (breakdownUsd[expense.categoryId] ?? 0) + expense.amount;
+    }
+
+    return PeriodSummary(
+      period: period,
+      label: bucket.label,
+      shortLabel: bucket.shortLabel,
+      leadingLabel: bucket.leadingLabel,
+      start: bucket.start,
+      end: bucket.end,
+      totalExpenses: currency.toDisplayAmount(totalUsd),
+      categoryBreakdown: {
+        for (final entry in breakdownUsd.entries)
+          entry.key: currency.toDisplayAmount(entry.value),
+      },
+    );
+  }
+
+  Future<List<double>> monthlyTrend(
+    CurrencyDisplay currency, {
+    int months = 6,
+  }) async {
+    final summaries = await monthlySummaries(currency, months: months);
     return summaries.reversed.map((m) => m.totalExpenses).toList();
   }
 
-  List<String> monthlyTrendLabels() {
+  List<String> monthlyTrendLabels({int months = 6}) {
     final now = DateTime.now();
-    return List.generate(6, (i) {
+    return List.generate(months, (i) {
       final date = DateTime(now.year, now.month - i, 1);
       return _monthLabels[date.month - 1];
     }).reversed.toList();

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/models/export_format.dart';
+import '../../data/models/insights_period.dart';
+import '../../data/models/user_preferences.dart';
 import '../../features/account/account_screen.dart';
 import '../../features/account/backup_screen.dart';
 import '../../features/account/edit_profile_screen.dart';
@@ -32,7 +34,6 @@ import '../../features/shell/main_shell.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../providers/notification_providers.dart';
 import '../../providers/preferences_providers.dart';
-import '../../data/models/user_preferences.dart';
 
 abstract final class AppRoutes {
   static const splash = '/splash';
@@ -69,8 +70,7 @@ abstract final class AppRoutes {
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = _RouterRefresh(ref);
-  final analyticsObserver =
-      ref.read(appAnalyticsProvider).navigatorObserver;
+  final analyticsObserver = ref.read(appAnalyticsProvider).navigatorObserver;
 
   final router = GoRouter(
     initialLocation: AppRoutes.splash,
@@ -215,7 +215,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.monthlySummary,
-        builder: (context, state) => const MonthlySummaryScreen(),
+        builder: (context, state) {
+          final extra = state.extra;
+          return MonthlySummaryScreen(
+            period: extra is PeriodSummary ? extra : null,
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.search,

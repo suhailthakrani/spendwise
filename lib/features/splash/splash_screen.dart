@@ -4,9 +4,9 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/constants/app_images.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_logo.dart';
 import '../../providers/preferences_providers.dart';
 
 /// Branded splash shown while local prefs / secure DB warm up.
@@ -101,16 +101,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 opacity: _fade,
                 child: ScaleTransition(
                   scale: _scale,
-                      child: Column(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Image.asset(
-                        AppImages.logo,
-                        width: 72,
-                        height: 72,
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.high,
-                        semanticLabel: 'SpendWise',
+                      const AppLogo(
+                        size: 112,
+                        transparent: true,
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -125,7 +121,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       Text(
                         'Spend with intention',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.primaryLight.withValues(alpha: 0.9),
+                              color:
+                                  AppColors.primaryLight.withValues(alpha: 0.9),
                               fontWeight: FontWeight.w500,
                             ),
                       ),

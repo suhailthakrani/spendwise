@@ -12,6 +12,7 @@ import '../../core/constants/app_icons.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../data/models/backup_snapshot.dart';
@@ -66,9 +67,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     });
     try {
       final typed = _email;
-      final email = await ref.read(googleDriveBackupClientProvider).connectAccount(
-            preferEmail: typed.isEmpty ? null : typed,
-          );
+      final email =
+          await ref.read(googleDriveBackupClientProvider).connectAccount(
+                preferEmail: typed.isEmpty ? null : typed,
+              );
       _emailController.text = email;
       await ref.read(preferencesRepositoryProvider).setBackupDriveEmail(email);
       if (mounted) {
@@ -101,7 +103,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         final email =
             await ref.read(googleDriveBackupClientProvider).connectAccount();
         _emailController.text = email;
-        await ref.read(preferencesRepositoryProvider).setBackupDriveEmail(email);
+        await ref
+            .read(preferencesRepositoryProvider)
+            .setBackupDriveEmail(email);
       }
 
       final snapshot = await ref.read(backupServiceProvider).createSnapshot(
@@ -119,7 +123,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             driveFileId: result.fileId,
           );
       if (mounted) {
-        setState(() => _status = 'Backup saved to Google Drive (${result.email})');
+        setState(
+            () => _status = 'Backup saved to Google Drive (${result.email})');
       }
     } on DriveBackupException catch (error) {
       if (!mounted) return;
@@ -153,7 +158,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           userId: userId,
           driveEmail: _email.isEmpty ? null : _email,
         );
-    final bytes = Uint8List.fromList(utf8.encode(jsonEncode(snapshot.toJson())));
+    final bytes =
+        Uint8List.fromList(utf8.encode(jsonEncode(snapshot.toJson())));
     final path = await FilePicker.platform.saveFile(
       dialogTitle: 'Save SpendWise backup',
       fileName: 'spendwise_backup.json',
@@ -183,7 +189,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         final email =
             await ref.read(googleDriveBackupClientProvider).connectAccount();
         _emailController.text = email;
-        await ref.read(preferencesRepositoryProvider).setBackupDriveEmail(email);
+        await ref
+            .read(preferencesRepositoryProvider)
+            .setBackupDriveEmail(email);
       }
       final prefs = ref.read(preferencesProvider).valueOrNull;
       final snapshot = await ref.read(googleDriveBackupClientProvider).download(
@@ -287,57 +295,40 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   }
 
   Future<bool?> _confirmRestore() {
-    return showDialog<bool>(
+    return showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Restore backup?'),
-        content: Text(
-          widget.restoreOnly
-              ? 'This creates or updates a local account from the Google Drive backup for $_email.'
-              : 'This replaces expenses, budgets, goals, and categories on this device with the Drive backup. Your local password is kept.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Restore'),
-          ),
-        ],
-      ),
+      title: 'Restore backup?',
+      message: widget.restoreOnly
+          ? 'This creates or updates a local account from the Google Drive backup${_email.isEmpty ? '' : ' for $_email'}.'
+          : 'This replaces expenses, budgets, goals, and categories on this device with the Drive backup. Your local password is kept.',
+      confirmLabel: 'Restore',
+      tone: AppConfirmTone.primary,
+      iconAsset: AppIcons.globe,
     );
   }
 
-  Future<String?> _askRestorePassword() async {
-    final controller = TextEditingController();
-    final password = await showDialog<String>(
+  Future<String?> _askRestorePassword() {
+    return showAppInputDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Set a local password'),
-        content: AppTextField(
-          controller: controller,
-          obscureText: true,
-          autofillHints: const [AutofillHints.newPassword],
-          decoration: const InputDecoration(
-            labelText: 'Password (min 6 characters)',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text),
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
+      title: 'Set a local password',
+      message:
+          'This backup will be restored as a new account on this device. Choose a password to sign in next time.',
+      confirmLabel: 'Continue',
+      fieldLabel: 'Password (min 6 characters)',
+      iconAsset: AppIcons.profile,
+      validator: (value) {
+        if (value.length < 6) return 'Use at least 6 characters';
+        return null;
+      },
     );
-    controller.dispose();
-    return password;
+  }
+
+  void _backToSignIn() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go(AppRoutes.signin);
   }
 
   @override
@@ -347,140 +338,156 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final lastBackup = prefs?.lastBackupAt;
     final dateFmt = DateFormat('d MMM yyyy, h:mm a');
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.restoreOnly ? 'Restore backup' : 'Google Drive backup'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.page,
-          8,
-          AppSpacing.page,
-          AppSpacing.navClearance,
+    return PopScope(
+      canPop: !widget.restoreOnly || context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || !widget.restoreOnly) return;
+        context.go(AppRoutes.signin);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.restoreOnly ? 'Restore backup' : 'Google Drive backup',
+          ),
+          leading: widget.restoreOnly
+              ? IconButton(
+                  tooltip: 'Back to sign in',
+                  onPressed: _backToSignIn,
+                  icon: const Icon(Icons.arrow_back_rounded),
+                )
+              : null,
         ),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  const AppIconBox(
-                    asset: AppIcons.globe,
-                    color: AppColors.primary,
-                    size: 48,
-                    iconSize: 22,
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Google Drive',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Connect your Google account, then back up. Restore any time.',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.secondaryText(context),
-                          ),
-                        ),
-                      ],
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            8,
+            AppSpacing.page,
+            AppSpacing.navClearance,
+          ),
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const AppIconBox(
+                      asset: AppIcons.globe,
+                      color: AppColors.primary,
+                      size: 48,
+                      iconSize: 22,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Google Drive',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Connect your Google account, then back up. Restore any time.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.secondaryText(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Form(
-            key: _emailKey,
-            child: AppTextFormField(
-              controller: _emailController,
-              enabled: !_busy,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.done,
-              autofillHints: const [AutofillHints.email],
-              decoration: const InputDecoration(
-                labelText: 'Google Drive email',
-                hintText: 'you@gmail.com',
-              ),
-              validator: (value) {
-                final email = value?.trim() ?? '';
-                if (email.isEmpty) return null;
-                if (!email.contains('@') || !email.contains('.')) {
-                  return 'Enter a valid email';
-                }
-                return null;
-              },
-              onFieldSubmitted: (_) => _connectDrive(),
-            ),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: _busy ? null : _connectDrive,
-            child: const Text('Connect Google Drive'),
-          ),
-          if (lastBackup != null) ...[
             const SizedBox(height: 16),
-            Text(
-              'Last backup: ${dateFmt.format(lastBackup.toLocal())}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.secondaryText(context),
+            Form(
+              key: _emailKey,
+              child: AppTextFormField(
+                controller: _emailController,
+                enabled: !_busy,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.email],
+                decoration: const InputDecoration(
+                  labelText: 'Google Drive email',
+                  hintText: 'you@gmail.com',
+                ),
+                validator: (value) {
+                  final email = value?.trim() ?? '';
+                  if (email.isEmpty) return null;
+                  if (!email.contains('@') || !email.contains('.')) {
+                    return 'Enter a valid email';
+                  }
+                  return null;
+                },
+                onFieldSubmitted: (_) => _connectDrive(),
               ),
             ),
-          ],
-          if (_status != null) ...[
             const SizedBox(height: 12),
-            Text(
-              _status!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.primaryDark,
-                fontWeight: FontWeight.w600,
+            OutlinedButton(
+              onPressed: _busy ? null : _connectDrive,
+              child: const Text('Connect Google Drive'),
+            ),
+            if (lastBackup != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Last backup: ${dateFmt.format(lastBackup.toLocal())}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.secondaryText(context),
+                ),
               ),
+            ],
+            if (_status != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _status!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.primaryDark,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _error!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+            if (!widget.restoreOnly)
+              FilledButton.icon(
+                onPressed: _busy ? null : _backupNow,
+                icon: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : AppIcon(
+                        AppIcons.globe,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                label: Text(_busy ? 'Working…' : 'Back up now'),
+              ),
+            if (!widget.restoreOnly) const SizedBox(height: 10),
+            FilledButton.tonal(
+              onPressed: _busy ? null : _restoreFromDrive,
+              child: const Text('Restore from Google Drive'),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: _busy ? null : _restoreFromFile,
+              child: const Text('Restore from a backup file'),
             ),
           ],
-          if (_error != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              _error!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.error,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-          const SizedBox(height: 24),
-          if (!widget.restoreOnly)
-            FilledButton.icon(
-              onPressed: _busy ? null : _backupNow,
-              icon: _busy
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : AppIcon(
-                      AppIcons.globe,
-                      size: 18,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-              label: Text(_busy ? 'Working…' : 'Back up now'),
-            ),
-          if (!widget.restoreOnly) const SizedBox(height: 10),
-          FilledButton.tonal(
-            onPressed: _busy ? null : _restoreFromDrive,
-            child: const Text('Restore from Google Drive'),
-          ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: _busy ? null : _restoreFromFile,
-            child: const Text('Restore from a backup file'),
-          ),
-        ],
+        ),
       ),
     );
   }

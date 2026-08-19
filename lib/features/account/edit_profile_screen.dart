@@ -82,8 +82,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   void _showAvatarOptions() {
-    final hasAvatar =
-        (_avatarPath != null && _avatarPath!.trim().isNotEmpty) && !_clearAvatar;
+    final hasAvatar = (_avatarPath != null && _avatarPath!.trim().isNotEmpty) &&
+        !_clearAvatar;
 
     showModalBottomSheet<void>(
       context: context,
@@ -200,6 +200,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _hydrateFromProfile();
 
     final theme = Theme.of(context);
+    final profile = ref.watch(currentUserProvider).valueOrNull;
     final displayPath = _clearAvatar ? null : _avatarPath;
 
     return Scaffold(
@@ -297,28 +298,32 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Leave blank to keep your current password',
+                  profile?.hasLocalPassword ?? true
+                      ? 'Leave blank to keep your current password'
+                      : 'Optional — add a password to also sign in with email',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.secondaryText(context),
                   ),
                 ),
                 const SizedBox(height: 12),
-                AppTextFormField(
-                  controller: _currentPasswordController,
-                  obscureText: _obscure,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'Current password',
-                    suffixIcon: IconButton(
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                      icon: AppIcon(
-                        _obscure ? AppIcons.info : AppIcons.clear,
-                        size: 20,
+                if (profile?.hasLocalPassword ?? true)
+                  AppTextFormField(
+                    controller: _currentPasswordController,
+                    obscureText: _obscure,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: 'Current password',
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(() => _obscure = !_obscure),
+                        icon: AppIcon(
+                          _obscure ? AppIcons.info : AppIcons.clear,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 14),
+                if (profile?.hasLocalPassword ?? true)
+                  const SizedBox(height: 14),
                 AppTextFormField(
                   controller: _newPasswordController,
                   obscureText: _obscure,

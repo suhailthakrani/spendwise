@@ -64,6 +64,7 @@ class BackupService {
         'email': profile.email,
         'regionCode': profile.regionCode,
         'currencyCode': profile.currencyCode,
+        'googleId': profile.googleId,
         'memberSince': profile.memberSince?.toIso8601String(),
       },
       categories: [
@@ -229,6 +230,7 @@ class BackupService {
               currencyCode: Value(
                 snapshot.profile['currencyCode'] as String? ?? 'USD',
               ),
+              googleId: Value(snapshot.profile['googleId'] as String?),
               memberSince: Value(memberSince),
             ),
           );
@@ -294,14 +296,15 @@ class BackupService {
       driveEmail: snapshot.driveEmail,
       profile: snapshot.profile,
       categories: [
-        for (final row in snapshot.categories) remapRow(row, extra: categoryIds),
+        for (final row in snapshot.categories)
+          remapRow(row, extra: categoryIds),
       ],
       expenses: [
         for (final row in snapshot.expenses)
           {
             ...remapRow(row),
-            'categoryId': categoryIds[row['categoryId'] as String] ??
-                row['categoryId'],
+            'categoryId':
+                categoryIds[row['categoryId'] as String] ?? row['categoryId'],
           },
       ],
       budgets: [
@@ -318,8 +321,8 @@ class BackupService {
         for (final row in snapshot.recurringExpenses)
           {
             ...remapRow(row),
-            'categoryId': categoryIds[row['categoryId'] as String] ??
-                row['categoryId'],
+            'categoryId':
+                categoryIds[row['categoryId'] as String] ?? row['categoryId'],
           },
       ],
       savingGoals: [

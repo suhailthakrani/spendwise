@@ -21,16 +21,25 @@ class ProfileAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolvedIconSize = iconSize ?? size * 0.47;
-    final hasFile = path != null &&
-        path!.trim().isNotEmpty &&
-        File(path!).existsSync();
+    final value = path?.trim() ?? '';
+    final isNetwork =
+        value.startsWith('http://') || value.startsWith('https://');
+    final hasFile = value.isNotEmpty && !isNetwork && File(value).existsSync();
+    final hasImage = hasFile || isNetwork;
+
+    ImageProvider? image;
+    if (isNetwork) {
+      image = NetworkImage(value);
+    } else if (hasFile) {
+      image = FileImage(File(value));
+    }
 
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: hasFile
+        gradient: hasImage
             ? null
             : LinearGradient(
                 begin: Alignment.topLeft,
@@ -40,18 +49,18 @@ class ProfileAvatar extends StatelessWidget {
                   AppColors.primaryLight.withValues(alpha: 0.25),
                 ],
               ),
-        image: hasFile
-            ? DecorationImage(
-                image: FileImage(File(path!)),
+        image: image == null
+            ? null
+            : DecorationImage(
+                image: image,
                 fit: BoxFit.cover,
-              )
-            : null,
+              ),
         border: Border.all(
           color: AppColors.primary.withValues(alpha: 0.18),
           width: 1.5,
         ),
       ),
-      child: hasFile
+      child: hasImage
           ? null
           : Center(
               child: AppIcon(

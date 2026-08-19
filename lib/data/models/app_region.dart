@@ -9,18 +9,43 @@ class AppRegion {
   /// ISO country code (e.g. US, PK).
   final String code;
   final String name;
+
   /// BCP 47-ish locale for number/date formatting (e.g. en_US).
   final String locale;
 
-  static const us = AppRegion(code: 'US', name: 'United States', locale: 'en_US');
+  static const us =
+      AppRegion(code: 'US', name: 'United States', locale: 'en_US');
+  static const pk = AppRegion(code: 'PK', name: 'Pakistan', locale: 'en_PK');
 
   /// ISO currency for this country. Falls back to USD when that unit is
   /// not in [AppCurrency.all].
   String get suggestedCurrencyCode {
     const euro = {
-      'AD', 'AT', 'BE', 'CY', 'DE', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR',
-      'IE', 'IT', 'LT', 'LU', 'LV', 'MC', 'ME', 'MT', 'NL', 'PT', 'SI',
-      'SK', 'SM', 'VA',
+      'AD',
+      'AT',
+      'BE',
+      'CY',
+      'DE',
+      'EE',
+      'ES',
+      'FI',
+      'FR',
+      'GR',
+      'HR',
+      'IE',
+      'IT',
+      'LT',
+      'LU',
+      'LV',
+      'MC',
+      'ME',
+      'MT',
+      'NL',
+      'PT',
+      'SI',
+      'SK',
+      'SM',
+      'VA',
     };
     if (euro.contains(code)) return 'EUR';
 
@@ -100,6 +125,13 @@ class AppRegion {
       if (region.code == upper) return region;
     }
     return us;
+  }
+
+  /// Country from the device locale, falling back to Pakistan.
+  static AppRegion fromDeviceLocale([String? countryCode]) {
+    final code = countryCode?.trim();
+    if (code == null || code.isEmpty) return pk;
+    return byCode(code);
   }
 
   static List<AppRegion> search(String query) {
@@ -247,7 +279,7 @@ class AppRegion {
     AppRegion(code: 'MK', name: 'North Macedonia', locale: 'en_MK'),
     AppRegion(code: 'NO', name: 'Norway', locale: 'nb_NO'),
     AppRegion(code: 'OM', name: 'Oman', locale: 'en_OM'),
-    AppRegion(code: 'PK', name: 'Pakistan', locale: 'en_PK'),
+    pk,
     AppRegion(code: 'PW', name: 'Palau', locale: 'en_PW'),
     AppRegion(code: 'PS', name: 'Palestine', locale: 'en_PS'),
     AppRegion(code: 'PA', name: 'Panama', locale: 'es_PA'),
@@ -263,7 +295,8 @@ class AppRegion {
     AppRegion(code: 'RW', name: 'Rwanda', locale: 'en_RW'),
     AppRegion(code: 'KN', name: 'Saint Kitts and Nevis', locale: 'en_KN'),
     AppRegion(code: 'LC', name: 'Saint Lucia', locale: 'en_LC'),
-    AppRegion(code: 'VC', name: 'Saint Vincent and the Grenadines', locale: 'en_VC'),
+    AppRegion(
+        code: 'VC', name: 'Saint Vincent and the Grenadines', locale: 'en_VC'),
     AppRegion(code: 'WS', name: 'Samoa', locale: 'en_WS'),
     AppRegion(code: 'SM', name: 'San Marino', locale: 'en_SM'),
     AppRegion(code: 'ST', name: 'Sao Tome and Principe', locale: 'en_ST'),
