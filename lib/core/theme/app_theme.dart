@@ -53,6 +53,11 @@ abstract final class AppTheme {
       textTheme: textTheme,
       primaryTextTheme: textTheme,
       splashFactory: InkSparkle.splashFactory,
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: AppColors.primary,
+        selectionColor: AppColors.primary.withValues(alpha: 0.22),
+        selectionHandleColor: AppColors.primary,
+      ),
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -76,7 +81,7 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(AppRadii.lg),
           side: BorderSide(color: border.withValues(alpha: isDark ? 0.7 : 1)),
         ),
-        clipBehavior: Clip.antiAlias,
+        clipBehavior: Clip.hardEdge,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
@@ -281,11 +286,12 @@ abstract final class AppTheme {
       ),
       bodyLarge: themed.bodyLarge?.copyWith(
         fontWeight: FontWeight.w500,
-        letterSpacing: -0.15,
+        letterSpacing: 0,
         height: 1.35,
       ),
       bodyMedium: themed.bodyMedium?.copyWith(
         fontWeight: FontWeight.w500,
+        letterSpacing: 0,
         height: 1.35,
       ),
       bodySmall: themed.bodySmall?.copyWith(

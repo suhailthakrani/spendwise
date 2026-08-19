@@ -7,7 +7,10 @@ import '../data/repositories/recurring_expense_repository.dart';
 import '../data/repositories/report_repository.dart';
 import '../data/repositories/saving_goal_repository.dart';
 import '../data/repositories/user_profile_repository.dart';
+import '../data/services/backup_service.dart';
+import '../data/services/biometric_auth_service.dart';
 import '../data/services/export_service.dart';
+import '../data/services/google_drive_backup_client.dart';
 import 'database_provider.dart';
 import 'preferences_providers.dart';
 
@@ -67,4 +70,16 @@ final exportServiceProvider = Provider<ExportService>((ref) {
     expenseRepository: ref.watch(expenseRepositoryProvider),
     categoryRepository: ref.watch(categoryRepositoryProvider),
   );
+});
+
+final backupServiceProvider = Provider<BackupService>((ref) {
+  return BackupService(ref.watch(databaseProvider));
+});
+
+final googleDriveBackupClientProvider = Provider<GoogleDriveBackupClient>((ref) {
+  return GoogleDriveBackupClient();
+});
+
+final biometricAuthServiceProvider = Provider<BiometricAuthService>((ref) {
+  return BiometricAuthService();
 });

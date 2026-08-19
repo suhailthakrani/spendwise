@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:csv/csv.dart';
 import 'package:excel/excel.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
@@ -133,17 +132,10 @@ class ExportService {
     final stamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     final name = 'spendwise_expenses_$stamp.${format.fileExtension}';
     final file = File(p.join(dir.path, name));
-
-    switch (format) {
-      case ExportFormat.csv:
-        await file.writeAsString(
-          _toCsv(expenses, categories, currency, rangeLabel),
-        );
-      case ExportFormat.excel:
-        final bytes = _toExcel(expenses, categories, currency, rangeLabel);
-        await file.writeAsBytes(bytes, flush: true);
-    }
-
+    await file.writeAsBytes(
+      _toExcel(expenses, categories, currency, rangeLabel),
+      flush: true,
+    );
     return file;
   }
 
@@ -180,23 +172,6 @@ class ExportService {
     }
 
     return rows;
-  }
-
-  String _toCsv(
-    List<Expense> expenses,
-    List<ExpenseCategory> categories,
-    CurrencyDisplay currency,
-    String rangeLabel,
-  ) {
-    final rows = _headerAndRows(expenses, categories, currency);
-    final meta = [
-      ['SpendWise expense export'],
-      ['Range', rangeLabel],
-      ['Currency', currency.displayCurrencyCode],
-      ['Rows', '${expenses.length}'],
-      <String>[],
-    ];
-    return const ListToCsvConverter().convert([...meta, ...rows]);
   }
 
   List<int> _toExcel(

@@ -1698,6 +1698,40 @@ class $AppPreferencesTable extends AppPreferences
           defaultConstraints: GeneratedColumn.constraintIsAlways(
               'CHECK ("product_updates_enabled" IN (0, 1))'),
           defaultValue: const Constant(false));
+  static const VerificationMeta _backupDriveEmailMeta =
+      const VerificationMeta('backupDriveEmail');
+  @override
+  late final GeneratedColumn<String> backupDriveEmail = GeneratedColumn<String>(
+      'backup_drive_email', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lastBackupAtMeta =
+      const VerificationMeta('lastBackupAt');
+  @override
+  late final GeneratedColumn<DateTime> lastBackupAt = GeneratedColumn<DateTime>(
+      'last_backup_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _backupDriveFileIdMeta =
+      const VerificationMeta('backupDriveFileId');
+  @override
+  late final GeneratedColumn<String> backupDriveFileId =
+      GeneratedColumn<String>('backup_drive_file_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _biometricUnlockEnabledMeta =
+      const VerificationMeta('biometricUnlockEnabled');
+  @override
+  late final GeneratedColumn<bool> biometricUnlockEnabled =
+      GeneratedColumn<bool>('biometric_unlock_enabled', aliasedName, false,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'CHECK ("biometric_unlock_enabled" IN (0, 1))'),
+          defaultValue: const Constant(false));
+  static const VerificationMeta _biometricUserIdMeta =
+      const VerificationMeta('biometricUserId');
+  @override
+  late final GeneratedColumn<String> biometricUserId = GeneratedColumn<String>(
+      'biometric_user_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -1708,7 +1742,12 @@ class $AppPreferencesTable extends AppPreferences
         billRemindersEnabled,
         budgetAlertsEnabled,
         goalRemindersEnabled,
-        productUpdatesEnabled
+        productUpdatesEnabled,
+        backupDriveEmail,
+        lastBackupAt,
+        backupDriveFileId,
+        biometricUnlockEnabled,
+        biometricUserId
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1771,6 +1810,36 @@ class $AppPreferencesTable extends AppPreferences
           productUpdatesEnabled.isAcceptableOrUnknown(
               data['product_updates_enabled']!, _productUpdatesEnabledMeta));
     }
+    if (data.containsKey('backup_drive_email')) {
+      context.handle(
+          _backupDriveEmailMeta,
+          backupDriveEmail.isAcceptableOrUnknown(
+              data['backup_drive_email']!, _backupDriveEmailMeta));
+    }
+    if (data.containsKey('last_backup_at')) {
+      context.handle(
+          _lastBackupAtMeta,
+          lastBackupAt.isAcceptableOrUnknown(
+              data['last_backup_at']!, _lastBackupAtMeta));
+    }
+    if (data.containsKey('backup_drive_file_id')) {
+      context.handle(
+          _backupDriveFileIdMeta,
+          backupDriveFileId.isAcceptableOrUnknown(
+              data['backup_drive_file_id']!, _backupDriveFileIdMeta));
+    }
+    if (data.containsKey('biometric_unlock_enabled')) {
+      context.handle(
+          _biometricUnlockEnabledMeta,
+          biometricUnlockEnabled.isAcceptableOrUnknown(
+              data['biometric_unlock_enabled']!, _biometricUnlockEnabledMeta));
+    }
+    if (data.containsKey('biometric_user_id')) {
+      context.handle(
+          _biometricUserIdMeta,
+          biometricUserId.isAcceptableOrUnknown(
+              data['biometric_user_id']!, _biometricUserIdMeta));
+    }
     return context;
   }
 
@@ -1800,6 +1869,17 @@ class $AppPreferencesTable extends AppPreferences
       productUpdatesEnabled: attachedDatabase.typeMapping.read(
           DriftSqlType.bool,
           data['${effectivePrefix}product_updates_enabled'])!,
+      backupDriveEmail: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}backup_drive_email']),
+      lastBackupAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_backup_at']),
+      backupDriveFileId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}backup_drive_file_id']),
+      biometricUnlockEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool,
+          data['${effectivePrefix}biometric_unlock_enabled'])!,
+      biometricUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}biometric_user_id']),
     );
   }
 
@@ -1819,6 +1899,11 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
   final bool budgetAlertsEnabled;
   final bool goalRemindersEnabled;
   final bool productUpdatesEnabled;
+  final String? backupDriveEmail;
+  final DateTime? lastBackupAt;
+  final String? backupDriveFileId;
+  final bool biometricUnlockEnabled;
+  final String? biometricUserId;
   const PreferencesRow(
       {required this.id,
       required this.themeMode,
@@ -1828,7 +1913,12 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       required this.billRemindersEnabled,
       required this.budgetAlertsEnabled,
       required this.goalRemindersEnabled,
-      required this.productUpdatesEnabled});
+      required this.productUpdatesEnabled,
+      this.backupDriveEmail,
+      this.lastBackupAt,
+      this.backupDriveFileId,
+      required this.biometricUnlockEnabled,
+      this.biometricUserId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1843,6 +1933,19 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
     map['budget_alerts_enabled'] = Variable<bool>(budgetAlertsEnabled);
     map['goal_reminders_enabled'] = Variable<bool>(goalRemindersEnabled);
     map['product_updates_enabled'] = Variable<bool>(productUpdatesEnabled);
+    if (!nullToAbsent || backupDriveEmail != null) {
+      map['backup_drive_email'] = Variable<String>(backupDriveEmail);
+    }
+    if (!nullToAbsent || lastBackupAt != null) {
+      map['last_backup_at'] = Variable<DateTime>(lastBackupAt);
+    }
+    if (!nullToAbsent || backupDriveFileId != null) {
+      map['backup_drive_file_id'] = Variable<String>(backupDriveFileId);
+    }
+    map['biometric_unlock_enabled'] = Variable<bool>(biometricUnlockEnabled);
+    if (!nullToAbsent || biometricUserId != null) {
+      map['biometric_user_id'] = Variable<String>(biometricUserId);
+    }
     return map;
   }
 
@@ -1859,6 +1962,19 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       budgetAlertsEnabled: Value(budgetAlertsEnabled),
       goalRemindersEnabled: Value(goalRemindersEnabled),
       productUpdatesEnabled: Value(productUpdatesEnabled),
+      backupDriveEmail: backupDriveEmail == null && nullToAbsent
+          ? const Value.absent()
+          : Value(backupDriveEmail),
+      lastBackupAt: lastBackupAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastBackupAt),
+      backupDriveFileId: backupDriveFileId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(backupDriveFileId),
+      biometricUnlockEnabled: Value(biometricUnlockEnabled),
+      biometricUserId: biometricUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(biometricUserId),
     );
   }
 
@@ -1881,6 +1997,13 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
           serializer.fromJson<bool>(json['goalRemindersEnabled']),
       productUpdatesEnabled:
           serializer.fromJson<bool>(json['productUpdatesEnabled']),
+      backupDriveEmail: serializer.fromJson<String?>(json['backupDriveEmail']),
+      lastBackupAt: serializer.fromJson<DateTime?>(json['lastBackupAt']),
+      backupDriveFileId:
+          serializer.fromJson<String?>(json['backupDriveFileId']),
+      biometricUnlockEnabled:
+          serializer.fromJson<bool>(json['biometricUnlockEnabled']),
+      biometricUserId: serializer.fromJson<String?>(json['biometricUserId']),
     );
   }
   @override
@@ -1896,6 +2019,11 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       'budgetAlertsEnabled': serializer.toJson<bool>(budgetAlertsEnabled),
       'goalRemindersEnabled': serializer.toJson<bool>(goalRemindersEnabled),
       'productUpdatesEnabled': serializer.toJson<bool>(productUpdatesEnabled),
+      'backupDriveEmail': serializer.toJson<String?>(backupDriveEmail),
+      'lastBackupAt': serializer.toJson<DateTime?>(lastBackupAt),
+      'backupDriveFileId': serializer.toJson<String?>(backupDriveFileId),
+      'biometricUnlockEnabled': serializer.toJson<bool>(biometricUnlockEnabled),
+      'biometricUserId': serializer.toJson<String?>(biometricUserId),
     };
   }
 
@@ -1908,7 +2036,12 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
           bool? billRemindersEnabled,
           bool? budgetAlertsEnabled,
           bool? goalRemindersEnabled,
-          bool? productUpdatesEnabled}) =>
+          bool? productUpdatesEnabled,
+          Value<String?> backupDriveEmail = const Value.absent(),
+          Value<DateTime?> lastBackupAt = const Value.absent(),
+          Value<String?> backupDriveFileId = const Value.absent(),
+          bool? biometricUnlockEnabled,
+          Value<String?> biometricUserId = const Value.absent()}) =>
       PreferencesRow(
         id: id ?? this.id,
         themeMode: themeMode ?? this.themeMode,
@@ -1922,6 +2055,19 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
         goalRemindersEnabled: goalRemindersEnabled ?? this.goalRemindersEnabled,
         productUpdatesEnabled:
             productUpdatesEnabled ?? this.productUpdatesEnabled,
+        backupDriveEmail: backupDriveEmail.present
+            ? backupDriveEmail.value
+            : this.backupDriveEmail,
+        lastBackupAt:
+            lastBackupAt.present ? lastBackupAt.value : this.lastBackupAt,
+        backupDriveFileId: backupDriveFileId.present
+            ? backupDriveFileId.value
+            : this.backupDriveFileId,
+        biometricUnlockEnabled:
+            biometricUnlockEnabled ?? this.biometricUnlockEnabled,
+        biometricUserId: biometricUserId.present
+            ? biometricUserId.value
+            : this.biometricUserId,
       );
   PreferencesRow copyWithCompanion(AppPreferencesCompanion data) {
     return PreferencesRow(
@@ -1948,6 +2094,21 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       productUpdatesEnabled: data.productUpdatesEnabled.present
           ? data.productUpdatesEnabled.value
           : this.productUpdatesEnabled,
+      backupDriveEmail: data.backupDriveEmail.present
+          ? data.backupDriveEmail.value
+          : this.backupDriveEmail,
+      lastBackupAt: data.lastBackupAt.present
+          ? data.lastBackupAt.value
+          : this.lastBackupAt,
+      backupDriveFileId: data.backupDriveFileId.present
+          ? data.backupDriveFileId.value
+          : this.backupDriveFileId,
+      biometricUnlockEnabled: data.biometricUnlockEnabled.present
+          ? data.biometricUnlockEnabled.value
+          : this.biometricUnlockEnabled,
+      biometricUserId: data.biometricUserId.present
+          ? data.biometricUserId.value
+          : this.biometricUserId,
     );
   }
 
@@ -1962,7 +2123,12 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
           ..write('billRemindersEnabled: $billRemindersEnabled, ')
           ..write('budgetAlertsEnabled: $budgetAlertsEnabled, ')
           ..write('goalRemindersEnabled: $goalRemindersEnabled, ')
-          ..write('productUpdatesEnabled: $productUpdatesEnabled')
+          ..write('productUpdatesEnabled: $productUpdatesEnabled, ')
+          ..write('backupDriveEmail: $backupDriveEmail, ')
+          ..write('lastBackupAt: $lastBackupAt, ')
+          ..write('backupDriveFileId: $backupDriveFileId, ')
+          ..write('biometricUnlockEnabled: $biometricUnlockEnabled, ')
+          ..write('biometricUserId: $biometricUserId')
           ..write(')'))
         .toString();
   }
@@ -1977,7 +2143,12 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       billRemindersEnabled,
       budgetAlertsEnabled,
       goalRemindersEnabled,
-      productUpdatesEnabled);
+      productUpdatesEnabled,
+      backupDriveEmail,
+      lastBackupAt,
+      backupDriveFileId,
+      biometricUnlockEnabled,
+      biometricUserId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1990,7 +2161,12 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
           other.billRemindersEnabled == this.billRemindersEnabled &&
           other.budgetAlertsEnabled == this.budgetAlertsEnabled &&
           other.goalRemindersEnabled == this.goalRemindersEnabled &&
-          other.productUpdatesEnabled == this.productUpdatesEnabled);
+          other.productUpdatesEnabled == this.productUpdatesEnabled &&
+          other.backupDriveEmail == this.backupDriveEmail &&
+          other.lastBackupAt == this.lastBackupAt &&
+          other.backupDriveFileId == this.backupDriveFileId &&
+          other.biometricUnlockEnabled == this.biometricUnlockEnabled &&
+          other.biometricUserId == this.biometricUserId);
 }
 
 class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
@@ -2003,6 +2179,11 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
   final Value<bool> budgetAlertsEnabled;
   final Value<bool> goalRemindersEnabled;
   final Value<bool> productUpdatesEnabled;
+  final Value<String?> backupDriveEmail;
+  final Value<DateTime?> lastBackupAt;
+  final Value<String?> backupDriveFileId;
+  final Value<bool> biometricUnlockEnabled;
+  final Value<String?> biometricUserId;
   const AppPreferencesCompanion({
     this.id = const Value.absent(),
     this.themeMode = const Value.absent(),
@@ -2013,6 +2194,11 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
     this.budgetAlertsEnabled = const Value.absent(),
     this.goalRemindersEnabled = const Value.absent(),
     this.productUpdatesEnabled = const Value.absent(),
+    this.backupDriveEmail = const Value.absent(),
+    this.lastBackupAt = const Value.absent(),
+    this.backupDriveFileId = const Value.absent(),
+    this.biometricUnlockEnabled = const Value.absent(),
+    this.biometricUserId = const Value.absent(),
   });
   AppPreferencesCompanion.insert({
     this.id = const Value.absent(),
@@ -2024,6 +2210,11 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
     this.budgetAlertsEnabled = const Value.absent(),
     this.goalRemindersEnabled = const Value.absent(),
     this.productUpdatesEnabled = const Value.absent(),
+    this.backupDriveEmail = const Value.absent(),
+    this.lastBackupAt = const Value.absent(),
+    this.backupDriveFileId = const Value.absent(),
+    this.biometricUnlockEnabled = const Value.absent(),
+    this.biometricUserId = const Value.absent(),
   }) : themeMode = Value(themeMode);
   static Insertable<PreferencesRow> custom({
     Expression<int>? id,
@@ -2035,6 +2226,11 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
     Expression<bool>? budgetAlertsEnabled,
     Expression<bool>? goalRemindersEnabled,
     Expression<bool>? productUpdatesEnabled,
+    Expression<String>? backupDriveEmail,
+    Expression<DateTime>? lastBackupAt,
+    Expression<String>? backupDriveFileId,
+    Expression<bool>? biometricUnlockEnabled,
+    Expression<String>? biometricUserId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2052,6 +2248,12 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
         'goal_reminders_enabled': goalRemindersEnabled,
       if (productUpdatesEnabled != null)
         'product_updates_enabled': productUpdatesEnabled,
+      if (backupDriveEmail != null) 'backup_drive_email': backupDriveEmail,
+      if (lastBackupAt != null) 'last_backup_at': lastBackupAt,
+      if (backupDriveFileId != null) 'backup_drive_file_id': backupDriveFileId,
+      if (biometricUnlockEnabled != null)
+        'biometric_unlock_enabled': biometricUnlockEnabled,
+      if (biometricUserId != null) 'biometric_user_id': biometricUserId,
     });
   }
 
@@ -2064,7 +2266,12 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
       Value<bool>? billRemindersEnabled,
       Value<bool>? budgetAlertsEnabled,
       Value<bool>? goalRemindersEnabled,
-      Value<bool>? productUpdatesEnabled}) {
+      Value<bool>? productUpdatesEnabled,
+      Value<String?>? backupDriveEmail,
+      Value<DateTime?>? lastBackupAt,
+      Value<String?>? backupDriveFileId,
+      Value<bool>? biometricUnlockEnabled,
+      Value<String?>? biometricUserId}) {
     return AppPreferencesCompanion(
       id: id ?? this.id,
       themeMode: themeMode ?? this.themeMode,
@@ -2077,6 +2284,12 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
       goalRemindersEnabled: goalRemindersEnabled ?? this.goalRemindersEnabled,
       productUpdatesEnabled:
           productUpdatesEnabled ?? this.productUpdatesEnabled,
+      backupDriveEmail: backupDriveEmail ?? this.backupDriveEmail,
+      lastBackupAt: lastBackupAt ?? this.lastBackupAt,
+      backupDriveFileId: backupDriveFileId ?? this.backupDriveFileId,
+      biometricUnlockEnabled:
+          biometricUnlockEnabled ?? this.biometricUnlockEnabled,
+      biometricUserId: biometricUserId ?? this.biometricUserId,
     );
   }
 
@@ -2114,6 +2327,22 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
       map['product_updates_enabled'] =
           Variable<bool>(productUpdatesEnabled.value);
     }
+    if (backupDriveEmail.present) {
+      map['backup_drive_email'] = Variable<String>(backupDriveEmail.value);
+    }
+    if (lastBackupAt.present) {
+      map['last_backup_at'] = Variable<DateTime>(lastBackupAt.value);
+    }
+    if (backupDriveFileId.present) {
+      map['backup_drive_file_id'] = Variable<String>(backupDriveFileId.value);
+    }
+    if (biometricUnlockEnabled.present) {
+      map['biometric_unlock_enabled'] =
+          Variable<bool>(biometricUnlockEnabled.value);
+    }
+    if (biometricUserId.present) {
+      map['biometric_user_id'] = Variable<String>(biometricUserId.value);
+    }
     return map;
   }
 
@@ -2128,7 +2357,12 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
           ..write('billRemindersEnabled: $billRemindersEnabled, ')
           ..write('budgetAlertsEnabled: $budgetAlertsEnabled, ')
           ..write('goalRemindersEnabled: $goalRemindersEnabled, ')
-          ..write('productUpdatesEnabled: $productUpdatesEnabled')
+          ..write('productUpdatesEnabled: $productUpdatesEnabled, ')
+          ..write('backupDriveEmail: $backupDriveEmail, ')
+          ..write('lastBackupAt: $lastBackupAt, ')
+          ..write('backupDriveFileId: $backupDriveFileId, ')
+          ..write('biometricUnlockEnabled: $biometricUnlockEnabled, ')
+          ..write('biometricUserId: $biometricUserId')
           ..write(')'))
         .toString();
   }
@@ -5010,6 +5244,11 @@ typedef $$AppPreferencesTableCreateCompanionBuilder = AppPreferencesCompanion
   Value<bool> budgetAlertsEnabled,
   Value<bool> goalRemindersEnabled,
   Value<bool> productUpdatesEnabled,
+  Value<String?> backupDriveEmail,
+  Value<DateTime?> lastBackupAt,
+  Value<String?> backupDriveFileId,
+  Value<bool> biometricUnlockEnabled,
+  Value<String?> biometricUserId,
 });
 typedef $$AppPreferencesTableUpdateCompanionBuilder = AppPreferencesCompanion
     Function({
@@ -5022,6 +5261,11 @@ typedef $$AppPreferencesTableUpdateCompanionBuilder = AppPreferencesCompanion
   Value<bool> budgetAlertsEnabled,
   Value<bool> goalRemindersEnabled,
   Value<bool> productUpdatesEnabled,
+  Value<String?> backupDriveEmail,
+  Value<DateTime?> lastBackupAt,
+  Value<String?> backupDriveFileId,
+  Value<bool> biometricUnlockEnabled,
+  Value<String?> biometricUserId,
 });
 
 class $$AppPreferencesTableFilterComposer
@@ -5064,6 +5308,25 @@ class $$AppPreferencesTableFilterComposer
 
   ColumnFilters<bool> get productUpdatesEnabled => $composableBuilder(
       column: $table.productUpdatesEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get backupDriveEmail => $composableBuilder(
+      column: $table.backupDriveEmail,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastBackupAt => $composableBuilder(
+      column: $table.lastBackupAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get backupDriveFileId => $composableBuilder(
+      column: $table.backupDriveFileId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get biometricUnlockEnabled => $composableBuilder(
+      column: $table.biometricUnlockEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get biometricUserId => $composableBuilder(
+      column: $table.biometricUserId,
       builder: (column) => ColumnFilters(column));
 }
 
@@ -5109,6 +5372,26 @@ class $$AppPreferencesTableOrderingComposer
   ColumnOrderings<bool> get productUpdatesEnabled => $composableBuilder(
       column: $table.productUpdatesEnabled,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get backupDriveEmail => $composableBuilder(
+      column: $table.backupDriveEmail,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastBackupAt => $composableBuilder(
+      column: $table.lastBackupAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get backupDriveFileId => $composableBuilder(
+      column: $table.backupDriveFileId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get biometricUnlockEnabled => $composableBuilder(
+      column: $table.biometricUnlockEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get biometricUserId => $composableBuilder(
+      column: $table.biometricUserId,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$AppPreferencesTableAnnotationComposer
@@ -5146,6 +5429,21 @@ class $$AppPreferencesTableAnnotationComposer
 
   GeneratedColumn<bool> get productUpdatesEnabled => $composableBuilder(
       column: $table.productUpdatesEnabled, builder: (column) => column);
+
+  GeneratedColumn<String> get backupDriveEmail => $composableBuilder(
+      column: $table.backupDriveEmail, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastBackupAt => $composableBuilder(
+      column: $table.lastBackupAt, builder: (column) => column);
+
+  GeneratedColumn<String> get backupDriveFileId => $composableBuilder(
+      column: $table.backupDriveFileId, builder: (column) => column);
+
+  GeneratedColumn<bool> get biometricUnlockEnabled => $composableBuilder(
+      column: $table.biometricUnlockEnabled, builder: (column) => column);
+
+  GeneratedColumn<String> get biometricUserId => $composableBuilder(
+      column: $table.biometricUserId, builder: (column) => column);
 }
 
 class $$AppPreferencesTableTableManager extends RootTableManager<
@@ -5184,6 +5482,11 @@ class $$AppPreferencesTableTableManager extends RootTableManager<
             Value<bool> budgetAlertsEnabled = const Value.absent(),
             Value<bool> goalRemindersEnabled = const Value.absent(),
             Value<bool> productUpdatesEnabled = const Value.absent(),
+            Value<String?> backupDriveEmail = const Value.absent(),
+            Value<DateTime?> lastBackupAt = const Value.absent(),
+            Value<String?> backupDriveFileId = const Value.absent(),
+            Value<bool> biometricUnlockEnabled = const Value.absent(),
+            Value<String?> biometricUserId = const Value.absent(),
           }) =>
               AppPreferencesCompanion(
             id: id,
@@ -5195,6 +5498,11 @@ class $$AppPreferencesTableTableManager extends RootTableManager<
             budgetAlertsEnabled: budgetAlertsEnabled,
             goalRemindersEnabled: goalRemindersEnabled,
             productUpdatesEnabled: productUpdatesEnabled,
+            backupDriveEmail: backupDriveEmail,
+            lastBackupAt: lastBackupAt,
+            backupDriveFileId: backupDriveFileId,
+            biometricUnlockEnabled: biometricUnlockEnabled,
+            biometricUserId: biometricUserId,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -5206,6 +5514,11 @@ class $$AppPreferencesTableTableManager extends RootTableManager<
             Value<bool> budgetAlertsEnabled = const Value.absent(),
             Value<bool> goalRemindersEnabled = const Value.absent(),
             Value<bool> productUpdatesEnabled = const Value.absent(),
+            Value<String?> backupDriveEmail = const Value.absent(),
+            Value<DateTime?> lastBackupAt = const Value.absent(),
+            Value<String?> backupDriveFileId = const Value.absent(),
+            Value<bool> biometricUnlockEnabled = const Value.absent(),
+            Value<String?> biometricUserId = const Value.absent(),
           }) =>
               AppPreferencesCompanion.insert(
             id: id,
@@ -5217,6 +5530,11 @@ class $$AppPreferencesTableTableManager extends RootTableManager<
             budgetAlertsEnabled: budgetAlertsEnabled,
             goalRemindersEnabled: goalRemindersEnabled,
             productUpdatesEnabled: productUpdatesEnabled,
+            backupDriveEmail: backupDriveEmail,
+            lastBackupAt: lastBackupAt,
+            backupDriveFileId: backupDriveFileId,
+            biometricUnlockEnabled: biometricUnlockEnabled,
+            biometricUserId: biometricUserId,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

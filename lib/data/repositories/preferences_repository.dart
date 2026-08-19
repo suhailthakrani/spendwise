@@ -48,6 +48,47 @@ class PreferencesRepository {
     await _upsert(current.copyWith(clearActiveUserId: true));
   }
 
+  Future<void> setBackupDriveEmail(String? email) async {
+    final current = await getPreferences();
+    final normalized = email?.trim().toLowerCase();
+    final emailChanged = (normalized ?? '') != (current.backupDriveEmail ?? '');
+    await _upsert(
+      current.copyWith(
+        backupDriveEmail: normalized,
+        clearBackupDriveEmail: normalized == null || normalized.isEmpty,
+        clearBackupDriveFileId: emailChanged,
+      ),
+    );
+  }
+
+  Future<void> setLastBackup({
+    required DateTime at,
+    String? driveFileId,
+  }) async {
+    final current = await getPreferences();
+    await _upsert(
+      current.copyWith(
+        lastBackupAt: at,
+        backupDriveFileId: driveFileId,
+        clearBackupDriveFileId: driveFileId == null || driveFileId.isEmpty,
+      ),
+    );
+  }
+
+  Future<void> setBiometricUnlock({
+    required bool enabled,
+    String? userId,
+  }) async {
+    final current = await getPreferences();
+    await _upsert(
+      current.copyWith(
+        biometricUnlockEnabled: enabled,
+        biometricUserId: enabled ? userId : null,
+        clearBiometricUserId: !enabled || userId == null || userId.isEmpty,
+      ),
+    );
+  }
+
   Future<void> setNotificationSettings({
     bool? notificationsEnabled,
     bool? billRemindersEnabled,

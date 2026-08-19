@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_logo.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/models/app_currency.dart';
 import '../../data/models/app_region.dart';
@@ -397,7 +398,7 @@ class _PersonalStep extends StatelessWidget {
           subtitle: 'Your details stay on this device.',
         ),
         const SizedBox(height: 24),
-        TextFormField(
+        AppTextFormField(
           controller: nameController,
           enabled: enabled,
           textCapitalization: TextCapitalization.words,
@@ -414,7 +415,7 @@ class _PersonalStep extends StatelessWidget {
           },
         ),
         const SizedBox(height: 12),
-        TextFormField(
+        AppTextFormField(
           controller: emailController,
           enabled: enabled,
           keyboardType: TextInputType.emailAddress,
@@ -434,7 +435,7 @@ class _PersonalStep extends StatelessWidget {
           },
         ),
         const SizedBox(height: 12),
-        TextFormField(
+        AppTextFormField(
           controller: passwordController,
           enabled: enabled,
           obscureText: obscurePassword,
@@ -465,7 +466,7 @@ class _PersonalStep extends StatelessWidget {
           _PasswordStrengthMeter(strength: strength),
         ],
         const SizedBox(height: 12),
-        TextFormField(
+        AppTextFormField(
           controller: confirmController,
           enabled: enabled,
           obscureText: obscureConfirm,

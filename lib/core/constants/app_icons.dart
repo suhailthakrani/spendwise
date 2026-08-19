@@ -22,7 +22,6 @@ abstract final class AppIcons {
   // Account & settings
   static const darkMode = '$_base/dark_mode.svg';
   static const lightMode = '$_base/light_mode.svg';
-  static const exportCsv = '$_base/export_csv.svg';
   static const exportExcel = '$_base/export_excel.svg';
   static const category = '$_base/category.svg';
   static const logout = '$_base/logout.svg';

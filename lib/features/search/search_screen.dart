@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/utils/category_lookup.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/expense_widgets.dart';
 import '../../data/models/expense.dart';
@@ -67,7 +68,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: TextField(
+            child: AppTextField(
               controller: _queryController,
               onChanged: (v) {
                 _query = v;

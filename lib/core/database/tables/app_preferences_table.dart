@@ -17,6 +17,12 @@ class AppPreferences extends Table {
       boolean().withDefault(const Constant(true))();
   BoolColumn get productUpdatesEnabled =>
       boolean().withDefault(const Constant(false))();
+  TextColumn get backupDriveEmail => text().nullable()();
+  DateTimeColumn get lastBackupAt => dateTime().nullable()();
+  TextColumn get backupDriveFileId => text().nullable()();
+  BoolColumn get biometricUnlockEnabled =>
+      boolean().withDefault(const Constant(false))();
+  TextColumn get biometricUserId => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

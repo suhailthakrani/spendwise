@@ -81,6 +81,62 @@ class AuthController {
     await AppCrashlytics.setUserId(null);
   }
 
+  Future<void> signInWithBiometrics() async {
+    final prefs =
+        await _ref.read(preferencesRepositoryProvider).getPreferences();
+    if (!prefs.canUnlockWithBiometrics) {
+      throw AuthException('Biometric sign-in is off');
+    }
+    final userId = prefs.biometricUserId!;
+    final profile =
+        await _ref.read(userProfileRepositoryProvider).getById(userId);
+    if (profile == null) {
+      await _ref.read(preferencesRepositoryProvider).setBiometricUnlock(
+            enabled: false,
+          );
+      throw AuthException('That account is no longer on this device');
+    }
+
+    final biometric = _ref.read(biometricAuthServiceProvider);
+    final label = await biometric.label();
+    final ok = await biometric.authenticate(
+      reason: 'Sign in to SpendWise with $label',
+    );
+    if (!ok) {
+      throw AuthException('Biometric sign-in cancelled');
+    }
+
+    await _ref.read(preferencesRepositoryProvider).setActiveUserId(userId);
+    await AppCrashlytics.setUserId(userId);
+  }
+
+  Future<void> setBiometricUnlock({required bool enabled}) async {
+    final userId = _ref.read(currentUserIdProvider);
+    if (userId == null) {
+      throw AuthException('Not signed in');
+    }
+
+    final biometric = _ref.read(biometricAuthServiceProvider);
+    if (enabled) {
+      final available = await biometric.isAvailable();
+      if (!available) {
+        throw AuthException('Set up Face ID or a fingerprint in device settings first');
+      }
+      final label = await biometric.label();
+      final ok = await biometric.authenticate(
+        reason: 'Enable $label for SpendWise',
+      );
+      if (!ok) {
+        throw AuthException('Biometric confirmation cancelled');
+      }
+    }
+
+    await _ref.read(preferencesRepositoryProvider).setBiometricUnlock(
+          enabled: enabled,
+          userId: userId,
+        );
+  }
+
   Future<UserProfile> updateProfile({
     required String name,
     required String email,
@@ -132,6 +188,9 @@ class AuthController {
           password: password,
         );
     await AvatarStorage.deleteForUser(userId);
+    await _ref.read(preferencesRepositoryProvider).setBiometricUnlock(
+          enabled: false,
+        );
     await _ref.read(preferencesRepositoryProvider).clearSession();
     await AppCrashlytics.setUserId(null);
   }

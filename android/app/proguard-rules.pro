@@ -13,7 +13,10 @@
 -dontwarn net.sqlcipher.**
 -dontwarn org.sqlite.**
 
-# Firebase / Crashlytics
+# Firebase / Crashlytics / Google Sign-In
 -keepattributes SourceFile,LineNumberTable,*Annotation*
 -keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-keep class io.flutter.plugins.googlesignin.** { *; }
+-keep class dev.flutter.pigeon.** { *; }
 -dontwarn com.google.firebase.**

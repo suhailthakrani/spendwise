@@ -41,9 +41,19 @@ class PrivacyScreen extends StatelessWidget {
                 'SpendWise is designed as an offline expense tracker. Your profile, expenses, budgets, categories, and saving goals are stored in an encrypted local database on this device.',
           ),
           const _PrivacyBlock(
-            title: 'No cloud account',
+            title: 'Local account',
             body:
-                'This version does not create a cloud account or sync your financial data to SpendWise servers. Sign-in credentials are verified locally. Passwords never leave this device.',
+                'SpendWise does not create an EvenLogix cloud account. Sign-in credentials are verified locally. Passwords never leave this device. Optional Google Sign-In is used only to write or read your backup file on your own Drive.',
+          ),
+          const _PrivacyBlock(
+            title: 'Google Drive backup',
+            body:
+                'If you add a Google Drive email, SpendWise can save a JSON backup of your expenses, budgets, and goals to that Google account. Backups are not encrypted. Password hashes are never included. Restore any time with the same Drive email.',
+          ),
+          const _PrivacyBlock(
+            title: 'Biometric sign-in',
+            body:
+                'If you enable Face ID or fingerprint, SpendWise unlocks the local account already on this device. Biometric data stays in the operating system. We never store your fingerprint or face.',
           ),
           const _PrivacyBlock(
             title: 'Crash reports and analytics',
@@ -63,7 +73,7 @@ class PrivacyScreen extends StatelessWidget {
           const _PrivacyBlock(
             title: 'Exports you choose',
             body:
-                'If you export CSV or Excel, files are created on your device and shared only through the system share sheet you select. We do not upload exports.',
+                'If you export Excel, files are created on this device and shared only through the system share sheet you select. We do not upload spreadsheet exports.',
           ),
           const _PrivacyBlock(
             title: 'Photos',

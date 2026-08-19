@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/models/export_format.dart';
 import '../../features/account/account_screen.dart';
+import '../../features/account/backup_screen.dart';
 import '../../features/account/edit_profile_screen.dart';
 import '../../features/account/export_screen.dart';
 import '../../features/account/faq_screen.dart';
@@ -56,12 +57,14 @@ abstract final class AppRoutes {
   static const account = '/account';
   static const editProfile = '/account/edit';
   static const export = '/account/export';
+  static const backup = '/account/backup';
   static const settings = '/account/settings';
   static const faq = '/account/faq';
   static const privacy = '/account/privacy';
   static const onboarding = '/onboarding';
   static const signin = '/signin';
   static const signup = '/signup';
+  static const restore = '/restore';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -80,7 +83,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final loc = state.matchedLocation;
       final onSplash = loc == AppRoutes.splash;
       final onOnboarding = loc == AppRoutes.onboarding;
-      final onAuth = loc == AppRoutes.signin || loc == AppRoutes.signup;
+      final onAuth = loc == AppRoutes.signin ||
+          loc == AppRoutes.signup ||
+          loc == AppRoutes.restore;
 
       // Splash owns its own exit navigation after boot + min display time.
       if (onSplash) return null;
@@ -122,6 +127,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.signup,
         builder: (context, state) => const SignUpScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.restore,
+        builder: (context, state) => const BackupScreen(restoreOnly: true),
       ),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
@@ -165,6 +174,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.backup,
+        builder: (context, state) => const BackupScreen(),
       ),
       GoRoute(
         path: AppRoutes.faq,
@@ -246,14 +259,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.export,
-        builder: (context, state) {
-          final formatParam =
-              state.uri.queryParameters['format']?.toLowerCase();
-          final format = formatParam == 'excel'
-              ? ExportFormat.excel
-              : ExportFormat.csv;
-          return ExportScreen(format: format);
-        },
+        builder: (context, state) => const ExportScreen(
+          format: ExportFormat.excel,
+        ),
       ),
     ],
   );

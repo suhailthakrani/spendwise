@@ -53,6 +53,8 @@
 		<true/>
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
+		<key>NSFaceIDUsageDescription</key>
+		<string>SpendWise uses Face ID so you can sign in without typing your password.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>SpendWise needs photo access so you can set a profile picture.</string>
 		<key>NSCameraUsageDescription</key>

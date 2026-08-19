@@ -7,6 +7,7 @@ import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/form_widgets.dart';
 import '../../data/models/app_currency.dart';
@@ -74,6 +75,39 @@ class SettingsScreen extends ConsumerWidget {
                             value ? ThemeMode.dark : ThemeMode.light,
                           );
                     },
+                  ),
+                ],
+              ),
+              const _SectionTitle(title: 'Security'),
+              SurfaceGroup(
+                children: [
+                  SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    secondary: AppIconBox(
+                      asset: AppIcons.profile,
+                      color: AppColors.primary,
+                      size: 42,
+                      iconSize: 20,
+                    ),
+                    title: Text(
+                      'Biometric sign-in',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      prefs.biometricUnlockEnabled
+                          ? 'Use Face ID or fingerprint after logout'
+                          : 'Off — password only',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.secondaryText(context),
+                      ),
+                    ),
+                    value: prefs.biometricUnlockEnabled,
+                    onChanged: (value) => _setBiometric(context, ref, value),
                   ),
                 ],
               ),
@@ -245,6 +279,28 @@ class SettingsScreen extends ConsumerWidget {
         );
   }
 
+  Future<void> _setBiometric(
+    BuildContext context,
+    WidgetRef ref,
+    bool enabled,
+  ) async {
+    try {
+      await ref.read(authControllerProvider).setBiometricUnlock(
+            enabled: enabled,
+          );
+    } on AuthException catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update biometric sign-in')),
+      );
+    }
+  }
+
   Future<void> _pickCountry(
     BuildContext context,
     WidgetRef ref,
@@ -326,6 +382,7 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      enableDrag: false,
       builder: (_) => const _CloseAccountSheet(),
     );
   }
@@ -411,7 +468,7 @@ class _CloseAccountSheetState extends ConsumerState<_CloseAccountSheet> {
                 ),
           ),
           const SizedBox(height: 16),
-          TextField(
+          AppTextField(
             controller: _passwordController,
             obscureText: _obscure,
             enabled: !_submitting,

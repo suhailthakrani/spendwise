@@ -10,7 +10,17 @@ class FaqScreen extends StatelessWidget {
     (
       q: 'Is my data uploaded to a server?',
       a:
-          'SpendWise stores your expenses, budgets, and account locally on this device. There is no cloud sync in this version. Crash reports and usage analytics, when enabled, do not include your email, password, or amounts.',
+          'SpendWise stores your expenses, budgets, and account locally on this device. Optional Google Drive backup writes a JSON file to your own Drive after you add that Google email. EvenLogix does not host your ledger. Crash reports and usage analytics, when enabled, do not include your password or expense amounts.',
+    ),
+    (
+      q: 'How do I back up to Google Drive?',
+      a:
+          'Open You → Google Drive backup, add the Google account email, then tap Back up now. Restore any time from this page or the sign-in screen.',
+    ),
+    (
+      q: 'Can I sign in with Face ID or fingerprint?',
+      a:
+          'Yes. In Settings, turn on Biometric sign-in. After you log out, the sign-in screen shows Sign in with biometrics for that local account.',
     ),
     (
       q: 'Can multiple people use SpendWise on one phone?',
@@ -30,7 +40,7 @@ class FaqScreen extends StatelessWidget {
     (
       q: 'How do I export my expenses?',
       a:
-          'Open You → Export CSV or Export Excel. Choose a timeline, preview the rows, then share the file.',
+          'Open You → Export Excel. Choose a timeline, preview the rows, then share the file.',
     ),
     (
       q: 'How do reminders work?',

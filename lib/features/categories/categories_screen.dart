@@ -6,6 +6,7 @@ import '../../core/constants/app_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../data/models/category.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
@@ -243,7 +244,7 @@ class _AddCategorySheetState extends ConsumerState<_AddCategorySheet> {
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
+            AppTextField(
               controller: _nameController,
               focusNode: _nameFocus,
               textCapitalization: TextCapitalization.words,

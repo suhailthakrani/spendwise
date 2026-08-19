@@ -137,9 +137,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currency = ref.watch(currencyDisplayProvider);
-    final icon = widget.format == ExportFormat.csv
-        ? AppIcons.exportCsv
-        : AppIcons.exportExcel;
+    final icon = AppIcons.exportExcel;
 
     return Scaffold(
       appBar: AppBar(

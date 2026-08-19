@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_icons.dart';
 import '../theme/app_colors.dart';
 import 'app_icon.dart';
+import 'app_text_field.dart';
 
 class FormSectionCard extends StatelessWidget {
   const FormSectionCard({
@@ -253,6 +254,7 @@ Future<T?> showSearchablePickerSheet<T>({
     context: context,
     useSafeArea: true,
     isScrollControlled: true,
+    enableDrag: false,
     builder: (ctx) {
       var query = '';
       return StatefulBuilder(
@@ -286,7 +288,7 @@ Future<T?> showSearchablePickerSheet<T>({
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                    child: TextField(
+                    child: AppTextField(
                       autofocus: true,
                       decoration: InputDecoration(
                         hintText: searchHint,

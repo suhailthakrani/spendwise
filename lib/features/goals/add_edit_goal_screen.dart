@@ -8,6 +8,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../data/models/goal_status.dart';
 import '../../data/models/saving_goal.dart';
 import '../../providers/preferences_providers.dart';
@@ -204,7 +205,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
           AppSpacing.navClearance,
         ),
         children: [
-          TextField(
+          AppTextField(
             controller: _nameController,
             textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(
@@ -213,7 +214,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          TextField(
+          AppTextField(
             controller: _targetController,
             keyboardType: TextInputType.numberWithOptions(
               decimal: currency.allowsDecimalInput,
@@ -257,7 +258,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
             onTap: _pickDeadline,
           ),
           const SizedBox(height: 8),
-          TextField(
+          AppTextField(
             controller: _monthlyController,
             keyboardType: TextInputType.numberWithOptions(
               decimal: currency.allowsDecimalInput,
@@ -292,7 +293,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
           ),
           if (_hasWishlist) ...[
             const SizedBox(height: 8),
-            TextField(
+            AppTextField(
               controller: _wishlistTitleController,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
@@ -301,7 +302,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
+            AppTextField(
               controller: _wishlistNoteController,
               textCapitalization: TextCapitalization.sentences,
               maxLines: 2,

@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/amount_input_formatter.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../data/models/saving_contribution.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
@@ -105,7 +106,7 @@ class _ContributeGoalScreenState extends ConsumerState<ContributeGoalScreen> {
                 ),
           ),
           const SizedBox(height: 16),
-          TextField(
+          AppTextField(
             controller: _amountController,
             autofocus: true,
             keyboardType: TextInputType.numberWithOptions(
@@ -121,7 +122,7 @@ class _ContributeGoalScreenState extends ConsumerState<ContributeGoalScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          TextField(
+          AppTextField(
             controller: _noteController,
             textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(

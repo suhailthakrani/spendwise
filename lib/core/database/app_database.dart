@@ -39,7 +39,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -68,6 +68,28 @@ class AppDatabase extends _$AppDatabase {
             await migrator.addColumn(
               appPreferences,
               appPreferences.productUpdatesEnabled,
+            );
+          }
+          if (from < 3) {
+            await migrator.addColumn(
+              appPreferences,
+              appPreferences.backupDriveEmail,
+            );
+            await migrator.addColumn(
+              appPreferences,
+              appPreferences.lastBackupAt,
+            );
+            await migrator.addColumn(
+              appPreferences,
+              appPreferences.backupDriveFileId,
+            );
+            await migrator.addColumn(
+              appPreferences,
+              appPreferences.biometricUnlockEnabled,
+            );
+            await migrator.addColumn(
+              appPreferences,
+              appPreferences.biometricUserId,
             );
           }
         },

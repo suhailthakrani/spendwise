@@ -10,6 +10,11 @@ class UserPreferences {
     this.budgetAlertsEnabled = true,
     this.goalRemindersEnabled = true,
     this.productUpdatesEnabled = false,
+    this.backupDriveEmail,
+    this.lastBackupAt,
+    this.backupDriveFileId,
+    this.biometricUnlockEnabled = false,
+    this.biometricUserId,
   });
 
   final ThemeMode themeMode;
@@ -20,6 +25,11 @@ class UserPreferences {
   final bool budgetAlertsEnabled;
   final bool goalRemindersEnabled;
   final bool productUpdatesEnabled;
+  final String? backupDriveEmail;
+  final DateTime? lastBackupAt;
+  final String? backupDriveFileId;
+  final bool biometricUnlockEnabled;
+  final String? biometricUserId;
 
   bool get isSignedIn =>
       activeUserId != null && activeUserId!.trim().isNotEmpty;
@@ -32,6 +42,14 @@ class UserPreferences {
       notificationsEnabled && goalRemindersEnabled;
   bool get productUpdatesActive =>
       notificationsEnabled && productUpdatesEnabled;
+
+  bool get hasBackupDriveEmail =>
+      backupDriveEmail != null && backupDriveEmail!.trim().isNotEmpty;
+
+  bool get canUnlockWithBiometrics =>
+      biometricUnlockEnabled &&
+      biometricUserId != null &&
+      biometricUserId!.trim().isNotEmpty;
 
   factory UserPreferences.defaults() => const UserPreferences(
         themeMode: ThemeMode.light,
@@ -47,6 +65,15 @@ class UserPreferences {
     bool? budgetAlertsEnabled,
     bool? goalRemindersEnabled,
     bool? productUpdatesEnabled,
+    String? backupDriveEmail,
+    bool clearBackupDriveEmail = false,
+    DateTime? lastBackupAt,
+    bool clearLastBackupAt = false,
+    String? backupDriveFileId,
+    bool clearBackupDriveFileId = false,
+    bool? biometricUnlockEnabled,
+    String? biometricUserId,
+    bool clearBiometricUserId = false,
   }) {
     return UserPreferences(
       themeMode: themeMode ?? this.themeMode,
@@ -60,6 +87,19 @@ class UserPreferences {
       goalRemindersEnabled: goalRemindersEnabled ?? this.goalRemindersEnabled,
       productUpdatesEnabled:
           productUpdatesEnabled ?? this.productUpdatesEnabled,
+      backupDriveEmail: clearBackupDriveEmail
+          ? null
+          : (backupDriveEmail ?? this.backupDriveEmail),
+      lastBackupAt:
+          clearLastBackupAt ? null : (lastBackupAt ?? this.lastBackupAt),
+      backupDriveFileId: clearBackupDriveFileId
+          ? null
+          : (backupDriveFileId ?? this.backupDriveFileId),
+      biometricUnlockEnabled:
+          biometricUnlockEnabled ?? this.biometricUnlockEnabled,
+      biometricUserId: clearBiometricUserId
+          ? null
+          : (biometricUserId ?? this.biometricUserId),
     );
   }
 }

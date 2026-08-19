@@ -17,6 +17,11 @@ abstract final class PreferencesMapper {
       budgetAlertsEnabled: row.budgetAlertsEnabled,
       goalRemindersEnabled: row.goalRemindersEnabled,
       productUpdatesEnabled: row.productUpdatesEnabled,
+      backupDriveEmail: row.backupDriveEmail,
+      lastBackupAt: row.lastBackupAt,
+      backupDriveFileId: row.backupDriveFileId,
+      biometricUnlockEnabled: row.biometricUnlockEnabled,
+      biometricUserId: row.biometricUserId,
     );
   }
 
@@ -31,6 +36,11 @@ abstract final class PreferencesMapper {
       budgetAlertsEnabled: Value(preferences.budgetAlertsEnabled),
       goalRemindersEnabled: Value(preferences.goalRemindersEnabled),
       productUpdatesEnabled: Value(preferences.productUpdatesEnabled),
+      backupDriveEmail: Value(preferences.backupDriveEmail),
+      lastBackupAt: Value(preferences.lastBackupAt),
+      backupDriveFileId: Value(preferences.backupDriveFileId),
+      biometricUnlockEnabled: Value(preferences.biometricUnlockEnabled),
+      biometricUserId: Value(preferences.biometricUserId),
     );
   }
 }

@@ -8,8 +8,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_logo.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../data/repositories/user_profile_repository.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/preferences_providers.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -59,9 +61,33 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     }
   }
 
+  Future<void> _signInWithBiometrics() async {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+
+    try {
+      await ref.read(authControllerProvider).signInWithBiometrics();
+      if (mounted) context.go(AppRoutes.dashboard);
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Biometric sign-in failed. Use your password.');
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final canBiometric =
+        ref.watch(preferencesProvider).valueOrNull?.canUnlockWithBiometrics ??
+            false;
 
     return Scaffold(
       body: SafeArea(
@@ -93,7 +119,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     ),
                   ),
                   const SizedBox(height: 28),
-                  TextFormField(
+                  AppTextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
@@ -110,7 +136,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     },
                   ),
                   const SizedBox(height: 14),
-                  TextFormField(
+                  AppTextFormField(
                     controller: _passwordController,
                     obscureText: _obscure,
                     textInputAction: TextInputAction.done,
@@ -148,6 +174,20 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     child: Text(_submitting ? 'Signing in…' : 'Sign in'),
                   ),
                   const SizedBox(height: 12),
+                  if (canBiometric) ...[
+                    OutlinedButton.icon(
+                      onPressed: _submitting ? null : _signInWithBiometrics,
+                      icon: const Icon(Icons.fingerprint_rounded, size: 22),
+                      label: const Text('Sign in with biometrics'),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  TextButton(
+                    onPressed: _submitting
+                        ? null
+                        : () => context.go(AppRoutes.restore),
+                    child: const Text('Restore from Google Drive'),
+                  ),
                   TextButton(
                     onPressed: _submitting
                         ? null

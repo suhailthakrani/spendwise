@@ -10,6 +10,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../data/models/category.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/payment_method.dart';
@@ -201,7 +202,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          TextFormField(
+                          AppTextFormField(
                             controller: _amountController,
                             focusNode: _amountFocus,
                             onChanged: (_) => setState(() {}),
@@ -218,7 +219,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                               fontWeight: FontWeight.w800,
                               fontSize: 48,
                               height: 1.05,
-                              letterSpacing: -1.2,
+                              letterSpacing: 0,
                               fontFeatures: const [
                                 FontFeature.tabularFigures(),
                               ],
@@ -229,7 +230,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                                 fontWeight: FontWeight.w800,
                                 fontSize: 48,
                                 height: 1.05,
-                                letterSpacing: -1.2,
+                                letterSpacing: 0,
                                 color: AppColors.tertiaryText(context),
                               ),
                               prefixText: '${currency.symbol} ',
@@ -292,7 +293,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                     const SizedBox(height: 20),
                     const _FieldLabel('Note'),
                     const SizedBox(height: 10),
-                    TextFormField(
+                    AppTextFormField(
                       controller: _noteController,
                       onChanged: (_) => setState(() {}),
                       textInputAction: TextInputAction.done,
@@ -405,6 +406,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      enableDrag: false,
       builder: (_) => _AllCategoriesSheet(
         categories: categories,
         selectedId: _categoryId,
@@ -562,7 +564,7 @@ class _AllCategoriesSheetState extends State<_AllCategoriesSheet> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
+                  AppTextField(
                     controller: _searchController,
                     focusNode: _searchFocus,
                     onChanged: (_) => setState(() {}),

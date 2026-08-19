@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/category_lookup.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../data/models/budget.dart';
 import '../../data/models/category.dart';
 import '../../providers/data_providers.dart';
@@ -222,7 +223,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 4),
-                      TextFormField(
+                      AppTextFormField(
                         controller: _limitController,
                         focusNode: _limitFocus,
                         onChanged: (_) => setState(() {}),
@@ -239,7 +240,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                           fontWeight: FontWeight.w800,
                           fontSize: 42,
                           height: 1.08,
-                          letterSpacing: -0.8,
+                          letterSpacing: 0,
                         ),
                         decoration: InputDecoration(
                           hintText: currency.amountInputHint,
@@ -336,7 +337,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                         ),
                         const SizedBox(height: 12),
                       ],
-                      TextFormField(
+                      AppTextFormField(
                         controller: _nameController,
                         onChanged: (_) => setState(() {}),
                         textInputAction: TextInputAction.done,

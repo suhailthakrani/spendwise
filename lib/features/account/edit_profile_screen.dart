@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/avatar_storage.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/profile_avatar.dart';
 import '../../data/repositories/user_profile_repository.dart';
 import '../../providers/auth_providers.dart';
@@ -264,7 +265,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                AppTextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
@@ -275,7 +276,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   },
                 ),
                 const SizedBox(height: 14),
-                TextFormField(
+                AppTextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -302,7 +303,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                AppTextFormField(
                   controller: _currentPasswordController,
                   obscureText: _obscure,
                   textInputAction: TextInputAction.next,
@@ -318,7 +319,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                TextFormField(
+                AppTextFormField(
                   controller: _newPasswordController,
                   obscureText: _obscure,
                   textInputAction: TextInputAction.done,

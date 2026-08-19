@@ -145,20 +145,16 @@ class AccountScreen extends ConsumerWidget {
               SurfaceGroup(
                 children: [
                   SettingsTile(
-                    iconAsset: AppIcons.exportCsv,
-                    title: 'Export CSV',
-                    subtitle: 'Choose timeline and preview',
-                    onTap: () => context.push(
-                      '${AppRoutes.export}?format=csv',
-                    ),
+                    iconAsset: AppIcons.globe,
+                    title: 'Google Drive backup',
+                    subtitle: 'Add a Drive email. Back up and restore any time',
+                    onTap: () => context.push(AppRoutes.backup),
                   ),
                   SettingsTile(
                     iconAsset: AppIcons.exportExcel,
                     title: 'Export Excel',
                     subtitle: 'Choose timeline and preview',
-                    onTap: () => context.push(
-                      '${AppRoutes.export}?format=excel',
-                    ),
+                    onTap: () => context.push(AppRoutes.export),
                   ),
                 ],
               ),
