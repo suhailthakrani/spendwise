@@ -11,6 +11,7 @@ import '../../core/utils/category_lookup.dart';
 import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/month_picker.dart';
 import '../../data/models/budget.dart';
 import '../../data/models/category.dart';
 import '../../providers/data_providers.dart';
@@ -43,6 +44,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
   double _alertThreshold = 0.8;
   Budget? _existingBudget;
   bool _initialized = false;
+  late DateTime _month;
 
   bool get isEditing => widget.budgetId != null;
 
@@ -52,6 +54,8 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
   void initState() {
     super.initState();
     _type = BudgetFormType.monthly;
+    final now = DateTime.now();
+    _month = DateTime(now.year, now.month);
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
   }
 
@@ -59,6 +63,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     final categories =
         await ref.read(categoryRepositoryProvider).watchAll().first;
     final currency = ref.read(currencyDisplayProvider);
+    final selectedMonth = ref.read(budgetMonthProvider);
 
     Budget? budget;
     if (widget.budgetId != null) {
@@ -78,14 +83,26 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     if (budget != null) {
       _nameController.text = budget.name;
       _limitController.text = currency.formatForInput(budget.limit);
+      _month = DateTime(budget.year, budget.month);
     } else {
       _nameController.text = 'Monthly Budget';
+      _month = DateTime(selectedMonth.year, selectedMonth.month);
     }
 
     setState(() => _initialized = true);
 
     if (!isEditing) {
       _limitFocus.requestFocus();
+    }
+  }
+
+  Future<void> _pickMonth() async {
+    final picked = await showMonthPicker(
+      context: context,
+      initialMonth: _month,
+    );
+    if (picked != null) {
+      setState(() => _month = DateTime(picked.year, picked.month));
     }
   }
 
@@ -123,6 +140,8 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
         limit: limit,
         categoryId: categoryId,
         isMonthly: isMonthly,
+        year: _month.year,
+        month: _month.month,
       );
     } else {
       await repo.create(
@@ -131,7 +150,11 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
         limit: limit,
         categoryId: categoryId,
         isMonthly: isMonthly,
+        year: _month.year,
+        month: _month.month,
       );
+      ref.read(budgetMonthProvider.notifier).state =
+          DateTime(_month.year, _month.month);
     }
 
     if (context.mounted) {
@@ -283,6 +306,16 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                         ),
                       ],
                       const SizedBox(height: 18),
+                      const _FieldLabel('Month'),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: MonthSelectorChip(
+                          month: _month,
+                          onTap: _pickMonth,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       if (!isEditing) ...[
                         const _FieldLabel('Type'),
                         const SizedBox(height: 8),

@@ -49,6 +49,12 @@ final budgetsProvider = StreamProvider<List<Budget>>((ref) {
   return ref.watch(budgetRepositoryProvider).watchAll();
 });
 
+/// Selected calendar month on the Budget tab (day ignored). Defaults to now.
+final budgetMonthProvider = StateProvider<DateTime>((ref) {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month);
+});
+
 final recurringExpensesProvider = StreamProvider<List<RecurringExpense>>((ref) {
   return ref.watch(recurringExpenseRepositoryProvider).watchAll();
 });

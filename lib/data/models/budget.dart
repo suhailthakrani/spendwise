@@ -4,6 +4,8 @@ class Budget {
     required this.name,
     required this.limit,
     required this.spent,
+    required this.year,
+    required this.month,
     this.categoryId,
     this.isMonthly = true,
   });
@@ -15,6 +17,10 @@ class Budget {
   final double spent;
   final String? categoryId;
   final bool isMonthly;
+  final int year;
+  final int month;
+
+  DateTime get period => DateTime(year, month);
 
   double get remaining => limit - spent;
   double get progress => limit > 0 ? (spent / limit).clamp(0.0, 1.0) : 0.0;

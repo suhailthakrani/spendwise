@@ -98,6 +98,8 @@ class BackupService {
             'limitAmount': row.limitAmount,
             'categoryId': row.categoryId,
             'isMonthly': row.isMonthly,
+            'year': row.year,
+            'month': row.month,
           },
       ],
       recurringExpenses: [
@@ -409,6 +411,8 @@ class BackupService {
                 limitAmount: _asDouble(row['limitAmount']) ?? 0,
                 categoryId: Value(row['categoryId'] as String?),
                 isMonthly: Value(row['isMonthly'] as bool? ?? true),
+                year: row['year'] as int? ?? DateTime.now().year,
+                month: row['month'] as int? ?? DateTime.now().month,
               ),
           ],
         );

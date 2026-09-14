@@ -125,6 +125,8 @@ class CurrencyDisplay {
       spent: toDisplayAmount(budget.spent),
       categoryId: budget.categoryId,
       isMonthly: budget.isMonthly,
+      year: budget.year,
+      month: budget.month,
     );
   }
 }

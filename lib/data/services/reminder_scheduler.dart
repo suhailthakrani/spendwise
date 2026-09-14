@@ -200,6 +200,9 @@ class ReminderScheduler {
     DateTime now,
   ) {
     if (budget.limit <= 0) return const [];
+    if (budget.year != now.year || budget.month != now.month) {
+      return const [];
+    }
 
     final previous = _lastBudgetProgress[budget.id];
     _lastBudgetProgress[budget.id] = budget.progress;

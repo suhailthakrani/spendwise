@@ -12,6 +12,7 @@ import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/expense_widgets.dart';
 import '../../core/widgets/goal_progress_banner.dart';
+import '../../core/widgets/month_picker.dart';
 import '../../data/models/category.dart';
 import '../../data/models/recurring_expense.dart';
 import '../../providers/data_providers.dart';
@@ -25,9 +26,28 @@ class BudgetScreen extends ConsumerWidget {
     final budgetsAsync = ref.watch(budgetsProvider);
     final recurringAsync = ref.watch(recurringExpensesProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
+    final selectedMonth = ref.watch(budgetMonthProvider);
     final currency = ref.watch(currencyDisplayProvider);
     final currencyCode = ref.watch(displayCurrencyCodeProvider);
     final theme = Theme.of(context);
+
+    Future<void> pickMonth() async {
+      final picked = await showMonthPicker(
+        context: context,
+        initialMonth: selectedMonth,
+      );
+      if (picked != null) {
+        ref.read(budgetMonthProvider.notifier).state =
+            DateTime(picked.year, picked.month);
+      }
+    }
+
+    void shiftMonth(int delta) {
+      ref.read(budgetMonthProvider.notifier).state = DateTime(
+        selectedMonth.year,
+        selectedMonth.month + delta,
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -68,37 +88,74 @@ class BudgetScreen extends ConsumerWidget {
         data: (rawBudgets) {
           final categories = categoriesAsync.valueOrNull ?? [];
           final recurring = recurringAsync.valueOrNull ?? [];
+          final monthBudgets = rawBudgets
+              .where(
+                (b) =>
+                    b.year == selectedMonth.year &&
+                    b.month == selectedMonth.month,
+              )
+              .toList();
           final monthlyRaw =
-              rawBudgets.where((b) => b.categoryId == null).firstOrNull;
+              monthBudgets.where((b) => b.categoryId == null).firstOrNull;
           final categoryRaws =
-              rawBudgets.where((b) => b.categoryId != null).toList();
+              monthBudgets.where((b) => b.categoryId != null).toList();
           final monthlyBudget = monthlyRaw != null
               ? currency.budgetInDisplay(monthlyRaw)
               : null;
           final categoryBudgets =
               categoryRaws.map(currency.budgetInDisplay).toList();
 
-          if (rawBudgets.isEmpty) {
-            return ListView(
-              padding: const EdgeInsets.only(bottom: AppSpacing.navClearance),
-              children: [
-                const GoalProgressBanner(),
-                const SizedBox(height: 48),
-                EmptyState(
-                  iconAsset: AppIcons.budget,
-                  title: 'No budgets yet',
-                  subtitle: 'Create a monthly budget to track your spending.',
-                  actionLabel: 'Add budget',
-                  onAction: () => context.push(AppRoutes.addBudget),
-                ),
-              ],
-            );
-          }
-
           return ListView(
             padding: const EdgeInsets.only(bottom: AppSpacing.navClearance),
             children: [
               const GoalProgressBanner(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.page,
+                  4,
+                  AppSpacing.page,
+                  0,
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      tooltip: 'Previous month',
+                      onPressed: () => shiftMonth(-1),
+                      icon: const RotatedBox(
+                        quarterTurns: 2,
+                        child: AppIcon(AppIcons.chevronRight, size: 20),
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: MonthSelectorChip(
+                          month: selectedMonth,
+                          dense: true,
+                          onTap: pickMonth,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Next month',
+                      onPressed: () => shiftMonth(1),
+                      icon: const AppIcon(AppIcons.chevronRight, size: 20),
+                    ),
+                  ],
+                ),
+              ),
+              if (monthBudgets.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 32),
+                  child: EmptyState(
+                    iconAsset: AppIcons.budget,
+                    title: 'No budgets for ${DateFormatter.monthYear(selectedMonth)}',
+                    subtitle:
+                        'Create a budget for this month to track your spending.',
+                    actionLabel: 'Add budget',
+                    onAction: () => context.push(AppRoutes.addBudget),
+                  ),
+                )
+              else ...[
               if (monthlyBudget != null && monthlyRaw != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -271,7 +328,9 @@ class BudgetScreen extends ConsumerWidget {
                         iconSize: 20,
                       ),
                       title: const Text('Set a monthly budget'),
-                      subtitle: const Text('Track how much you can spend'),
+                      subtitle: Text(
+                        'Track spending for ${DateFormatter.monthYear(selectedMonth)}',
+                      ),
                       trailing: const AppIcon(AppIcons.add, size: 20),
                       onTap: () => context.push(AppRoutes.addBudget),
                     ),
@@ -368,6 +427,7 @@ class BudgetScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+              ],
               if (recurring.isNotEmpty) ...[
                 const SectionHeader(title: 'Recurring'),
                 Padding(

@@ -39,7 +39,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -94,6 +94,18 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) {
             await migrator.addColumn(userProfiles, userProfiles.googleId);
+          }
+          if (from < 5) {
+            final now = DateTime.now();
+            // Existing budgets become the current month's budgets.
+            await customStatement(
+              'ALTER TABLE budgets ADD COLUMN year INTEGER NOT NULL '
+              'DEFAULT ${now.year}',
+            );
+            await customStatement(
+              'ALTER TABLE budgets ADD COLUMN month INTEGER NOT NULL '
+              'DEFAULT ${now.month}',
+            );
           }
         },
       );

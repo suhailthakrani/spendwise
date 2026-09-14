@@ -12,6 +12,8 @@ abstract final class BudgetMapper {
       spent: spent,
       categoryId: row.categoryId,
       isMonthly: row.isMonthly,
+      year: row.year,
+      month: row.month,
     );
   }
 
@@ -20,6 +22,8 @@ abstract final class BudgetMapper {
     required String userId,
     required String name,
     required double limit,
+    required int year,
+    required int month,
     String? categoryId,
     bool isMonthly = true,
   }) {
@@ -30,6 +34,8 @@ abstract final class BudgetMapper {
       limitAmount: Value(limit),
       categoryId: Value(categoryId),
       isMonthly: Value(isMonthly),
+      year: Value(year),
+      month: Value(month),
     );
   }
 }

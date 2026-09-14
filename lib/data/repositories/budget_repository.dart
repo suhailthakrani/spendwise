@@ -82,6 +82,8 @@ class BudgetRepository {
     required String id,
     required String name,
     required double limit,
+    required int year,
+    required int month,
     String? categoryId,
     bool isMonthly = true,
   }) async {
@@ -91,6 +93,8 @@ class BudgetRepository {
             userId: _userId,
             name: name,
             limit: limit,
+            year: year,
+            month: month,
             categoryId: categoryId,
             isMonthly: isMonthly,
           ),
@@ -101,6 +105,8 @@ class BudgetRepository {
     required String id,
     required String name,
     required double limit,
+    required int year,
+    required int month,
     String? categoryId,
     bool isMonthly = true,
   }) async {
@@ -112,6 +118,8 @@ class BudgetRepository {
         limitAmount: Value(limit),
         categoryId: Value(categoryId),
         isMonthly: Value(isMonthly),
+        year: Value(year),
+        month: Value(month),
       ),
     );
   }
@@ -123,13 +131,14 @@ class BudgetRepository {
   }
 
   Future<List<Budget>> _mapBudgets(List<BudgetRow> rows) async {
-    final now = DateTime.now();
     final budgets = <Budget>[];
     for (final row in rows) {
-      final spent = await _spentForBudget(row, month: now);
+      final spent = await _spentForBudget(row);
       budgets.add(BudgetMapper.fromRow(row, spent: spent));
     }
     budgets.sort((a, b) {
+      final byPeriod = DateTime(b.year, b.month).compareTo(DateTime(a.year, a.month));
+      if (byPeriod != 0) return byPeriod;
       if (a.categoryId == null) return -1;
       if (b.categoryId == null) return 1;
       return a.name.compareTo(b.name);
@@ -137,11 +146,10 @@ class BudgetRepository {
     return budgets;
   }
 
-  Future<double> _spentForBudget(BudgetRow row, {DateTime? month}) async {
-    final reference = month ?? DateTime.now();
+  Future<double> _spentForBudget(BudgetRow row) {
     return _expenses.sumForMonth(
       categoryId: row.categoryId,
-      month: reference,
+      month: DateTime(row.year, row.month),
     );
   }
 }
