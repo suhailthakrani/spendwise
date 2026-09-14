@@ -143,7 +143,7 @@ class SettingsScreen extends ConsumerWidget {
                   _NotificationSwitch(
                     iconAsset: AppIcons.warning,
                     title: 'Budget alerts',
-                    subtitle: 'When a budget hits 80% or goes over',
+                    subtitle: 'When your monthly budget hits 80% or goes over',
                     value: prefs.budgetAlertsActive,
                     enabled: prefs.notificationsEnabled,
                     onChanged: (value) => _setNotifications(

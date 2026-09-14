@@ -6,6 +6,7 @@ import '../../core/constants/app_icons.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/store_links.dart';
 import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_logo.dart';
@@ -180,6 +181,18 @@ class AccountScreen extends ConsumerWidget {
                     subtitle: 'How your data stays on this device',
                     onTap: () => context.push(AppRoutes.privacy),
                   ),
+                  SettingsTile(
+                    iconAsset: AppIcons.heart,
+                    title: 'Rate us',
+                    subtitle: 'Leave a review on the Play Store',
+                    onTap: () => _openPlayStore(context),
+                  ),
+                  SettingsTile(
+                    iconAsset: AppIcons.edit,
+                    title: 'Share feedback',
+                    subtitle: 'Tell us what to improve',
+                    onTap: () => _openFeedback(context),
+                  ),
                 ],
               ),
               const _SectionTitle(title: 'Session'),
@@ -213,7 +226,7 @@ class AccountScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  'v1.0.0',
+                  'v1.3.0',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: AppColors.tertiaryText(context),
                   ),
@@ -224,6 +237,26 @@ class AccountScreen extends ConsumerWidget {
         );
       },
     );
+  }
+
+  Future<void> _openPlayStore(BuildContext context) async {
+    final opened = await StoreLinks.openPlayStore();
+    if (!opened && context.mounted) {
+      StoreLinks.showLaunchError(
+        context,
+        'Could not open the Play Store',
+      );
+    }
+  }
+
+  Future<void> _openFeedback(BuildContext context) async {
+    final opened = await StoreLinks.openFeedbackEmail();
+    if (!opened && context.mounted) {
+      StoreLinks.showLaunchError(
+        context,
+        'No email app found. Write to ${StoreLinks.feedbackEmail}',
+      );
+    }
   }
 
   Future<void> _showLogoutDialog(BuildContext context, WidgetRef ref) async {

@@ -45,6 +45,15 @@ class UserProfileRepository {
     return row == null ? null : UserProfileMapper.fromRow(row);
   }
 
+  Future<UserProfile?> findByGoogleId(String googleId) async {
+    final id = googleId.trim();
+    if (id.isEmpty) return null;
+    final row = await (_db.select(_db.userProfiles)
+          ..where((t) => t.googleId.equals(id)))
+        .getSingleOrNull();
+    return row == null ? null : UserProfileMapper.fromRow(row);
+  }
+
   /// Creates a new local account and seeds starter categories.
   Future<UserProfile> signUp({
     required String name,
@@ -139,12 +148,28 @@ class UserProfileRepository {
       throw AuthException('Google did not return a valid email');
     }
 
+    final byGoogleId = await findByGoogleId(identity.id);
+    if (byGoogleId != null) {
+      await _linkGoogleAccount(
+        userId: byGoogleId.id,
+        identity: identity,
+        fillEmptyProfile: true,
+        syncEmail: true,
+      );
+      final updated = await getById(byGoogleId.id);
+      if (updated == null) {
+        throw AuthException('Could not sign in with Google');
+      }
+      return updated;
+    }
+
     final existing = await findByEmail(identity.email);
     if (existing != null) {
       await _linkGoogleAccount(
         userId: existing.id,
         identity: identity,
         fillEmptyProfile: true,
+        syncEmail: false,
       );
       final updated = await getById(existing.id);
       if (updated == null) {
@@ -198,18 +223,34 @@ class UserProfileRepository {
     required String userId,
     required GoogleIdentity identity,
     required bool fillEmptyProfile,
+    bool syncEmail = false,
   }) async {
     final row = await (_db.select(_db.userProfiles)
           ..where((t) => t.id.equals(userId)))
         .getSingleOrNull();
     if (row == null) return;
 
+    Value<String> emailValue = const Value.absent();
+    if (syncEmail && identity.email != row.email) {
+      final taken = await (_db.select(_db.userProfiles)
+            ..where((t) => t.email.equals(identity.email)))
+          .getSingleOrNull();
+      if (taken == null || taken.id == userId) {
+        emailValue = Value(identity.email);
+      }
+    }
+
     await (_db.update(_db.userProfiles)..where((t) => t.id.equals(userId)))
         .write(
       UserProfilesCompanion(
         googleId: Value(identity.id),
+        email: emailValue,
         name: fillEmptyProfile && row.name.trim().isEmpty
-            ? Value(identity.displayName.trim())
+            ? Value(
+                identity.displayName.trim().isEmpty
+                    ? identity.email.split('@').first
+                    : identity.displayName.trim(),
+              )
             : const Value.absent(),
         avatarUrl: fillEmptyProfile &&
                 (row.avatarUrl == null || row.avatarUrl!.trim().isEmpty) &&

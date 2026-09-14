@@ -12,7 +12,8 @@ class ReminderScheduler {
 
   final NotificationService _notifications;
 
-  static const _hour = 9;
+  static const _morningHour = 9;
+  static const _eveningHour = 19;
   static const _debounce = Duration(milliseconds: 600);
   static const _maxPaceGoals = 3;
 
@@ -28,6 +29,7 @@ class ReminderScheduler {
     required List<RecurringExpense> recurring,
     required List<Budget> budgets,
     required List<SavingGoal> goals,
+    required bool hasExpenseToday,
     required String Function(double amount) formatAmount,
   }) {
     _cancelQueued = false;
@@ -41,6 +43,7 @@ class ReminderScheduler {
             recurring: recurring,
             budgets: budgets,
             goals: goals,
+            hasExpenseToday: hasExpenseToday,
             formatAmount: formatAmount,
           ),
         ),
@@ -76,6 +79,7 @@ class ReminderScheduler {
     required List<RecurringExpense> recurring,
     required List<Budget> budgets,
     required List<SavingGoal> goals,
+    required bool hasExpenseToday,
     required String Function(double amount) formatAmount,
   }) async {
     if (!prefs.notificationsEnabled) {
@@ -93,6 +97,7 @@ class ReminderScheduler {
         ...goals.expand((goal) => _deadlinePlans(goal, formatAmount)),
         ..._pacePlans(goals, formatAmount, now),
       ],
+      _dailyCheckInPlan(now: now, hasExpenseToday: hasExpenseToday),
     ];
 
     final desiredIds = plans.map((plan) => plan.id).toSet();
@@ -115,14 +120,18 @@ class ReminderScheduler {
 
       final when = plan.when;
       if (when == null || !when.isAfter(now)) continue;
-      if (pending.contains(plan.id)) continue;
 
-      await _notifications.scheduleAt(
-        id: plan.id,
-        when: when,
-        title: plan.title,
-        body: plan.body,
-      );
+      if (plan.replaceIfPending || !pending.contains(plan.id)) {
+        if (pending.contains(plan.id)) {
+          await _notifications.cancel(plan.id);
+        }
+        await _notifications.scheduleAt(
+          id: plan.id,
+          when: when,
+          title: plan.title,
+          body: plan.body,
+        );
+      }
     }
 
     _managedIds = desiredIds;
@@ -146,7 +155,7 @@ class ReminderScheduler {
       bill.nextDueDate.month,
       bill.nextDueDate.day,
     );
-    final dueNine = DateTime(dueDay.year, dueDay.month, dueDay.day, _hour);
+    final dueNine = DateTime(dueDay.year, dueDay.month, dueDay.day, _morningHour);
     final amount = formatAmount(bill.amount);
     final today = DateTime(now.year, now.month, now.day);
     final plans = <_ReminderPlan>[];
@@ -194,11 +203,13 @@ class ReminderScheduler {
     return plans;
   }
 
+  /// Overall monthly budgets only — category caps stay quiet.
   List<_ReminderPlan> _budgetPlans(
     Budget budget,
     String Function(double amount) formatAmount,
     DateTime now,
   ) {
+    if (budget.categoryId != null) return const [];
     if (budget.limit <= 0) return const [];
     if (budget.year != now.year || budget.month != now.month) {
       return const [];
@@ -235,7 +246,7 @@ class ReminderScheduler {
         ),
       );
     } else if (budget.progress >= 0.8) {
-      var when = DateTime(now.year, now.month, now.day, _hour);
+      var when = DateTime(now.year, now.month, now.day, _morningHour);
       if (!when.isAfter(now)) {
         when = when.add(const Duration(days: 1));
       }
@@ -256,6 +267,31 @@ class ReminderScheduler {
     return plans;
   }
 
+  _ReminderPlan _dailyCheckInPlan({
+    required DateTime now,
+    required bool hasExpenseToday,
+  }) {
+    var when = DateTime(now.year, now.month, now.day, _eveningHour);
+    if (!when.isAfter(now)) {
+      when = when.add(const Duration(days: 1));
+    }
+
+    final forToday = when.year == now.year &&
+        when.month == now.month &&
+        when.day == now.day;
+    final quietDay = forToday && !hasExpenseToday;
+
+    return _ReminderPlan(
+      id: _id('daily_checkin_${_dayKey(when)}'),
+      when: when,
+      replaceIfPending: true,
+      title: quietDay ? 'Nothing logged today' : 'Evening check-in',
+      body: quietDay
+          ? 'Capture today’s purchases while they’re fresh.'
+          : 'Anything else to add before the day wraps up?',
+    );
+  }
+
   List<_ReminderPlan> _deadlinePlans(
     SavingGoal goal,
     String Function(double amount) formatAmount,
@@ -267,7 +303,7 @@ class ReminderScheduler {
       deadline.year,
       deadline.month,
       deadline.day,
-      _hour,
+      _morningHour,
     );
     final remaining = formatAmount(goal.remaining);
     return [
@@ -300,9 +336,9 @@ class ReminderScheduler {
       selected.add(goal);
     }
 
-    final first = DateTime(now.year, now.month, 1, _hour);
-    final mid = DateTime(now.year, now.month, 15, _hour);
-    final nextFirst = DateTime(now.year, now.month + 1, 1, _hour);
+    final first = DateTime(now.year, now.month, 1, _morningHour);
+    final mid = DateTime(now.year, now.month, 15, _morningHour);
+    final nextFirst = DateTime(now.year, now.month + 1, 1, _morningHour);
     final plans = <_ReminderPlan>[];
 
     for (final goal in selected) {
@@ -341,6 +377,7 @@ class _ReminderPlan {
     required this.body,
     this.when,
     this.immediate = false,
+    this.replaceIfPending = false,
   });
 
   final int id;
@@ -348,4 +385,5 @@ class _ReminderPlan {
   final String title;
   final String body;
   final bool immediate;
+  final bool replaceIfPending;
 }

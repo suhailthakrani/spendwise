@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/models/budget.dart';
+import '../data/models/expense.dart';
 import '../data/models/recurring_expense.dart';
 import '../data/models/saving_goal.dart';
 import '../data/repositories/budget_repository.dart';
@@ -54,6 +55,24 @@ final _reminderGoalsProvider = StreamProvider<List<SavingGoal>>((ref) {
   return SavingGoalRepository(ref.watch(databaseProvider), userId).watchActive();
 });
 
+final _reminderExpensesProvider = StreamProvider<List<Expense>>((ref) {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null || userId.isEmpty) {
+    return Stream.value(const []);
+  }
+  return ExpenseRepository(ref.watch(databaseProvider), userId).watchAll();
+});
+
+bool _hasExpenseOnDay(List<Expense> expenses, DateTime day) {
+  final start = DateTime(day.year, day.month, day.day);
+  final end = DateTime(day.year, day.month, day.day, 23, 59, 59, 999);
+  for (final expense in expenses) {
+    final date = expense.date;
+    if (!date.isBefore(start) && !date.isAfter(end)) return true;
+  }
+  return false;
+}
+
 /// Keeps local reminders in sync with prefs and account data.
 final reminderBindingProvider = Provider<void>((ref) {
   final prefs = ref.watch(preferencesProvider).valueOrNull;
@@ -80,12 +99,15 @@ final reminderBindingProvider = Provider<void>((ref) {
   final recurring = ref.watch(_reminderRecurringProvider).valueOrNull ?? const [];
   final budgets = ref.watch(_reminderBudgetsProvider).valueOrNull ?? const [];
   final goals = ref.watch(_reminderGoalsProvider).valueOrNull ?? const [];
+  final expenses = ref.watch(_reminderExpensesProvider).valueOrNull ?? const [];
+  final hasExpenseToday = _hasExpenseOnDay(expenses, DateTime.now());
 
   scheduler.scheduleSync(
     prefs: prefs,
     recurring: recurring,
     budgets: budgets,
     goals: goals,
+    hasExpenseToday: hasExpenseToday,
     formatAmount: currency.format,
   );
 });

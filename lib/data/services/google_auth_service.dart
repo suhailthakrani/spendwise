@@ -30,9 +30,21 @@ class GoogleAuthService {
   /// Opens the Google account picker. Returns null if the user cancels.
   Future<GoogleIdentity?> pickAccount() async {
     try {
+      // Clear any sticky silent session so the account chooser always appears.
+      try {
+        await signInClient.signOut();
+      } catch (_) {}
+
       final account = await signInClient.signIn();
       if (account == null) return null;
-      return _toIdentity(account);
+
+      // Ensure profile scopes are granted (needed after some Play Services updates).
+      final granted = await signInClient.requestScopes(identityScopes);
+      if (!granted && (account.email.trim().isEmpty)) {
+        throw AuthException('Google did not grant access to your email');
+      }
+
+      return _toIdentity(signInClient.currentUser ?? account);
     } on AuthException {
       rethrow;
     } catch (error) {
@@ -83,7 +95,9 @@ class GoogleAuthService {
         ? '${error.code} ${error.message ?? ''}'
         : error.toString();
     final lower = text.toLowerCase();
-    return lower.contains('sign_in_canceled') || lower.contains('canceled');
+    return lower.contains('sign_in_canceled') ||
+        lower.contains('canceled') ||
+        lower.contains('cancelled');
   }
 
   static String _humanize(Object error) {
@@ -101,7 +115,7 @@ class GoogleAuthService {
     if (lower.contains('10:') ||
         lower.contains('developer_error') ||
         lower.contains('api_not_connected')) {
-      return 'Google Sign-In is not configured for this app yet.';
+      return 'Google Sign-In isn’t set up for this build’s signing key. Add this app’s SHA-1 in Firebase and download a fresh google-services.json.';
     }
     debugPrint('Google Sign-In error: $error');
     return 'Could not continue with Google. Try again.';
