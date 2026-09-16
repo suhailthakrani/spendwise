@@ -74,7 +74,7 @@ class GoalsScreen extends ConsumerWidget {
                   (g) => _GoalTile(
                     goal: g,
                     monthlyRequired: currency.toDisplayAmount(
-                      GoalPaceCalculator.requiredThisMonth(g),
+                      GoalPaceCalculator.remainingToStayOnPace(g),
                     ),
                   ),
                 ),
@@ -206,7 +206,7 @@ class _GoalTile extends ConsumerWidget {
                     ),
                     if (!goal.isAchieved && monthlyRequired > 0)
                       Text(
-                        '${currency.formatAlreadyConverted(monthlyRequired)}/mo',
+                        '${currency.formatAlreadyConverted(monthlyRequired)} left this month',
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.accent,

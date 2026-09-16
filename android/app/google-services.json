@@ -22,6 +22,38 @@
           }
         },
         {
+          "client_id": "981163576593-dbtatbrf0a957chhoekbkutucccqt6ii.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.evenlogix.spendwise",
+            "certificate_hash": "185f6079b8192443014dd4ace7cdf854314d2ad8"
+          }
+        },
+        {
+          "client_id": "981163576593-e4m504po4uhot2oaqohbdbsn5lajsiuc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.evenlogix.spendwise",
+            "certificate_hash": "4b94baaf8156584c303d219b94a55f09e410c969"
+          }
+        },
+        {
+          "client_id": "981163576593-p87pahrvmg8vandqhn0dsa1ue67e6fiv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.evenlogix.spendwise",
+            "certificate_hash": "cccc9da47f4b4d1c89ed6d766e424826a0d45dd8"
+          }
+        },
+        {
+          "client_id": "981163576593-q24ee3vsqnum65dbjlh87om3stfqgehr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.evenlogix.spendwise",
+            "certificate_hash": "59720e7f0cf264dd92eb65f913b930e094520fcb"
+          }
+        },
+        {
           "client_id": "981163576593-raqclmjdf2bc1vmh6v4o7nqfilialbva.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

@@ -8,6 +8,7 @@ import '../data/models/app_region.dart';
 import '../data/models/user_profile.dart';
 import '../data/repositories/user_profile_repository.dart';
 import '../data/services/app_crashlytics.dart';
+import '../data/services/firebase_auth_service.dart';
 import 'preferences_providers.dart';
 import 'repository_providers.dart';
 
@@ -54,13 +55,39 @@ class AuthController {
     required String regionCode,
     required String currencyCode,
   }) async {
-    final profile = await _ref.read(userProfileRepositoryProvider).signUp(
-          name: name,
-          email: email,
+    final repo = _ref.read(userProfileRepositoryProvider);
+    final existing = await repo.findByEmail(email);
+    if (existing != null) {
+      throw AuthException('An account with this email already exists');
+    }
+
+    final cloud = await _ref.read(firebaseAuthServiceProvider).tryCreateEmailAccount(
+          email: email.trim().toLowerCase(),
           password: password,
-          regionCode: regionCode,
-          currencyCode: currencyCode,
         );
+    switch (cloud) {
+      case FirebaseEmailOutcome.emailTaken:
+        throw AuthException(
+          'An account with this email already exists. Sign in instead.',
+        );
+      case FirebaseEmailOutcome.invalidEmail:
+        throw AuthException('Enter a valid email');
+      case FirebaseEmailOutcome.weakPassword:
+        throw AuthException('Password must be at least 6 characters');
+      case FirebaseEmailOutcome.created:
+      case FirebaseEmailOutcome.signedIn:
+      case FirebaseEmailOutcome.offline:
+      case FirebaseEmailOutcome.failed:
+        break;
+    }
+
+    final profile = await repo.signUp(
+      name: name,
+      email: email,
+      password: password,
+      regionCode: regionCode,
+      currencyCode: currencyCode,
+    );
     await _ref.read(preferencesRepositoryProvider).completeOnboarding();
     await _ref.read(preferencesRepositoryProvider).setActiveUserId(profile.id);
     await AppCrashlytics.setUserId(profile.id);
@@ -71,13 +98,44 @@ class AuthController {
     required String email,
     required String password,
   }) async {
-    final profile = await _ref.read(userProfileRepositoryProvider).signIn(
-          email: email,
-          password: password,
-        );
-    await _ref.read(preferencesRepositoryProvider).setActiveUserId(profile.id);
-    await AppCrashlytics.setUserId(profile.id);
-    return profile;
+    final repo = _ref.read(userProfileRepositoryProvider);
+    try {
+      final profile = await repo.signIn(
+        email: email,
+        password: password,
+      );
+      await _ref.read(firebaseAuthServiceProvider).trySignInEmail(
+            email: email.trim().toLowerCase(),
+            password: password,
+          );
+      await _ref.read(preferencesRepositoryProvider).setActiveUserId(profile.id);
+      await AppCrashlytics.setUserId(profile.id);
+      return profile;
+    } on AuthException {
+      final local = await repo.findByEmail(email);
+      if (local != null) rethrow;
+
+      final cloud = await _ref.read(firebaseAuthServiceProvider).trySignInEmail(
+            email: email.trim().toLowerCase(),
+            password: password,
+          );
+      if (cloud != FirebaseEmailOutcome.signedIn) rethrow;
+
+      final region = AppRegion.fromDeviceLocale(
+        PlatformDispatcher.instance.locale.countryCode,
+      );
+      final profile = await repo.signUp(
+        name: email.trim().split('@').first,
+        email: email,
+        password: password,
+        regionCode: region.code,
+        currencyCode: AppCurrency.byCode(region.suggestedCurrencyCode).code,
+      );
+      await _ref.read(preferencesRepositoryProvider).completeOnboarding();
+      await _ref.read(preferencesRepositoryProvider).setActiveUserId(profile.id);
+      await AppCrashlytics.setUserId(profile.id);
+      return profile;
+    }
   }
 
   /// Signs in or creates a local profile from a Google account.
@@ -111,6 +169,7 @@ class AuthController {
   Future<void> signOut() async {
     await _ref.read(preferencesRepositoryProvider).clearSession();
     await _ref.read(googleAuthServiceProvider).signOut();
+    await _ref.read(firebaseAuthServiceProvider).signOut();
     await AppCrashlytics.setUserId(null);
   }
 
@@ -251,6 +310,7 @@ class AuthController {
         );
     await _ref.read(preferencesRepositoryProvider).clearSession();
     await _ref.read(googleAuthServiceProvider).signOut();
+    await _ref.read(firebaseAuthServiceProvider).signOut();
     await AppCrashlytics.setUserId(null);
   }
 }

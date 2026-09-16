@@ -125,6 +125,7 @@ class AppTextField extends StatefulWidget {
     this.onSubmitted,
     this.onTap,
     this.autofillHints,
+    this.scrollPadding = const EdgeInsets.fromLTRB(20, 20, 20, 120),
   });
 
   final TextEditingController? controller;
@@ -146,6 +147,7 @@ class AppTextField extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
   final GestureTapCallback? onTap;
   final Iterable<String>? autofillHints;
+  final EdgeInsets scrollPadding;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -206,6 +208,7 @@ class _AppTextFieldState extends State<AppTextField> {
         onSubmitted: widget.onSubmitted,
         onTap: widget.onTap,
         autofillHints: widget.autofillHints,
+        scrollPadding: widget.scrollPadding,
         smartDashesType: SmartDashesType.disabled,
         smartQuotesType: SmartQuotesType.disabled,
         stylusHandwritingEnabled: false,
@@ -239,6 +242,7 @@ class AppTextFormField extends StatefulWidget {
     this.autofillHints,
     this.validator,
     this.autovalidateMode,
+    this.scrollPadding = const EdgeInsets.fromLTRB(20, 20, 20, 120),
   });
 
   final TextEditingController? controller;
@@ -263,6 +267,7 @@ class AppTextFormField extends StatefulWidget {
   final Iterable<String>? autofillHints;
   final FormFieldValidator<String>? validator;
   final AutovalidateMode? autovalidateMode;
+  final EdgeInsets scrollPadding;
 
   @override
   State<AppTextFormField> createState() => _AppTextFormFieldState();
@@ -327,6 +332,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
         autofillHints: widget.autofillHints,
         validator: widget.validator,
         autovalidateMode: widget.autovalidateMode,
+        scrollPadding: widget.scrollPadding,
         smartDashesType: SmartDashesType.disabled,
         smartQuotesType: SmartQuotesType.disabled,
         stylusHandwritingEnabled: false,

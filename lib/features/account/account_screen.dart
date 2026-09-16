@@ -226,7 +226,7 @@ class AccountScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  'v1.3.0',
+                  'v1.3.2',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: AppColors.tertiaryText(context),
                   ),

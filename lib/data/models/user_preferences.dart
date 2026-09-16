@@ -52,7 +52,7 @@ class UserPreferences {
       biometricUserId!.trim().isNotEmpty;
 
   factory UserPreferences.defaults() => const UserPreferences(
-        themeMode: ThemeMode.light,
+        themeMode: ThemeMode.dark,
       );
 
   UserPreferences copyWith({

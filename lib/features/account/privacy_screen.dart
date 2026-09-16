@@ -43,7 +43,7 @@ class PrivacyScreen extends StatelessWidget {
           const _PrivacyBlock(
             title: 'Local account',
             body:
-                'SpendWise does not create an EvenLogix cloud account. Sign-in credentials are verified locally. Passwords never leave this device. Optional Google Sign-In is used only to write or read your backup file on your own Drive.',
+                'Email sign-up tries Firebase first so you can recover the same login on another device. If that step cannot complete, SpendWise still creates a local account on this phone. Expense data stays in the encrypted local database. Optional Google Sign-In is used only to write or read your backup file on your own Drive.',
           ),
           const _PrivacyBlock(
             title: 'Google Drive backup',

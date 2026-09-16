@@ -29,7 +29,7 @@ Future<void> seedCategoriesForUser(AppDatabase db, String userId) async {
 
 final _defaultPreferences = AppPreferencesCompanion.insert(
   id: Value(preferencesId),
-  themeMode: ThemeMode.light.name,
+  themeMode: ThemeMode.dark.name,
   hasCompletedOnboarding: const Value(false),
 );
 

@@ -342,7 +342,7 @@ class ReminderScheduler {
     final plans = <_ReminderPlan>[];
 
     for (final goal in selected) {
-      final required = GoalPaceCalculator.requiredThisMonth(goal, now);
+      final required = GoalPaceCalculator.remainingToStayOnPace(goal, now);
       if (required <= 0) continue;
       final amount = formatAmount(required);
       final when = first.isAfter(now)

@@ -13,10 +13,13 @@
 -dontwarn net.sqlcipher.**
 -dontwarn org.sqlite.**
 
-# Firebase / Crashlytics / Google Sign-In
+# Firebase / Crashlytics / Google Sign-In (Credential Manager)
 -keepattributes SourceFile,LineNumberTable,*Annotation*
 -keep class com.google.firebase.** { *; }
 -keep class com.google.android.gms.** { *; }
+-keep class com.google.android.libraries.identity.** { *; }
+-keep class androidx.credentials.** { *; }
 -keep class io.flutter.plugins.googlesignin.** { *; }
 -keep class dev.flutter.pigeon.** { *; }
 -dontwarn com.google.firebase.**
+-dontwarn androidx.credentials.**

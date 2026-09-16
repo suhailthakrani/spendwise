@@ -14,6 +14,7 @@ class SavingGoal {
     this.monthlyTarget,
     this.wishlistTitle,
     this.wishlistNote,
+    this.savedThisMonth = 0,
   });
 
   final String id;
@@ -31,6 +32,8 @@ class SavingGoal {
   final GoalStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
+  /// Contributions logged in the current calendar month (USD storage).
+  final double savedThisMonth;
 
   double get remaining =>
       (targetAmount - savedAmount).clamp(0.0, double.infinity);
@@ -54,6 +57,7 @@ class SavingGoal {
     GoalStatus? status,
     DateTime? createdAt,
     DateTime? updatedAt,
+    double? savedThisMonth,
     bool clearDeadline = false,
     bool clearMonthlyTarget = false,
     bool clearWishlistTitle = false,
@@ -75,6 +79,7 @@ class SavingGoal {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      savedThisMonth: savedThisMonth ?? this.savedThisMonth,
     );
   }
 }

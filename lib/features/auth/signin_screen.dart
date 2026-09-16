@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/constants/app_icons.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/continue_with_google_button.dart';
@@ -170,9 +168,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       labelText: 'Password',
                       suffixIcon: IconButton(
                         onPressed: () => setState(() => _obscure = !_obscure),
-                        icon: AppIcon(
-                          _obscure ? AppIcons.info : AppIcons.clear,
-                          size: 20,
+                        tooltip: _obscure ? 'Show password' : 'Hide password',
+                        icon: Icon(
+                          _obscure
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          size: 22,
                         ),
                       ),
                     ),

@@ -29,12 +29,10 @@ abstract final class AppIcons {
   static const currency = '$_base/currency.svg';
   static const profile = '$_base/profile.svg';
   static const settings = '$_base/settings.svg';
-  static const logo = '$_base/logo.svg';
 
   // Status
   static const savings = '$_base/savings.svg';
   static const warning = '$_base/warning.svg';
-  static const arrowUp = '$_base/arrow_up.svg';
   static const arrowDown = '$_base/arrow_down.svg';
   static const info = '$_base/info.svg';
   static const error = '$_base/error.svg';

@@ -5,7 +5,11 @@ import '../models/goal_status.dart';
 import '../models/saving_goal.dart';
 
 abstract final class SavingGoalMapper {
-  static SavingGoal fromRow(SavingGoalRow row, {required double savedAmount}) {
+  static SavingGoal fromRow(
+    SavingGoalRow row, {
+    required double savedAmount,
+    double savedThisMonth = 0,
+  }) {
     return SavingGoal(
       id: row.id,
       name: row.name,
@@ -19,6 +23,7 @@ abstract final class SavingGoalMapper {
       status: GoalStatus.fromDb(row.status),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+      savedThisMonth: savedThisMonth,
     );
   }
 

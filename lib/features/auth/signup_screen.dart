@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -168,7 +168,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       searchHint: 'Search currencies',
       items: AppCurrency.all,
       labelOf: (c) => c.name,
-      subtitleOf: (c) => '${c.code} · ${c.symbol}',
+      subtitleOf: (c) => '${c.code} Â· ${c.symbol}',
       isSelected: (c) => c.code == _currencyCode,
       iconAsset: AppIcons.currency,
       trailingOf: (c) => c.symbol,
@@ -190,9 +190,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     final strength = _PasswordStrength.from(_passwordController.text);
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
+    final keyboardOpen = bottomInset > 80;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         body: DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -250,11 +253,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       physics: const NeverScrollableScrollPhysics(),
                       children: [
                         SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: EdgeInsets.fromLTRB(
                             AppSpacing.page,
                             8,
                             AppSpacing.page,
-                            12,
+                            keyboardOpen ? 28 : 12,
                           ),
                           child: Form(
                             key: _step0Key,
@@ -273,10 +278,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               onToggleConfirm: () => setState(
                                 () => _obscureConfirm = !_obscureConfirm,
                               ),
+                              onSubmit: _next,
                             ),
                           ),
                         ),
                         SingleChildScrollView(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
                           padding: const EdgeInsets.fromLTRB(
                             AppSpacing.page,
                             8,
@@ -295,14 +303,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     ),
                   ),
                 ),
-                AnimatedPadding(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
+                Padding(
                   padding: EdgeInsets.fromLTRB(
                     AppSpacing.page,
                     8,
                     AppSpacing.page,
-                    12 + (bottomInset > 0 ? 0 : 4),
+                    keyboardOpen ? 8 : 16,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -324,7 +330,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               )
                             : Text(_step == 0 ? 'Continue' : 'Create account'),
                       ),
-                      if (_step == 0) ...[
+                      if (_step == 0 && !keyboardOpen) ...[
                         const SizedBox(height: 16),
                         const AuthOrDivider(),
                         const SizedBox(height: 16),
@@ -406,6 +412,7 @@ class _PersonalStep extends StatelessWidget {
     required this.strength,
     required this.onTogglePassword,
     required this.onToggleConfirm,
+    required this.onSubmit,
   });
 
   final TextEditingController nameController;
@@ -418,6 +425,7 @@ class _PersonalStep extends StatelessWidget {
   final _PasswordStrength strength;
   final VoidCallback onTogglePassword;
   final VoidCallback onToggleConfirm;
+  final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
@@ -504,6 +512,7 @@ class _PersonalStep extends StatelessWidget {
           enabled: enabled,
           obscureText: obscureConfirm,
           textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => onSubmit(),
           autofillHints: const [AutofillHints.newPassword],
           decoration: InputDecoration(
             labelText: 'Confirm password',

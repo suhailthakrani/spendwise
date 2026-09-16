@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/services/app_crashlytics.dart';
 import '../data/services/firebase_bootstrap.dart';
+import '../data/services/google_auth_service.dart';
 import '../data/services/notification_service.dart';
 import '../providers/notification_providers.dart';
 import 'app.dart';
@@ -19,6 +20,12 @@ Future<void> bootstrap() async {
     try {
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     } catch (_) {}
+  }
+
+  try {
+    await GoogleAuthService.ensureInitialized();
+  } catch (error) {
+    debugPrint('Google Sign-In not ready: $error');
   }
 
   final notifications = NotificationService();

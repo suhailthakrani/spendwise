@@ -16,7 +16,7 @@ final preferencesProvider = StreamProvider<UserPreferences>((ref) {
 
 final themeModeProvider = Provider<ThemeMode>((ref) {
   return ref.watch(preferencesProvider).valueOrNull?.themeMode ??
-      ThemeMode.light;
+      ThemeMode.dark;
 });
 
 /// Locale settings for the signed-in account (per-user).

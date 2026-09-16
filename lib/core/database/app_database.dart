@@ -39,7 +39,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -105,6 +105,12 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(
               'ALTER TABLE budgets ADD COLUMN month INTEGER NOT NULL '
               'DEFAULT ${now.month}',
+            );
+          }
+          if (from < 6) {
+            await customStatement(
+              "UPDATE app_preferences SET theme_mode = 'dark' "
+              "WHERE theme_mode = 'light'",
             );
           }
         },

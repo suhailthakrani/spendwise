@@ -158,14 +158,19 @@ class StatCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
+                    fontSize: 22,
+                    height: 1.1,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
               if (subtitle != null) ...[

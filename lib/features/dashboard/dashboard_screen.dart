@@ -16,6 +16,7 @@ import '../../core/widgets/expense_widgets.dart';
 import '../../data/models/dashboard_stats.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
+import '../../providers/repository_providers.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -42,7 +43,9 @@ class DashboardScreen extends ConsumerWidget {
               )
               .length;
 
-          return RefreshIndicator(
+          return _HomeRatingGate(
+            expenseCount: expenses.length,
+            child: RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () async {
               ref.invalidate(dashboardStatsProvider);
@@ -314,6 +317,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ],
             ),
+            ),
           );
         },
       ),
@@ -326,6 +330,46 @@ class DashboardScreen extends ConsumerWidget {
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
   }
+}
+
+class _HomeRatingGate extends ConsumerStatefulWidget {
+  const _HomeRatingGate({
+    required this.expenseCount,
+    required this.child,
+  });
+
+  final int expenseCount;
+  final Widget child;
+
+  @override
+  ConsumerState<_HomeRatingGate> createState() => _HomeRatingGateState();
+}
+
+class _HomeRatingGateState extends ConsumerState<_HomeRatingGate> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _tryPrompt());
+  }
+
+  @override
+  void didUpdateWidget(_HomeRatingGate oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.expenseCount != widget.expenseCount) {
+      _tryPrompt();
+    }
+  }
+
+  void _tryPrompt() {
+    if (!mounted) return;
+    ref.read(ratingPromptServiceProvider).maybePrompt(
+          context,
+          expenseCount: widget.expenseCount,
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class _DashboardCategoryBars extends StatelessWidget {
@@ -463,19 +507,25 @@ class _SpendingHeroCard extends StatelessWidget {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              currency.formatInUserCurrency(
-                                stats.totalSpentThisMonth,
-                              ),
-                              style: theme.textTheme.displaySmall?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -1.2,
-                                height: 1.0,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
+                            const SizedBox(height: 6),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                currency.formatInUserCurrency(
+                                  stats.totalSpentThisMonth,
+                                ),
+                                maxLines: 1,
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.8,
+                                  fontSize: 30,
+                                  height: 1.05,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -657,17 +707,21 @@ class _GlassStatChip extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
-              fontFeatures: [FontFeature.tabularFigures()],
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
+                height: 1.1,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

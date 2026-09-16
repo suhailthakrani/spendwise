@@ -27,7 +27,14 @@ class SavingGoalRepository {
       final goals = <SavingGoal>[];
       for (final row in rows) {
         final saved = await _sumContributions(row.id);
-        goals.add(SavingGoalMapper.fromRow(row, savedAmount: saved));
+        final thisMonth = await savedThisMonth(row.id);
+        goals.add(
+          SavingGoalMapper.fromRow(
+            row,
+            savedAmount: saved,
+            savedThisMonth: thisMonth,
+          ),
+        );
       }
       return goals;
     });
@@ -48,7 +55,12 @@ class SavingGoalRepository {
         .asyncMap((row) async {
       if (row == null) return null;
       final saved = await _sumContributions(row.id);
-      return SavingGoalMapper.fromRow(row, savedAmount: saved);
+      final thisMonth = await savedThisMonth(row.id);
+      return SavingGoalMapper.fromRow(
+        row,
+        savedAmount: saved,
+        savedThisMonth: thisMonth,
+      );
     });
   }
 
@@ -58,7 +70,12 @@ class SavingGoalRepository {
         .getSingleOrNull();
     if (row == null) return null;
     final saved = await _sumContributions(row.id);
-    return SavingGoalMapper.fromRow(row, savedAmount: saved);
+    final thisMonth = await savedThisMonth(row.id);
+    return SavingGoalMapper.fromRow(
+      row,
+      savedAmount: saved,
+      savedThisMonth: thisMonth,
+    );
   }
 
   Stream<List<SavingContribution>> watchContributions(String goalId) {

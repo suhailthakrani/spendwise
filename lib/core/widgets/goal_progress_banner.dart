@@ -28,9 +28,17 @@ class GoalProgressBanner extends ConsumerWidget {
         ? (primary.wishlistTitle ?? primary.name)
         : primary.name;
 
-    final text = pace.activeCount == 1
-        ? 'Save ${currency.formatAlreadyConverted(pace.primaryRequiredDisplay)} · $label'
-        : 'Save ${currency.formatAlreadyConverted(pace.requiredDisplay)} across ${pace.activeCount} goals';
+    final remaining = pace.activeCount == 1
+        ? pace.primaryRequiredDisplay
+        : pace.requiredDisplay;
+
+    final text = remaining <= 0
+        ? (pace.activeCount == 1
+            ? 'On pace this month · $label'
+            : 'On pace across ${pace.activeCount} goals')
+        : pace.activeCount == 1
+            ? 'Save ${currency.formatAlreadyConverted(pace.primaryRequiredDisplay)} more · $label'
+            : 'Save ${currency.formatAlreadyConverted(pace.requiredDisplay)} more across ${pace.activeCount} goals';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(

@@ -140,9 +140,11 @@ final monthlyGoalsPaceProvider = Provider<
   final goals = ref.watch(activeSavingGoalsProvider).valueOrNull ?? [];
   final currency = ref.watch(currencyDisplayProvider);
   final primary = GoalPaceCalculator.primaryGoal(goals);
-  final requiredUsd = GoalPaceCalculator.totalRequiredThisMonth(goals);
-  final primaryUsd =
-      primary == null ? 0.0 : GoalPaceCalculator.requiredThisMonth(primary);
+    final requiredUsd =
+        GoalPaceCalculator.totalRequiredThisMonth(goals);
+    final primaryUsd = primary == null
+        ? 0.0
+        : GoalPaceCalculator.remainingToStayOnPace(primary);
 
   return (
     primary: primary,

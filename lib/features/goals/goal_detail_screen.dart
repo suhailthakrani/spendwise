@@ -44,7 +44,7 @@ class GoalDetailScreen extends ConsumerWidget {
           );
         }
 
-        final required = GoalPaceCalculator.requiredThisMonth(goal);
+        final required = GoalPaceCalculator.remainingToStayOnPace(goal);
         final title = goal.hasWishlist ? goal.wishlistTitle! : goal.name;
 
         return Scaffold(
@@ -130,10 +130,18 @@ class GoalDetailScreen extends ConsumerWidget {
                         else ...[
                           if (required > 0)
                             Text(
-                              'Save ${currency.formatDisplay(required)} this month to stay on pace',
+                              'Save ${currency.formatDisplay(required)} more this month to stay on pace',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.accent,
+                              ),
+                            )
+                          else if (!goal.isAchieved)
+                            Text(
+                              'You’re on pace this month',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.success,
                               ),
                             ),
                           if (goal.deadline != null) ...[

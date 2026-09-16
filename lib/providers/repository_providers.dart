@@ -10,8 +10,10 @@ import '../data/repositories/user_profile_repository.dart';
 import '../data/services/backup_service.dart';
 import '../data/services/biometric_auth_service.dart';
 import '../data/services/export_service.dart';
+import '../data/services/firebase_auth_service.dart';
 import '../data/services/google_auth_service.dart';
 import '../data/services/google_drive_backup_client.dart';
+import '../data/services/rating_prompt_service.dart';
 import 'database_provider.dart';
 import 'preferences_providers.dart';
 
@@ -81,10 +83,18 @@ final googleAuthServiceProvider = Provider<GoogleAuthService>((ref) {
   return GoogleAuthService();
 });
 
+final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
+  return FirebaseAuthService();
+});
+
+final ratingPromptServiceProvider = Provider<RatingPromptService>((ref) {
+  return RatingPromptService();
+});
+
 final googleDriveBackupClientProvider =
     Provider<GoogleDriveBackupClient>((ref) {
   return GoogleDriveBackupClient(
-    signIn: ref.watch(googleAuthServiceProvider).signInClient,
+    auth: ref.watch(googleAuthServiceProvider),
   );
 });
 

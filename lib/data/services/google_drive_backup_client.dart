@@ -1,12 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
 
 import '../models/backup_snapshot.dart';
+import '../repositories/user_profile_repository.dart';
 import 'google_auth_service.dart';
 
 class DriveBackupException implements Exception {
@@ -30,53 +30,32 @@ class DriveBackupResult {
 
 /// Uploads / downloads one SpendWise backup on the signed-in Google Drive.
 class GoogleDriveBackupClient {
-  GoogleDriveBackupClient({GoogleSignIn? signIn}) : _injected = signIn;
+  GoogleDriveBackupClient({GoogleAuthService? auth})
+      : _auth = auth ?? GoogleAuthService();
 
-  static const _scopes = [
-    'email',
-    'https://www.googleapis.com/auth/drive.file',
-  ];
+  static const _driveFileScope = 'https://www.googleapis.com/auth/drive.file';
   static const _fileName = 'spendwise_backup.json';
   static const _folderName = 'SpendWise Backups';
   static const _mimeJson = 'application/json';
   static const _mimeFolder = 'application/vnd.google-apps.folder';
 
-  final GoogleSignIn? _injected;
-  GoogleSignIn? _signIn;
-
-  GoogleSignIn get _client {
-    return _injected ??
-        (_signIn ??= GoogleSignIn(
-          scopes: _scopes,
-          serverClientId: GoogleAuthService.serverClientId,
-        ));
-  }
+  final GoogleAuthService _auth;
+  GoogleSignInAccount? _account;
 
   /// Opens the Google account picker and returns the chosen Drive email.
   Future<String> connectAccount({String? preferEmail}) async {
     try {
-      final preferred = preferEmail?.trim().toLowerCase();
-      var account = _client.currentUser ?? await _client.signInSilently();
-      if (account != null &&
-          preferred != null &&
-          preferred.isNotEmpty &&
-          account.email.trim().toLowerCase() != preferred) {
-        await _client.signOut();
-        account = null;
-      }
-      account ??= await _client.signIn();
+      final account = await _auth.authenticate(preferEmail: preferEmail);
       if (account == null) {
         throw DriveBackupException('Google sign-in was cancelled');
       }
-      final granted = await _client.requestScopes(_scopes);
-      if (!granted) {
-        throw DriveBackupException(
-          'Allow Drive access to save the SpendWise backup.',
-        );
-      }
+      await _headersFor(account);
+      _account = account;
       return account.email.trim().toLowerCase();
     } on DriveBackupException {
       rethrow;
+    } on AuthException catch (error) {
+      throw DriveBackupException(error.message);
     } catch (error) {
       throw DriveBackupException(
         _humanize(error),
@@ -180,12 +159,39 @@ class GoogleDriveBackupClient {
   }
 
   Future<drive.DriveApi> _driveApi() async {
-    final account = _client.currentUser;
+    final account = _account;
     if (account == null) {
       throw DriveBackupException('Not signed in to Google');
     }
-    final headers = await account.authHeaders;
+    final headers = await _headersFor(account);
     return drive.DriveApi(_AuthedClient(headers));
+  }
+
+  Future<Map<String, String>> _headersFor(GoogleSignInAccount account) async {
+    try {
+      final headers = await account.authorizationClient.authorizationHeaders(
+        const [_driveFileScope],
+        promptIfNecessary: true,
+      );
+      if (headers == null || headers.isEmpty) {
+        throw DriveBackupException(
+          'Allow Drive access to save the SpendWise backup.',
+        );
+      }
+      return headers;
+    } on DriveBackupException {
+      rethrow;
+    } catch (error) {
+      if (GoogleAuthService.isCancelled(error)) {
+        throw DriveBackupException(
+          'Allow Drive access to save the SpendWise backup.',
+        );
+      }
+      throw DriveBackupException(
+        _humanize(error),
+        signInUnavailable: _isSignInMisconfigured(error),
+      );
+    }
   }
 
   Future<String> _ensureFolder(drive.DriveApi api) async {
@@ -225,21 +231,31 @@ class GoogleDriveBackupClient {
   }
 
   static bool _isSignInMisconfigured(Object error) {
-    final text = error is PlatformException
-        ? '${error.code} ${error.message ?? ''}'
-        : error.toString();
-    final lower = text.toLowerCase();
-    return lower.contains('channel-error') ||
-        lower.contains('unable to establish connection') ||
-        lower.contains('10:') ||
-        lower.contains('developer_error') ||
-        lower.contains('api_not_connected');
+    if (error is GoogleSignInException) {
+      return error.code == GoogleSignInExceptionCode.clientConfigurationError ||
+          error.code == GoogleSignInExceptionCode.providerConfigurationError ||
+          error.code == GoogleSignInExceptionCode.uiUnavailable;
+    }
+    final text = error.toString().toLowerCase();
+    return text.contains('channel-error') ||
+        text.contains('unable to establish connection') ||
+        text.contains('10:') ||
+        text.contains('developer_error') ||
+        text.contains('api_not_connected') ||
+        text.contains('clientconfiguration');
   }
 
   static String _humanize(Object error) {
-    final text = error is PlatformException
-        ? '${error.code} ${error.message ?? ''}'
-        : error.toString();
+    if (GoogleAuthService.isCancelled(error)) {
+      return 'Google sign-in was cancelled';
+    }
+    if (error is GoogleSignInException) {
+      return GoogleAuthService.humanize(error).replaceFirst(
+        'Google Sign-In',
+        'Google Drive',
+      );
+    }
+    final text = error.toString();
     final lower = text.toLowerCase();
     if (lower.contains('channel-error') ||
         lower.contains('unable to establish connection')) {
@@ -248,16 +264,6 @@ class GoogleDriveBackupClient {
     }
     if (lower.contains('network_error') || lower.contains('network')) {
       return 'Check your internet connection and try again.';
-    }
-    if (lower.contains('sign_in_canceled') || lower.contains('canceled')) {
-      return 'Google sign-in was cancelled';
-    }
-    if (lower.contains('10:') ||
-        lower.contains('developer_error') ||
-        lower.contains('api_not_connected')) {
-      return 'Google Sign-In is not enabled for this Firebase project yet. '
-          'Enable Google in Authentication, download a new google-services.json, '
-          'and fully restart the app.';
     }
     debugPrint('Google Drive error: $error');
     return 'Could not open Google Drive. Try again.';

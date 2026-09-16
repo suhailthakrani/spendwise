@@ -33,6 +33,19 @@ abstract final class GoalPaceCalculator {
     return remaining / months;
   }
 
+  /// Amount still needed this month to match the planned frequency.
+  /// Zero when this month’s contributions already meet or beat the pace.
+  static double remainingToStayOnPace(
+    SavingGoal goal, [
+    DateTime? now,
+  ]) {
+    final planned = requiredThisMonth(goal, now);
+    if (planned <= 0) return 0;
+    final gap = planned - goal.savedThisMonth;
+    if (gap <= 0.0001) return 0;
+    return gap.clamp(0.0, goal.remaining);
+  }
+
   /// Sum of required monthly saves across active goals.
   static double totalRequiredThisMonth(
     List<SavingGoal> goals, [
@@ -40,7 +53,7 @@ abstract final class GoalPaceCalculator {
   ]) {
     return goals.fold<double>(
       0,
-      (sum, g) => sum + requiredThisMonth(g, now),
+      (sum, g) => sum + remainingToStayOnPace(g, now),
     );
   }
 

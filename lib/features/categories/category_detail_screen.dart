@@ -9,6 +9,7 @@ import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/expense_widgets.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
+import 'category_editor_sheet.dart';
 
 class CategoryDetailScreen extends ConsumerWidget {
   const CategoryDetailScreen({super.key, required this.categoryId});
@@ -68,8 +69,12 @@ class CategoryDetailScreen extends ConsumerWidget {
             actions: [
               if (category.isCustom)
                 IconButton(
+                  tooltip: 'Edit',
                   icon: const AppIcon(AppIcons.edit, size: 22),
-                  onPressed: () {},
+                  onPressed: () => showCategoryEditorSheet(
+                    context,
+                    category: category,
+                  ),
                 ),
             ],
           ),
