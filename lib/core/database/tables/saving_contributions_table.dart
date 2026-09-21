@@ -3,6 +3,10 @@ import 'package:drift/drift.dart';
 import 'saving_goals_table.dart';
 
 @DataClassName('SavingContributionRow')
+@TableIndex(
+  name: 'idx_saving_contributions_user_goal',
+  columns: {#userId, #goalId},
+)
 class SavingContributions extends Table {
   TextColumn get id => text()();
   TextColumn get userId =>

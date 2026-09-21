@@ -3,6 +3,8 @@ import 'package:drift/drift.dart';
 import 'categories_table.dart';
 
 @DataClassName('ExpenseRow')
+@TableIndex(name: 'idx_expenses_user_date', columns: {#userId, #date})
+@TableIndex(name: 'idx_expenses_user_category', columns: {#userId, #categoryId})
 class Expenses extends Table {
   TextColumn get id => text()();
   TextColumn get userId =>

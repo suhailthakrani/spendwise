@@ -11,6 +11,15 @@ Future<void> seedDatabase(AppDatabase db) async {
   await db.into(db.appPreferences).insert(_defaultPreferences);
 }
 
+/// Gives an account its own settings row. Safe to call repeatedly — an existing
+/// row is never overwritten, so a user's choices survive later sign-ins.
+Future<void> seedSettingsForUser(AppDatabase db, String userId) async {
+  await db.into(db.userSettings).insert(
+        UserSettingsCompanion.insert(userId: userId),
+        mode: InsertMode.insertOrIgnore,
+      );
+}
+
 /// Starter categories for a specific user (unique ids per account).
 Future<void> seedCategoriesForUser(AppDatabase db, String userId) async {
   final existing = await (db.select(db.categories)

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 @DataClassName('CategoryRow')
+@TableIndex(name: 'idx_categories_user', columns: {#userId})
 class Categories extends Table {
   TextColumn get id => text()();
   TextColumn get userId =>

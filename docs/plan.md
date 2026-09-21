@@ -72,6 +72,16 @@ Add `createdAt`, `updatedAt`, and soft-delete `deletedAt` to every user-owned ta
 in a `change_log`. Multi-device sync (Phase 9) is only tractable with per-row versioning and
 tombstones. Retrofitting them later means we cannot reconcile edits made before the upgrade.
 
+Sequencing note: these columns ride along with the ledger migration rather than shipping first.
+Adding them means touching every insert and update path, and the ledger migration rewrites those same
+paths — doing it twice would double the risk for no gain.
+
+### ADR-5 — Settings belong to an account, not to the device
+
+Delivered, see section 3a. Per-account settings live in `user_settings`; only genuinely device-wide
+state (active session, onboarding, biometric binding) stays in `app_preferences`. Callers keep reading
+one merged `UserPreferences`, so this stayed invisible to the UI.
+
 ### ADR-4 — Aggregate in SQL, not in Dart
 
 `monthlySummaries` currently loops N months, and each iteration loads and folds rows in Dart;
@@ -85,21 +95,66 @@ time so past reports don't silently change.
 
 ---
 
+## 3a. Shipped: account-scoped settings (schema v7)
+
+The first slice, chosen because it was the one multi-user defect that could silently leak one person's
+data to another.
+
+**The defect:** `app_preferences` was a single row for the whole device. Theme, all five notification
+toggles, and the Google Drive backup identity (`backupDriveEmail`, `backupDriveFileId`,
+`lastBackupAt`) lived there. Everything else was already correctly user-scoped — per-user `userId`
+columns, namespaced starter category ids, `_requireUserId` on every repository provider, per-user
+deletion — so a second account would have inherited exactly those shared settings, including pointing
+its backups at the first account's Drive file.
+
+**What changed:**
+
+- New `user_settings` table keyed by `userId`, holding theme, the notification toggles, and the Drive
+  backup identity. `app_preferences` now holds only device state: active session, onboarding, and the
+  biometric binding (deliberately device-level — one local account unlocks with this device's
+  biometrics).
+- `PreferencesRepository` reads both tables through one left-joined query and returns the same merged
+  `UserPreferences` as before, so no screen or provider changed. Writes route to the correct table;
+  theme is also mirrored onto the device row so splash and sign-in look right before a session exists.
+- Every sign-in path creates the account's settings row (`setActiveUserId` is the choke point, with
+  `signUp` and the Google paths seeding it too). Closing an account deletes its settings row.
+- Backups are `formatVersion` 2 and carry account settings; version 1 files still restore and get
+  defaults. Drive linkage is deliberately excluded from backups — it belongs to the device that
+  authorised it, not to the data.
+- Indexes on the `(user_id, …)` paths every query filters by: expenses by date and by category,
+  budgets by period, recurring by due date, goals by status, contributions by goal, categories by user.
+
+**Existing users are unaffected.** The migration copies the current settings onto the signed-in
+account before dropping the old columns, guards against a stale session id that no longer matches a
+profile, and gives any other local profile defaults rather than the first account's settings.
+
+**Tests:** `test/migration_v6_to_v7_test.dart` builds a real schema-6 database and asserts the
+upgrade preserves the account's settings, device state, and ledger, drops the moved columns, creates
+the indexes, and survives a stale session. `test/user_scoped_settings_test.dart` covers two-account
+isolation, Drive re-linking, signed-out fallback, biometric scope, and settings deletion.
+`test/backup_service_test.dart` covers version 1 and 2 restores.
+
+**Deferred with reasons:** audit columns and `change_log` (ADR-3) and the `Money` conversion (ADR-2)
+move to Phase 0b, where the same write paths are already being rewritten.
+
 ## 3. Roadmap
 
 Ordering principle: **capture → model → understand → forecast → personalise → protect → intelligence.**
 Each phase is shippable on its own and leaves the app in a releasable state.
 
-### Phase 0 — Foundations (enabler, no user-visible feature)
+### Phase 0a — Account-scoped settings (shipped, schema v7)
 
-- Schema v7: `accounts`, `transactions` (with `type`, `accountId`, `toAccountId`), `tags`,
-  `transaction_tags`, `attachments`; audit columns and `change_log` per ADR-3.
+See section 3a for detail. Multi-user correctness and the cheap parts of ADR-4.
+
+### Phase 0b — Transaction ledger (next, schema v8)
+
+- `accounts`, `transactions` (with `type`, `accountId`, `toAccountId`), `tags`, `transaction_tags`,
+  `attachments`; audit columns and `change_log` per ADR-3.
 - Data migration from `expenses` → `transactions` (`type = expense`, default cash account), with a
-  Drift schema-verifier test and a restore test from an existing `BackupSnapshot`.
+  migration test and a restore test from an existing `BackupSnapshot`.
 - `Money` value type; amounts to integer minor units (ADR-2).
-- SQL aggregation queries + indexes (ADR-4).
-- `BackupSnapshot` bumped to `formatVersion` 2, with a reader that still restores version 1.
-- Test scaffolding: in-memory DB repository tests, provider tests with fakes.
+- SQL aggregation to replace the per-month Dart folding in `ReportRepository` (ADR-4).
+- `BackupSnapshot` bumped to `formatVersion` 3, still reading versions 1 and 2.
 
 **DoD:** existing app behaviour unchanged, all screens read through the ledger, migration and restore
 tests green, no regression in dashboard/report numbers.
@@ -267,6 +322,15 @@ Not "never" — just not before the core is excellent.
 
 ### Immediate next step
 
-Phase 0, task 1: design the schema v7 ledger tables and write the migration plan, including the
-`expenses` → `transactions` backfill and the `Money` conversion. No UI work until the migration test
-suite is green.
+Phase 0b, task 1: design the schema v8 ledger tables and write the migration plan, including the
+`expenses` → `transactions` backfill, the audit columns, and the `Money` conversion. No UI work until
+the migration test suite is green.
+
+### Known unrelated issue
+
+`test/widget_test.dart` fails at HEAD and still fails: it pumps the app against a fresh in-memory
+database, where onboarding is incomplete, so the router correctly redirects to onboarding and the
+dashboard assertions never match. Giving the test a signed-in fixture gets it to the dashboard but
+then `pumpAndSettle` never completes, so the dashboard has something that never stops animating or a
+stream that never closes. Worth fixing on its own, alongside the Phase 1 capture work that will touch
+the dashboard anyway.

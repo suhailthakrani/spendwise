@@ -1,62 +1,75 @@
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
-import 'package:spendwise/data/mappers/preferences_mapper.dart';
-import 'package:spendwise/data/models/user_preferences.dart';
 
 import '../../core/database/app_database.dart';
+import '../../core/database/database_seed.dart';
+import '../mappers/preferences_mapper.dart';
+import '../models/user_preferences.dart';
 
+/// Reads and writes preferences as a single [UserPreferences] view over two
+/// tables: device state in `app_preferences`, account settings in
+/// `user_settings`. Callers never need to know which table a field lives in.
 class PreferencesRepository {
   PreferencesRepository(this._db);
 
   final AppDatabase _db;
 
+  static const _preferencesId = PreferencesMapper.preferencesId;
+
   Stream<UserPreferences> watchPreferences() {
-    return (_db.select(_db.appPreferences)
-          ..where((t) => t.id.equals(PreferencesMapper.preferencesId)))
-        .watchSingleOrNull()
-        .map((row) {
-      if (row == null) return UserPreferences.defaults();
-      return PreferencesMapper.fromRow(row);
-    });
+    return _query().watchSingleOrNull().map(_merge);
   }
 
   Future<UserPreferences> getPreferences() async {
-    final row = await (_db.select(_db.appPreferences)
-          ..where((t) => t.id.equals(PreferencesMapper.preferencesId)))
-        .getSingleOrNull();
-    return row == null
-        ? UserPreferences.defaults()
-        : PreferencesMapper.fromRow(row);
+    return _merge(await _query().getSingleOrNull());
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    final current = await getPreferences();
-    await _upsert(current.copyWith(themeMode: mode));
+    final userId = await _activeUserId();
+    // Mirrored onto the device row so splash and sign-in match the last
+    // account's theme before any session exists.
+    await _writeDevice(AppPreferencesCompanion(themeMode: Value(mode.name)));
+    if (userId != null) {
+      await _writeSettings(
+        userId,
+        UserSettingsCompanion(themeMode: Value(mode.name)),
+      );
+    }
   }
 
   Future<void> completeOnboarding() async {
-    final current = await getPreferences();
-    await _upsert(current.copyWith(hasCompletedOnboarding: true));
+    await _writeDevice(
+      const AppPreferencesCompanion(hasCompletedOnboarding: Value(true)),
+    );
   }
 
   Future<void> setActiveUserId(String userId) async {
-    final current = await getPreferences();
-    await _upsert(current.copyWith(activeUserId: userId));
+    await seedSettingsForUser(_db, userId);
+    await _writeDevice(AppPreferencesCompanion(activeUserId: Value(userId)));
   }
 
   Future<void> clearSession() async {
-    final current = await getPreferences();
-    await _upsert(current.copyWith(clearActiveUserId: true));
+    await _writeDevice(
+      const AppPreferencesCompanion(activeUserId: Value(null)),
+    );
   }
 
   Future<void> setBackupDriveEmail(String? email) async {
+    final userId = await _activeUserId();
+    if (userId == null) return;
+
     final current = await getPreferences();
     final normalized = email?.trim().toLowerCase();
+    final cleared = normalized == null || normalized.isEmpty;
     final emailChanged = (normalized ?? '') != (current.backupDriveEmail ?? '');
-    await _upsert(
-      current.copyWith(
-        backupDriveEmail: normalized,
-        clearBackupDriveEmail: normalized == null || normalized.isEmpty,
-        clearBackupDriveFileId: emailChanged,
+
+    await _writeSettings(
+      userId,
+      UserSettingsCompanion(
+        backupDriveEmail: Value(cleared ? null : normalized),
+        // A different Drive account means the remembered file no longer applies.
+        backupDriveFileId:
+            emailChanged ? const Value(null) : const Value.absent(),
       ),
     );
   }
@@ -65,26 +78,31 @@ class PreferencesRepository {
     required DateTime at,
     String? driveFileId,
   }) async {
-    final current = await getPreferences();
-    await _upsert(
-      current.copyWith(
-        lastBackupAt: at,
-        backupDriveFileId: driveFileId,
-        clearBackupDriveFileId: driveFileId == null || driveFileId.isEmpty,
+    final userId = await _activeUserId();
+    if (userId == null) return;
+
+    await _writeSettings(
+      userId,
+      UserSettingsCompanion(
+        lastBackupAt: Value(at),
+        backupDriveFileId: Value(
+          driveFileId == null || driveFileId.isEmpty ? null : driveFileId,
+        ),
       ),
     );
   }
 
+  /// Device-level: one local account can be unlocked by this device's
+  /// biometrics, so this deliberately stays out of per-account settings.
   Future<void> setBiometricUnlock({
     required bool enabled,
     String? userId,
   }) async {
-    final current = await getPreferences();
-    await _upsert(
-      current.copyWith(
-        biometricUnlockEnabled: enabled,
-        biometricUserId: enabled ? userId : null,
-        clearBiometricUserId: !enabled || userId == null || userId.isEmpty,
+    final bound = enabled && userId != null && userId.isNotEmpty;
+    await _writeDevice(
+      AppPreferencesCompanion(
+        biometricUnlockEnabled: Value(bound),
+        biometricUserId: Value(bound ? userId : null),
       ),
     );
   }
@@ -96,21 +114,77 @@ class PreferencesRepository {
     bool? goalRemindersEnabled,
     bool? productUpdatesEnabled,
   }) async {
-    final current = await getPreferences();
-    await _upsert(
-      current.copyWith(
-        notificationsEnabled: notificationsEnabled,
-        billRemindersEnabled: billRemindersEnabled,
-        budgetAlertsEnabled: budgetAlertsEnabled,
-        goalRemindersEnabled: goalRemindersEnabled,
-        productUpdatesEnabled: productUpdatesEnabled,
+    final userId = await _activeUserId();
+    if (userId == null) return;
+
+    await _writeSettings(
+      userId,
+      UserSettingsCompanion(
+        notificationsEnabled: _value(notificationsEnabled),
+        billRemindersEnabled: _value(billRemindersEnabled),
+        budgetAlertsEnabled: _value(budgetAlertsEnabled),
+        goalRemindersEnabled: _value(goalRemindersEnabled),
+        productUpdatesEnabled: _value(productUpdatesEnabled),
       ),
     );
   }
 
-  Future<void> _upsert(UserPreferences preferences) async {
-    await _db.into(_db.appPreferences).insertOnConflictUpdate(
-          PreferencesMapper.toCompanion(preferences),
+  JoinedSelectStatement<HasResultSet, dynamic> _query() {
+    return _db.select(_db.appPreferences).join([
+      leftOuterJoin(
+        _db.userSettings,
+        _db.userSettings.userId.equalsExp(_db.appPreferences.activeUserId),
+      ),
+    ])
+      ..where(_db.appPreferences.id.equals(_preferencesId));
+  }
+
+  UserPreferences _merge(TypedResult? result) {
+    final device = result?.readTableOrNull(_db.appPreferences);
+    if (device == null) return UserPreferences.defaults();
+    return PreferencesMapper.fromRows(
+      device: device,
+      settings: result?.readTableOrNull(_db.userSettings),
+    );
+  }
+
+  Future<String?> _activeUserId() async {
+    final row = await (_db.select(_db.appPreferences)
+          ..where((t) => t.id.equals(_preferencesId)))
+        .getSingleOrNull();
+    final userId = row?.activeUserId;
+    if (userId == null || userId.isEmpty) return null;
+    return userId;
+  }
+
+  Future<void> _writeDevice(AppPreferencesCompanion changes) async {
+    await _ensureDeviceRow();
+    await (_db.update(_db.appPreferences)
+          ..where((t) => t.id.equals(_preferencesId)))
+        .write(changes);
+  }
+
+  Future<void> _ensureDeviceRow() async {
+    await _db.into(_db.appPreferences).insert(
+          AppPreferencesCompanion.insert(
+            id: const Value(_preferencesId),
+            themeMode: UserPreferences.defaults().themeMode.name,
+          ),
+          mode: InsertMode.insertOrIgnore,
         );
+  }
+
+  Future<void> _writeSettings(
+    String userId,
+    UserSettingsCompanion changes,
+  ) async {
+    await seedSettingsForUser(_db, userId);
+    await (_db.update(_db.userSettings)
+          ..where((t) => t.userId.equals(userId)))
+        .write(changes);
+  }
+
+  static Value<bool> _value(bool? value) {
+    return value == null ? const Value.absent() : Value(value);
   }
 }

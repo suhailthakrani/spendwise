@@ -420,7 +420,10 @@ class $ExpensesTable extends Expenses
   @override
   late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
       'category_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES categories (id)'));
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
@@ -851,7 +854,10 @@ class $BudgetsTable extends Budgets with TableInfo<$BudgetsTable, BudgetRow> {
   @override
   late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
       'category_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES categories (id)'));
   static const VerificationMeta _isMonthlyMeta =
       const VerificationMeta('isMonthly');
   @override
@@ -1278,7 +1284,10 @@ class $RecurringExpensesTable extends RecurringExpenses
   @override
   late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
       'category_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES categories (id)'));
   static const VerificationMeta _frequencyMeta =
       const VerificationMeta('frequency');
   @override
@@ -1715,74 +1724,6 @@ class $AppPreferencesTable extends AppPreferences
   late final GeneratedColumn<String> activeUserId = GeneratedColumn<String>(
       'active_user_id', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _notificationsEnabledMeta =
-      const VerificationMeta('notificationsEnabled');
-  @override
-  late final GeneratedColumn<bool> notificationsEnabled = GeneratedColumn<bool>(
-      'notifications_enabled', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("notifications_enabled" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  static const VerificationMeta _billRemindersEnabledMeta =
-      const VerificationMeta('billRemindersEnabled');
-  @override
-  late final GeneratedColumn<bool> billRemindersEnabled = GeneratedColumn<bool>(
-      'bill_reminders_enabled', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("bill_reminders_enabled" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  static const VerificationMeta _budgetAlertsEnabledMeta =
-      const VerificationMeta('budgetAlertsEnabled');
-  @override
-  late final GeneratedColumn<bool> budgetAlertsEnabled = GeneratedColumn<bool>(
-      'budget_alerts_enabled', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("budget_alerts_enabled" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  static const VerificationMeta _goalRemindersEnabledMeta =
-      const VerificationMeta('goalRemindersEnabled');
-  @override
-  late final GeneratedColumn<bool> goalRemindersEnabled = GeneratedColumn<bool>(
-      'goal_reminders_enabled', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("goal_reminders_enabled" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  static const VerificationMeta _productUpdatesEnabledMeta =
-      const VerificationMeta('productUpdatesEnabled');
-  @override
-  late final GeneratedColumn<bool> productUpdatesEnabled =
-      GeneratedColumn<bool>('product_updates_enabled', aliasedName, false,
-          type: DriftSqlType.bool,
-          requiredDuringInsert: false,
-          defaultConstraints: GeneratedColumn.constraintIsAlways(
-              'CHECK ("product_updates_enabled" IN (0, 1))'),
-          defaultValue: const Constant(false));
-  static const VerificationMeta _backupDriveEmailMeta =
-      const VerificationMeta('backupDriveEmail');
-  @override
-  late final GeneratedColumn<String> backupDriveEmail = GeneratedColumn<String>(
-      'backup_drive_email', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _lastBackupAtMeta =
-      const VerificationMeta('lastBackupAt');
-  @override
-  late final GeneratedColumn<DateTime> lastBackupAt = GeneratedColumn<DateTime>(
-      'last_backup_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _backupDriveFileIdMeta =
-      const VerificationMeta('backupDriveFileId');
-  @override
-  late final GeneratedColumn<String> backupDriveFileId =
-      GeneratedColumn<String>('backup_drive_file_id', aliasedName, true,
-          type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _biometricUnlockEnabledMeta =
       const VerificationMeta('biometricUnlockEnabled');
   @override
@@ -1805,14 +1746,6 @@ class $AppPreferencesTable extends AppPreferences
         themeMode,
         hasCompletedOnboarding,
         activeUserId,
-        notificationsEnabled,
-        billRemindersEnabled,
-        budgetAlertsEnabled,
-        goalRemindersEnabled,
-        productUpdatesEnabled,
-        backupDriveEmail,
-        lastBackupAt,
-        backupDriveFileId,
         biometricUnlockEnabled,
         biometricUserId
       ];
@@ -1847,54 +1780,6 @@ class $AppPreferencesTable extends AppPreferences
           activeUserId.isAcceptableOrUnknown(
               data['active_user_id']!, _activeUserIdMeta));
     }
-    if (data.containsKey('notifications_enabled')) {
-      context.handle(
-          _notificationsEnabledMeta,
-          notificationsEnabled.isAcceptableOrUnknown(
-              data['notifications_enabled']!, _notificationsEnabledMeta));
-    }
-    if (data.containsKey('bill_reminders_enabled')) {
-      context.handle(
-          _billRemindersEnabledMeta,
-          billRemindersEnabled.isAcceptableOrUnknown(
-              data['bill_reminders_enabled']!, _billRemindersEnabledMeta));
-    }
-    if (data.containsKey('budget_alerts_enabled')) {
-      context.handle(
-          _budgetAlertsEnabledMeta,
-          budgetAlertsEnabled.isAcceptableOrUnknown(
-              data['budget_alerts_enabled']!, _budgetAlertsEnabledMeta));
-    }
-    if (data.containsKey('goal_reminders_enabled')) {
-      context.handle(
-          _goalRemindersEnabledMeta,
-          goalRemindersEnabled.isAcceptableOrUnknown(
-              data['goal_reminders_enabled']!, _goalRemindersEnabledMeta));
-    }
-    if (data.containsKey('product_updates_enabled')) {
-      context.handle(
-          _productUpdatesEnabledMeta,
-          productUpdatesEnabled.isAcceptableOrUnknown(
-              data['product_updates_enabled']!, _productUpdatesEnabledMeta));
-    }
-    if (data.containsKey('backup_drive_email')) {
-      context.handle(
-          _backupDriveEmailMeta,
-          backupDriveEmail.isAcceptableOrUnknown(
-              data['backup_drive_email']!, _backupDriveEmailMeta));
-    }
-    if (data.containsKey('last_backup_at')) {
-      context.handle(
-          _lastBackupAtMeta,
-          lastBackupAt.isAcceptableOrUnknown(
-              data['last_backup_at']!, _lastBackupAtMeta));
-    }
-    if (data.containsKey('backup_drive_file_id')) {
-      context.handle(
-          _backupDriveFileIdMeta,
-          backupDriveFileId.isAcceptableOrUnknown(
-              data['backup_drive_file_id']!, _backupDriveFileIdMeta));
-    }
     if (data.containsKey('biometric_unlock_enabled')) {
       context.handle(
           _biometricUnlockEnabledMeta,
@@ -1925,23 +1810,6 @@ class $AppPreferencesTable extends AppPreferences
           data['${effectivePrefix}has_completed_onboarding'])!,
       activeUserId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}active_user_id']),
-      notificationsEnabled: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}notifications_enabled'])!,
-      billRemindersEnabled: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}bill_reminders_enabled'])!,
-      budgetAlertsEnabled: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}budget_alerts_enabled'])!,
-      goalRemindersEnabled: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}goal_reminders_enabled'])!,
-      productUpdatesEnabled: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool,
-          data['${effectivePrefix}product_updates_enabled'])!,
-      backupDriveEmail: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}backup_drive_email']),
-      lastBackupAt: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}last_backup_at']),
-      backupDriveFileId: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}backup_drive_file_id']),
       biometricUnlockEnabled: attachedDatabase.typeMapping.read(
           DriftSqlType.bool,
           data['${effectivePrefix}biometric_unlock_enabled'])!,
@@ -1958,17 +1826,14 @@ class $AppPreferencesTable extends AppPreferences
 
 class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
   final int id;
+
+  /// Theme used before any account is signed in (splash, onboarding, sign-in).
+  /// Mirrors the signed-in account's choice so the next cold start matches.
   final String themeMode;
   final bool hasCompletedOnboarding;
   final String? activeUserId;
-  final bool notificationsEnabled;
-  final bool billRemindersEnabled;
-  final bool budgetAlertsEnabled;
-  final bool goalRemindersEnabled;
-  final bool productUpdatesEnabled;
-  final String? backupDriveEmail;
-  final DateTime? lastBackupAt;
-  final String? backupDriveFileId;
+
+  /// Which single local account this device's biometrics unlock.
   final bool biometricUnlockEnabled;
   final String? biometricUserId;
   const PreferencesRow(
@@ -1976,14 +1841,6 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       required this.themeMode,
       required this.hasCompletedOnboarding,
       this.activeUserId,
-      required this.notificationsEnabled,
-      required this.billRemindersEnabled,
-      required this.budgetAlertsEnabled,
-      required this.goalRemindersEnabled,
-      required this.productUpdatesEnabled,
-      this.backupDriveEmail,
-      this.lastBackupAt,
-      this.backupDriveFileId,
       required this.biometricUnlockEnabled,
       this.biometricUserId});
   @override
@@ -1994,20 +1851,6 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
     map['has_completed_onboarding'] = Variable<bool>(hasCompletedOnboarding);
     if (!nullToAbsent || activeUserId != null) {
       map['active_user_id'] = Variable<String>(activeUserId);
-    }
-    map['notifications_enabled'] = Variable<bool>(notificationsEnabled);
-    map['bill_reminders_enabled'] = Variable<bool>(billRemindersEnabled);
-    map['budget_alerts_enabled'] = Variable<bool>(budgetAlertsEnabled);
-    map['goal_reminders_enabled'] = Variable<bool>(goalRemindersEnabled);
-    map['product_updates_enabled'] = Variable<bool>(productUpdatesEnabled);
-    if (!nullToAbsent || backupDriveEmail != null) {
-      map['backup_drive_email'] = Variable<String>(backupDriveEmail);
-    }
-    if (!nullToAbsent || lastBackupAt != null) {
-      map['last_backup_at'] = Variable<DateTime>(lastBackupAt);
-    }
-    if (!nullToAbsent || backupDriveFileId != null) {
-      map['backup_drive_file_id'] = Variable<String>(backupDriveFileId);
     }
     map['biometric_unlock_enabled'] = Variable<bool>(biometricUnlockEnabled);
     if (!nullToAbsent || biometricUserId != null) {
@@ -2024,20 +1867,6 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       activeUserId: activeUserId == null && nullToAbsent
           ? const Value.absent()
           : Value(activeUserId),
-      notificationsEnabled: Value(notificationsEnabled),
-      billRemindersEnabled: Value(billRemindersEnabled),
-      budgetAlertsEnabled: Value(budgetAlertsEnabled),
-      goalRemindersEnabled: Value(goalRemindersEnabled),
-      productUpdatesEnabled: Value(productUpdatesEnabled),
-      backupDriveEmail: backupDriveEmail == null && nullToAbsent
-          ? const Value.absent()
-          : Value(backupDriveEmail),
-      lastBackupAt: lastBackupAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastBackupAt),
-      backupDriveFileId: backupDriveFileId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(backupDriveFileId),
       biometricUnlockEnabled: Value(biometricUnlockEnabled),
       biometricUserId: biometricUserId == null && nullToAbsent
           ? const Value.absent()
@@ -2054,20 +1883,6 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       hasCompletedOnboarding:
           serializer.fromJson<bool>(json['hasCompletedOnboarding']),
       activeUserId: serializer.fromJson<String?>(json['activeUserId']),
-      notificationsEnabled:
-          serializer.fromJson<bool>(json['notificationsEnabled']),
-      billRemindersEnabled:
-          serializer.fromJson<bool>(json['billRemindersEnabled']),
-      budgetAlertsEnabled:
-          serializer.fromJson<bool>(json['budgetAlertsEnabled']),
-      goalRemindersEnabled:
-          serializer.fromJson<bool>(json['goalRemindersEnabled']),
-      productUpdatesEnabled:
-          serializer.fromJson<bool>(json['productUpdatesEnabled']),
-      backupDriveEmail: serializer.fromJson<String?>(json['backupDriveEmail']),
-      lastBackupAt: serializer.fromJson<DateTime?>(json['lastBackupAt']),
-      backupDriveFileId:
-          serializer.fromJson<String?>(json['backupDriveFileId']),
       biometricUnlockEnabled:
           serializer.fromJson<bool>(json['biometricUnlockEnabled']),
       biometricUserId: serializer.fromJson<String?>(json['biometricUserId']),
@@ -2081,14 +1896,6 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       'themeMode': serializer.toJson<String>(themeMode),
       'hasCompletedOnboarding': serializer.toJson<bool>(hasCompletedOnboarding),
       'activeUserId': serializer.toJson<String?>(activeUserId),
-      'notificationsEnabled': serializer.toJson<bool>(notificationsEnabled),
-      'billRemindersEnabled': serializer.toJson<bool>(billRemindersEnabled),
-      'budgetAlertsEnabled': serializer.toJson<bool>(budgetAlertsEnabled),
-      'goalRemindersEnabled': serializer.toJson<bool>(goalRemindersEnabled),
-      'productUpdatesEnabled': serializer.toJson<bool>(productUpdatesEnabled),
-      'backupDriveEmail': serializer.toJson<String?>(backupDriveEmail),
-      'lastBackupAt': serializer.toJson<DateTime?>(lastBackupAt),
-      'backupDriveFileId': serializer.toJson<String?>(backupDriveFileId),
       'biometricUnlockEnabled': serializer.toJson<bool>(biometricUnlockEnabled),
       'biometricUserId': serializer.toJson<String?>(biometricUserId),
     };
@@ -2099,14 +1906,6 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
           String? themeMode,
           bool? hasCompletedOnboarding,
           Value<String?> activeUserId = const Value.absent(),
-          bool? notificationsEnabled,
-          bool? billRemindersEnabled,
-          bool? budgetAlertsEnabled,
-          bool? goalRemindersEnabled,
-          bool? productUpdatesEnabled,
-          Value<String?> backupDriveEmail = const Value.absent(),
-          Value<DateTime?> lastBackupAt = const Value.absent(),
-          Value<String?> backupDriveFileId = const Value.absent(),
           bool? biometricUnlockEnabled,
           Value<String?> biometricUserId = const Value.absent()}) =>
       PreferencesRow(
@@ -2116,20 +1915,6 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
             hasCompletedOnboarding ?? this.hasCompletedOnboarding,
         activeUserId:
             activeUserId.present ? activeUserId.value : this.activeUserId,
-        notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
-        billRemindersEnabled: billRemindersEnabled ?? this.billRemindersEnabled,
-        budgetAlertsEnabled: budgetAlertsEnabled ?? this.budgetAlertsEnabled,
-        goalRemindersEnabled: goalRemindersEnabled ?? this.goalRemindersEnabled,
-        productUpdatesEnabled:
-            productUpdatesEnabled ?? this.productUpdatesEnabled,
-        backupDriveEmail: backupDriveEmail.present
-            ? backupDriveEmail.value
-            : this.backupDriveEmail,
-        lastBackupAt:
-            lastBackupAt.present ? lastBackupAt.value : this.lastBackupAt,
-        backupDriveFileId: backupDriveFileId.present
-            ? backupDriveFileId.value
-            : this.backupDriveFileId,
         biometricUnlockEnabled:
             biometricUnlockEnabled ?? this.biometricUnlockEnabled,
         biometricUserId: biometricUserId.present
@@ -2146,30 +1931,6 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
       activeUserId: data.activeUserId.present
           ? data.activeUserId.value
           : this.activeUserId,
-      notificationsEnabled: data.notificationsEnabled.present
-          ? data.notificationsEnabled.value
-          : this.notificationsEnabled,
-      billRemindersEnabled: data.billRemindersEnabled.present
-          ? data.billRemindersEnabled.value
-          : this.billRemindersEnabled,
-      budgetAlertsEnabled: data.budgetAlertsEnabled.present
-          ? data.budgetAlertsEnabled.value
-          : this.budgetAlertsEnabled,
-      goalRemindersEnabled: data.goalRemindersEnabled.present
-          ? data.goalRemindersEnabled.value
-          : this.goalRemindersEnabled,
-      productUpdatesEnabled: data.productUpdatesEnabled.present
-          ? data.productUpdatesEnabled.value
-          : this.productUpdatesEnabled,
-      backupDriveEmail: data.backupDriveEmail.present
-          ? data.backupDriveEmail.value
-          : this.backupDriveEmail,
-      lastBackupAt: data.lastBackupAt.present
-          ? data.lastBackupAt.value
-          : this.lastBackupAt,
-      backupDriveFileId: data.backupDriveFileId.present
-          ? data.backupDriveFileId.value
-          : this.backupDriveFileId,
       biometricUnlockEnabled: data.biometricUnlockEnabled.present
           ? data.biometricUnlockEnabled.value
           : this.biometricUnlockEnabled,
@@ -2186,14 +1947,6 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
           ..write('themeMode: $themeMode, ')
           ..write('hasCompletedOnboarding: $hasCompletedOnboarding, ')
           ..write('activeUserId: $activeUserId, ')
-          ..write('notificationsEnabled: $notificationsEnabled, ')
-          ..write('billRemindersEnabled: $billRemindersEnabled, ')
-          ..write('budgetAlertsEnabled: $budgetAlertsEnabled, ')
-          ..write('goalRemindersEnabled: $goalRemindersEnabled, ')
-          ..write('productUpdatesEnabled: $productUpdatesEnabled, ')
-          ..write('backupDriveEmail: $backupDriveEmail, ')
-          ..write('lastBackupAt: $lastBackupAt, ')
-          ..write('backupDriveFileId: $backupDriveFileId, ')
           ..write('biometricUnlockEnabled: $biometricUnlockEnabled, ')
           ..write('biometricUserId: $biometricUserId')
           ..write(')'))
@@ -2201,21 +1954,8 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      id,
-      themeMode,
-      hasCompletedOnboarding,
-      activeUserId,
-      notificationsEnabled,
-      billRemindersEnabled,
-      budgetAlertsEnabled,
-      goalRemindersEnabled,
-      productUpdatesEnabled,
-      backupDriveEmail,
-      lastBackupAt,
-      backupDriveFileId,
-      biometricUnlockEnabled,
-      biometricUserId);
+  int get hashCode => Object.hash(id, themeMode, hasCompletedOnboarding,
+      activeUserId, biometricUnlockEnabled, biometricUserId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2224,14 +1964,6 @@ class PreferencesRow extends DataClass implements Insertable<PreferencesRow> {
           other.themeMode == this.themeMode &&
           other.hasCompletedOnboarding == this.hasCompletedOnboarding &&
           other.activeUserId == this.activeUserId &&
-          other.notificationsEnabled == this.notificationsEnabled &&
-          other.billRemindersEnabled == this.billRemindersEnabled &&
-          other.budgetAlertsEnabled == this.budgetAlertsEnabled &&
-          other.goalRemindersEnabled == this.goalRemindersEnabled &&
-          other.productUpdatesEnabled == this.productUpdatesEnabled &&
-          other.backupDriveEmail == this.backupDriveEmail &&
-          other.lastBackupAt == this.lastBackupAt &&
-          other.backupDriveFileId == this.backupDriveFileId &&
           other.biometricUnlockEnabled == this.biometricUnlockEnabled &&
           other.biometricUserId == this.biometricUserId);
 }
@@ -2241,14 +1973,6 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
   final Value<String> themeMode;
   final Value<bool> hasCompletedOnboarding;
   final Value<String?> activeUserId;
-  final Value<bool> notificationsEnabled;
-  final Value<bool> billRemindersEnabled;
-  final Value<bool> budgetAlertsEnabled;
-  final Value<bool> goalRemindersEnabled;
-  final Value<bool> productUpdatesEnabled;
-  final Value<String?> backupDriveEmail;
-  final Value<DateTime?> lastBackupAt;
-  final Value<String?> backupDriveFileId;
   final Value<bool> biometricUnlockEnabled;
   final Value<String?> biometricUserId;
   const AppPreferencesCompanion({
@@ -2256,14 +1980,6 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
     this.themeMode = const Value.absent(),
     this.hasCompletedOnboarding = const Value.absent(),
     this.activeUserId = const Value.absent(),
-    this.notificationsEnabled = const Value.absent(),
-    this.billRemindersEnabled = const Value.absent(),
-    this.budgetAlertsEnabled = const Value.absent(),
-    this.goalRemindersEnabled = const Value.absent(),
-    this.productUpdatesEnabled = const Value.absent(),
-    this.backupDriveEmail = const Value.absent(),
-    this.lastBackupAt = const Value.absent(),
-    this.backupDriveFileId = const Value.absent(),
     this.biometricUnlockEnabled = const Value.absent(),
     this.biometricUserId = const Value.absent(),
   });
@@ -2272,14 +1988,6 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
     required String themeMode,
     this.hasCompletedOnboarding = const Value.absent(),
     this.activeUserId = const Value.absent(),
-    this.notificationsEnabled = const Value.absent(),
-    this.billRemindersEnabled = const Value.absent(),
-    this.budgetAlertsEnabled = const Value.absent(),
-    this.goalRemindersEnabled = const Value.absent(),
-    this.productUpdatesEnabled = const Value.absent(),
-    this.backupDriveEmail = const Value.absent(),
-    this.lastBackupAt = const Value.absent(),
-    this.backupDriveFileId = const Value.absent(),
     this.biometricUnlockEnabled = const Value.absent(),
     this.biometricUserId = const Value.absent(),
   }) : themeMode = Value(themeMode);
@@ -2288,14 +1996,6 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
     Expression<String>? themeMode,
     Expression<bool>? hasCompletedOnboarding,
     Expression<String>? activeUserId,
-    Expression<bool>? notificationsEnabled,
-    Expression<bool>? billRemindersEnabled,
-    Expression<bool>? budgetAlertsEnabled,
-    Expression<bool>? goalRemindersEnabled,
-    Expression<bool>? productUpdatesEnabled,
-    Expression<String>? backupDriveEmail,
-    Expression<DateTime>? lastBackupAt,
-    Expression<String>? backupDriveFileId,
     Expression<bool>? biometricUnlockEnabled,
     Expression<String>? biometricUserId,
   }) {
@@ -2305,19 +2005,6 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
       if (hasCompletedOnboarding != null)
         'has_completed_onboarding': hasCompletedOnboarding,
       if (activeUserId != null) 'active_user_id': activeUserId,
-      if (notificationsEnabled != null)
-        'notifications_enabled': notificationsEnabled,
-      if (billRemindersEnabled != null)
-        'bill_reminders_enabled': billRemindersEnabled,
-      if (budgetAlertsEnabled != null)
-        'budget_alerts_enabled': budgetAlertsEnabled,
-      if (goalRemindersEnabled != null)
-        'goal_reminders_enabled': goalRemindersEnabled,
-      if (productUpdatesEnabled != null)
-        'product_updates_enabled': productUpdatesEnabled,
-      if (backupDriveEmail != null) 'backup_drive_email': backupDriveEmail,
-      if (lastBackupAt != null) 'last_backup_at': lastBackupAt,
-      if (backupDriveFileId != null) 'backup_drive_file_id': backupDriveFileId,
       if (biometricUnlockEnabled != null)
         'biometric_unlock_enabled': biometricUnlockEnabled,
       if (biometricUserId != null) 'biometric_user_id': biometricUserId,
@@ -2329,14 +2016,6 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
       Value<String>? themeMode,
       Value<bool>? hasCompletedOnboarding,
       Value<String?>? activeUserId,
-      Value<bool>? notificationsEnabled,
-      Value<bool>? billRemindersEnabled,
-      Value<bool>? budgetAlertsEnabled,
-      Value<bool>? goalRemindersEnabled,
-      Value<bool>? productUpdatesEnabled,
-      Value<String?>? backupDriveEmail,
-      Value<DateTime?>? lastBackupAt,
-      Value<String?>? backupDriveFileId,
       Value<bool>? biometricUnlockEnabled,
       Value<String?>? biometricUserId}) {
     return AppPreferencesCompanion(
@@ -2345,15 +2024,6 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
       hasCompletedOnboarding:
           hasCompletedOnboarding ?? this.hasCompletedOnboarding,
       activeUserId: activeUserId ?? this.activeUserId,
-      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
-      billRemindersEnabled: billRemindersEnabled ?? this.billRemindersEnabled,
-      budgetAlertsEnabled: budgetAlertsEnabled ?? this.budgetAlertsEnabled,
-      goalRemindersEnabled: goalRemindersEnabled ?? this.goalRemindersEnabled,
-      productUpdatesEnabled:
-          productUpdatesEnabled ?? this.productUpdatesEnabled,
-      backupDriveEmail: backupDriveEmail ?? this.backupDriveEmail,
-      lastBackupAt: lastBackupAt ?? this.lastBackupAt,
-      backupDriveFileId: backupDriveFileId ?? this.backupDriveFileId,
       biometricUnlockEnabled:
           biometricUnlockEnabled ?? this.biometricUnlockEnabled,
       biometricUserId: biometricUserId ?? this.biometricUserId,
@@ -2376,33 +2046,6 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
     if (activeUserId.present) {
       map['active_user_id'] = Variable<String>(activeUserId.value);
     }
-    if (notificationsEnabled.present) {
-      map['notifications_enabled'] = Variable<bool>(notificationsEnabled.value);
-    }
-    if (billRemindersEnabled.present) {
-      map['bill_reminders_enabled'] =
-          Variable<bool>(billRemindersEnabled.value);
-    }
-    if (budgetAlertsEnabled.present) {
-      map['budget_alerts_enabled'] = Variable<bool>(budgetAlertsEnabled.value);
-    }
-    if (goalRemindersEnabled.present) {
-      map['goal_reminders_enabled'] =
-          Variable<bool>(goalRemindersEnabled.value);
-    }
-    if (productUpdatesEnabled.present) {
-      map['product_updates_enabled'] =
-          Variable<bool>(productUpdatesEnabled.value);
-    }
-    if (backupDriveEmail.present) {
-      map['backup_drive_email'] = Variable<String>(backupDriveEmail.value);
-    }
-    if (lastBackupAt.present) {
-      map['last_backup_at'] = Variable<DateTime>(lastBackupAt.value);
-    }
-    if (backupDriveFileId.present) {
-      map['backup_drive_file_id'] = Variable<String>(backupDriveFileId.value);
-    }
     if (biometricUnlockEnabled.present) {
       map['biometric_unlock_enabled'] =
           Variable<bool>(biometricUnlockEnabled.value);
@@ -2420,14 +2063,6 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
           ..write('themeMode: $themeMode, ')
           ..write('hasCompletedOnboarding: $hasCompletedOnboarding, ')
           ..write('activeUserId: $activeUserId, ')
-          ..write('notificationsEnabled: $notificationsEnabled, ')
-          ..write('billRemindersEnabled: $billRemindersEnabled, ')
-          ..write('budgetAlertsEnabled: $budgetAlertsEnabled, ')
-          ..write('goalRemindersEnabled: $goalRemindersEnabled, ')
-          ..write('productUpdatesEnabled: $productUpdatesEnabled, ')
-          ..write('backupDriveEmail: $backupDriveEmail, ')
-          ..write('lastBackupAt: $lastBackupAt, ')
-          ..write('backupDriveFileId: $backupDriveFileId, ')
           ..write('biometricUnlockEnabled: $biometricUnlockEnabled, ')
           ..write('biometricUserId: $biometricUserId')
           ..write(')'))
@@ -2949,6 +2584,585 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
           ..write('avatarUrl: $avatarUrl, ')
           ..write('googleId: $googleId, ')
           ..write('memberSince: $memberSince, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserSettingsTable extends UserSettings
+    with TableInfo<$UserSettingsTable, UserSettingsRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserSettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES user_profiles (id)'));
+  static const VerificationMeta _themeModeMeta =
+      const VerificationMeta('themeMode');
+  @override
+  late final GeneratedColumn<String> themeMode = GeneratedColumn<String>(
+      'theme_mode', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('dark'));
+  static const VerificationMeta _notificationsEnabledMeta =
+      const VerificationMeta('notificationsEnabled');
+  @override
+  late final GeneratedColumn<bool> notificationsEnabled = GeneratedColumn<bool>(
+      'notifications_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("notifications_enabled" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _billRemindersEnabledMeta =
+      const VerificationMeta('billRemindersEnabled');
+  @override
+  late final GeneratedColumn<bool> billRemindersEnabled = GeneratedColumn<bool>(
+      'bill_reminders_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("bill_reminders_enabled" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _budgetAlertsEnabledMeta =
+      const VerificationMeta('budgetAlertsEnabled');
+  @override
+  late final GeneratedColumn<bool> budgetAlertsEnabled = GeneratedColumn<bool>(
+      'budget_alerts_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("budget_alerts_enabled" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _goalRemindersEnabledMeta =
+      const VerificationMeta('goalRemindersEnabled');
+  @override
+  late final GeneratedColumn<bool> goalRemindersEnabled = GeneratedColumn<bool>(
+      'goal_reminders_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("goal_reminders_enabled" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _productUpdatesEnabledMeta =
+      const VerificationMeta('productUpdatesEnabled');
+  @override
+  late final GeneratedColumn<bool> productUpdatesEnabled =
+      GeneratedColumn<bool>('product_updates_enabled', aliasedName, false,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'CHECK ("product_updates_enabled" IN (0, 1))'),
+          defaultValue: const Constant(false));
+  static const VerificationMeta _backupDriveEmailMeta =
+      const VerificationMeta('backupDriveEmail');
+  @override
+  late final GeneratedColumn<String> backupDriveEmail = GeneratedColumn<String>(
+      'backup_drive_email', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _backupDriveFileIdMeta =
+      const VerificationMeta('backupDriveFileId');
+  @override
+  late final GeneratedColumn<String> backupDriveFileId =
+      GeneratedColumn<String>('backup_drive_file_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lastBackupAtMeta =
+      const VerificationMeta('lastBackupAt');
+  @override
+  late final GeneratedColumn<DateTime> lastBackupAt = GeneratedColumn<DateTime>(
+      'last_backup_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        userId,
+        themeMode,
+        notificationsEnabled,
+        billRemindersEnabled,
+        budgetAlertsEnabled,
+        goalRemindersEnabled,
+        productUpdatesEnabled,
+        backupDriveEmail,
+        backupDriveFileId,
+        lastBackupAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_settings';
+  @override
+  VerificationContext validateIntegrity(Insertable<UserSettingsRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('theme_mode')) {
+      context.handle(_themeModeMeta,
+          themeMode.isAcceptableOrUnknown(data['theme_mode']!, _themeModeMeta));
+    }
+    if (data.containsKey('notifications_enabled')) {
+      context.handle(
+          _notificationsEnabledMeta,
+          notificationsEnabled.isAcceptableOrUnknown(
+              data['notifications_enabled']!, _notificationsEnabledMeta));
+    }
+    if (data.containsKey('bill_reminders_enabled')) {
+      context.handle(
+          _billRemindersEnabledMeta,
+          billRemindersEnabled.isAcceptableOrUnknown(
+              data['bill_reminders_enabled']!, _billRemindersEnabledMeta));
+    }
+    if (data.containsKey('budget_alerts_enabled')) {
+      context.handle(
+          _budgetAlertsEnabledMeta,
+          budgetAlertsEnabled.isAcceptableOrUnknown(
+              data['budget_alerts_enabled']!, _budgetAlertsEnabledMeta));
+    }
+    if (data.containsKey('goal_reminders_enabled')) {
+      context.handle(
+          _goalRemindersEnabledMeta,
+          goalRemindersEnabled.isAcceptableOrUnknown(
+              data['goal_reminders_enabled']!, _goalRemindersEnabledMeta));
+    }
+    if (data.containsKey('product_updates_enabled')) {
+      context.handle(
+          _productUpdatesEnabledMeta,
+          productUpdatesEnabled.isAcceptableOrUnknown(
+              data['product_updates_enabled']!, _productUpdatesEnabledMeta));
+    }
+    if (data.containsKey('backup_drive_email')) {
+      context.handle(
+          _backupDriveEmailMeta,
+          backupDriveEmail.isAcceptableOrUnknown(
+              data['backup_drive_email']!, _backupDriveEmailMeta));
+    }
+    if (data.containsKey('backup_drive_file_id')) {
+      context.handle(
+          _backupDriveFileIdMeta,
+          backupDriveFileId.isAcceptableOrUnknown(
+              data['backup_drive_file_id']!, _backupDriveFileIdMeta));
+    }
+    if (data.containsKey('last_backup_at')) {
+      context.handle(
+          _lastBackupAtMeta,
+          lastBackupAt.isAcceptableOrUnknown(
+              data['last_backup_at']!, _lastBackupAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {userId};
+  @override
+  UserSettingsRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserSettingsRow(
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      themeMode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}theme_mode'])!,
+      notificationsEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}notifications_enabled'])!,
+      billRemindersEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}bill_reminders_enabled'])!,
+      budgetAlertsEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}budget_alerts_enabled'])!,
+      goalRemindersEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}goal_reminders_enabled'])!,
+      productUpdatesEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool,
+          data['${effectivePrefix}product_updates_enabled'])!,
+      backupDriveEmail: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}backup_drive_email']),
+      backupDriveFileId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}backup_drive_file_id']),
+      lastBackupAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_backup_at']),
+    );
+  }
+
+  @override
+  $UserSettingsTable createAlias(String alias) {
+    return $UserSettingsTable(attachedDatabase, alias);
+  }
+}
+
+class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
+  final String userId;
+  final String themeMode;
+  final bool notificationsEnabled;
+  final bool billRemindersEnabled;
+  final bool budgetAlertsEnabled;
+  final bool goalRemindersEnabled;
+  final bool productUpdatesEnabled;
+  final String? backupDriveEmail;
+  final String? backupDriveFileId;
+  final DateTime? lastBackupAt;
+  const UserSettingsRow(
+      {required this.userId,
+      required this.themeMode,
+      required this.notificationsEnabled,
+      required this.billRemindersEnabled,
+      required this.budgetAlertsEnabled,
+      required this.goalRemindersEnabled,
+      required this.productUpdatesEnabled,
+      this.backupDriveEmail,
+      this.backupDriveFileId,
+      this.lastBackupAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['user_id'] = Variable<String>(userId);
+    map['theme_mode'] = Variable<String>(themeMode);
+    map['notifications_enabled'] = Variable<bool>(notificationsEnabled);
+    map['bill_reminders_enabled'] = Variable<bool>(billRemindersEnabled);
+    map['budget_alerts_enabled'] = Variable<bool>(budgetAlertsEnabled);
+    map['goal_reminders_enabled'] = Variable<bool>(goalRemindersEnabled);
+    map['product_updates_enabled'] = Variable<bool>(productUpdatesEnabled);
+    if (!nullToAbsent || backupDriveEmail != null) {
+      map['backup_drive_email'] = Variable<String>(backupDriveEmail);
+    }
+    if (!nullToAbsent || backupDriveFileId != null) {
+      map['backup_drive_file_id'] = Variable<String>(backupDriveFileId);
+    }
+    if (!nullToAbsent || lastBackupAt != null) {
+      map['last_backup_at'] = Variable<DateTime>(lastBackupAt);
+    }
+    return map;
+  }
+
+  UserSettingsCompanion toCompanion(bool nullToAbsent) {
+    return UserSettingsCompanion(
+      userId: Value(userId),
+      themeMode: Value(themeMode),
+      notificationsEnabled: Value(notificationsEnabled),
+      billRemindersEnabled: Value(billRemindersEnabled),
+      budgetAlertsEnabled: Value(budgetAlertsEnabled),
+      goalRemindersEnabled: Value(goalRemindersEnabled),
+      productUpdatesEnabled: Value(productUpdatesEnabled),
+      backupDriveEmail: backupDriveEmail == null && nullToAbsent
+          ? const Value.absent()
+          : Value(backupDriveEmail),
+      backupDriveFileId: backupDriveFileId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(backupDriveFileId),
+      lastBackupAt: lastBackupAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastBackupAt),
+    );
+  }
+
+  factory UserSettingsRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserSettingsRow(
+      userId: serializer.fromJson<String>(json['userId']),
+      themeMode: serializer.fromJson<String>(json['themeMode']),
+      notificationsEnabled:
+          serializer.fromJson<bool>(json['notificationsEnabled']),
+      billRemindersEnabled:
+          serializer.fromJson<bool>(json['billRemindersEnabled']),
+      budgetAlertsEnabled:
+          serializer.fromJson<bool>(json['budgetAlertsEnabled']),
+      goalRemindersEnabled:
+          serializer.fromJson<bool>(json['goalRemindersEnabled']),
+      productUpdatesEnabled:
+          serializer.fromJson<bool>(json['productUpdatesEnabled']),
+      backupDriveEmail: serializer.fromJson<String?>(json['backupDriveEmail']),
+      backupDriveFileId:
+          serializer.fromJson<String?>(json['backupDriveFileId']),
+      lastBackupAt: serializer.fromJson<DateTime?>(json['lastBackupAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'userId': serializer.toJson<String>(userId),
+      'themeMode': serializer.toJson<String>(themeMode),
+      'notificationsEnabled': serializer.toJson<bool>(notificationsEnabled),
+      'billRemindersEnabled': serializer.toJson<bool>(billRemindersEnabled),
+      'budgetAlertsEnabled': serializer.toJson<bool>(budgetAlertsEnabled),
+      'goalRemindersEnabled': serializer.toJson<bool>(goalRemindersEnabled),
+      'productUpdatesEnabled': serializer.toJson<bool>(productUpdatesEnabled),
+      'backupDriveEmail': serializer.toJson<String?>(backupDriveEmail),
+      'backupDriveFileId': serializer.toJson<String?>(backupDriveFileId),
+      'lastBackupAt': serializer.toJson<DateTime?>(lastBackupAt),
+    };
+  }
+
+  UserSettingsRow copyWith(
+          {String? userId,
+          String? themeMode,
+          bool? notificationsEnabled,
+          bool? billRemindersEnabled,
+          bool? budgetAlertsEnabled,
+          bool? goalRemindersEnabled,
+          bool? productUpdatesEnabled,
+          Value<String?> backupDriveEmail = const Value.absent(),
+          Value<String?> backupDriveFileId = const Value.absent(),
+          Value<DateTime?> lastBackupAt = const Value.absent()}) =>
+      UserSettingsRow(
+        userId: userId ?? this.userId,
+        themeMode: themeMode ?? this.themeMode,
+        notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+        billRemindersEnabled: billRemindersEnabled ?? this.billRemindersEnabled,
+        budgetAlertsEnabled: budgetAlertsEnabled ?? this.budgetAlertsEnabled,
+        goalRemindersEnabled: goalRemindersEnabled ?? this.goalRemindersEnabled,
+        productUpdatesEnabled:
+            productUpdatesEnabled ?? this.productUpdatesEnabled,
+        backupDriveEmail: backupDriveEmail.present
+            ? backupDriveEmail.value
+            : this.backupDriveEmail,
+        backupDriveFileId: backupDriveFileId.present
+            ? backupDriveFileId.value
+            : this.backupDriveFileId,
+        lastBackupAt:
+            lastBackupAt.present ? lastBackupAt.value : this.lastBackupAt,
+      );
+  UserSettingsRow copyWithCompanion(UserSettingsCompanion data) {
+    return UserSettingsRow(
+      userId: data.userId.present ? data.userId.value : this.userId,
+      themeMode: data.themeMode.present ? data.themeMode.value : this.themeMode,
+      notificationsEnabled: data.notificationsEnabled.present
+          ? data.notificationsEnabled.value
+          : this.notificationsEnabled,
+      billRemindersEnabled: data.billRemindersEnabled.present
+          ? data.billRemindersEnabled.value
+          : this.billRemindersEnabled,
+      budgetAlertsEnabled: data.budgetAlertsEnabled.present
+          ? data.budgetAlertsEnabled.value
+          : this.budgetAlertsEnabled,
+      goalRemindersEnabled: data.goalRemindersEnabled.present
+          ? data.goalRemindersEnabled.value
+          : this.goalRemindersEnabled,
+      productUpdatesEnabled: data.productUpdatesEnabled.present
+          ? data.productUpdatesEnabled.value
+          : this.productUpdatesEnabled,
+      backupDriveEmail: data.backupDriveEmail.present
+          ? data.backupDriveEmail.value
+          : this.backupDriveEmail,
+      backupDriveFileId: data.backupDriveFileId.present
+          ? data.backupDriveFileId.value
+          : this.backupDriveFileId,
+      lastBackupAt: data.lastBackupAt.present
+          ? data.lastBackupAt.value
+          : this.lastBackupAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserSettingsRow(')
+          ..write('userId: $userId, ')
+          ..write('themeMode: $themeMode, ')
+          ..write('notificationsEnabled: $notificationsEnabled, ')
+          ..write('billRemindersEnabled: $billRemindersEnabled, ')
+          ..write('budgetAlertsEnabled: $budgetAlertsEnabled, ')
+          ..write('goalRemindersEnabled: $goalRemindersEnabled, ')
+          ..write('productUpdatesEnabled: $productUpdatesEnabled, ')
+          ..write('backupDriveEmail: $backupDriveEmail, ')
+          ..write('backupDriveFileId: $backupDriveFileId, ')
+          ..write('lastBackupAt: $lastBackupAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      userId,
+      themeMode,
+      notificationsEnabled,
+      billRemindersEnabled,
+      budgetAlertsEnabled,
+      goalRemindersEnabled,
+      productUpdatesEnabled,
+      backupDriveEmail,
+      backupDriveFileId,
+      lastBackupAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserSettingsRow &&
+          other.userId == this.userId &&
+          other.themeMode == this.themeMode &&
+          other.notificationsEnabled == this.notificationsEnabled &&
+          other.billRemindersEnabled == this.billRemindersEnabled &&
+          other.budgetAlertsEnabled == this.budgetAlertsEnabled &&
+          other.goalRemindersEnabled == this.goalRemindersEnabled &&
+          other.productUpdatesEnabled == this.productUpdatesEnabled &&
+          other.backupDriveEmail == this.backupDriveEmail &&
+          other.backupDriveFileId == this.backupDriveFileId &&
+          other.lastBackupAt == this.lastBackupAt);
+}
+
+class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
+  final Value<String> userId;
+  final Value<String> themeMode;
+  final Value<bool> notificationsEnabled;
+  final Value<bool> billRemindersEnabled;
+  final Value<bool> budgetAlertsEnabled;
+  final Value<bool> goalRemindersEnabled;
+  final Value<bool> productUpdatesEnabled;
+  final Value<String?> backupDriveEmail;
+  final Value<String?> backupDriveFileId;
+  final Value<DateTime?> lastBackupAt;
+  final Value<int> rowid;
+  const UserSettingsCompanion({
+    this.userId = const Value.absent(),
+    this.themeMode = const Value.absent(),
+    this.notificationsEnabled = const Value.absent(),
+    this.billRemindersEnabled = const Value.absent(),
+    this.budgetAlertsEnabled = const Value.absent(),
+    this.goalRemindersEnabled = const Value.absent(),
+    this.productUpdatesEnabled = const Value.absent(),
+    this.backupDriveEmail = const Value.absent(),
+    this.backupDriveFileId = const Value.absent(),
+    this.lastBackupAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserSettingsCompanion.insert({
+    required String userId,
+    this.themeMode = const Value.absent(),
+    this.notificationsEnabled = const Value.absent(),
+    this.billRemindersEnabled = const Value.absent(),
+    this.budgetAlertsEnabled = const Value.absent(),
+    this.goalRemindersEnabled = const Value.absent(),
+    this.productUpdatesEnabled = const Value.absent(),
+    this.backupDriveEmail = const Value.absent(),
+    this.backupDriveFileId = const Value.absent(),
+    this.lastBackupAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : userId = Value(userId);
+  static Insertable<UserSettingsRow> custom({
+    Expression<String>? userId,
+    Expression<String>? themeMode,
+    Expression<bool>? notificationsEnabled,
+    Expression<bool>? billRemindersEnabled,
+    Expression<bool>? budgetAlertsEnabled,
+    Expression<bool>? goalRemindersEnabled,
+    Expression<bool>? productUpdatesEnabled,
+    Expression<String>? backupDriveEmail,
+    Expression<String>? backupDriveFileId,
+    Expression<DateTime>? lastBackupAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
+      if (themeMode != null) 'theme_mode': themeMode,
+      if (notificationsEnabled != null)
+        'notifications_enabled': notificationsEnabled,
+      if (billRemindersEnabled != null)
+        'bill_reminders_enabled': billRemindersEnabled,
+      if (budgetAlertsEnabled != null)
+        'budget_alerts_enabled': budgetAlertsEnabled,
+      if (goalRemindersEnabled != null)
+        'goal_reminders_enabled': goalRemindersEnabled,
+      if (productUpdatesEnabled != null)
+        'product_updates_enabled': productUpdatesEnabled,
+      if (backupDriveEmail != null) 'backup_drive_email': backupDriveEmail,
+      if (backupDriveFileId != null) 'backup_drive_file_id': backupDriveFileId,
+      if (lastBackupAt != null) 'last_backup_at': lastBackupAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserSettingsCompanion copyWith(
+      {Value<String>? userId,
+      Value<String>? themeMode,
+      Value<bool>? notificationsEnabled,
+      Value<bool>? billRemindersEnabled,
+      Value<bool>? budgetAlertsEnabled,
+      Value<bool>? goalRemindersEnabled,
+      Value<bool>? productUpdatesEnabled,
+      Value<String?>? backupDriveEmail,
+      Value<String?>? backupDriveFileId,
+      Value<DateTime?>? lastBackupAt,
+      Value<int>? rowid}) {
+    return UserSettingsCompanion(
+      userId: userId ?? this.userId,
+      themeMode: themeMode ?? this.themeMode,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      billRemindersEnabled: billRemindersEnabled ?? this.billRemindersEnabled,
+      budgetAlertsEnabled: budgetAlertsEnabled ?? this.budgetAlertsEnabled,
+      goalRemindersEnabled: goalRemindersEnabled ?? this.goalRemindersEnabled,
+      productUpdatesEnabled:
+          productUpdatesEnabled ?? this.productUpdatesEnabled,
+      backupDriveEmail: backupDriveEmail ?? this.backupDriveEmail,
+      backupDriveFileId: backupDriveFileId ?? this.backupDriveFileId,
+      lastBackupAt: lastBackupAt ?? this.lastBackupAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (themeMode.present) {
+      map['theme_mode'] = Variable<String>(themeMode.value);
+    }
+    if (notificationsEnabled.present) {
+      map['notifications_enabled'] = Variable<bool>(notificationsEnabled.value);
+    }
+    if (billRemindersEnabled.present) {
+      map['bill_reminders_enabled'] =
+          Variable<bool>(billRemindersEnabled.value);
+    }
+    if (budgetAlertsEnabled.present) {
+      map['budget_alerts_enabled'] = Variable<bool>(budgetAlertsEnabled.value);
+    }
+    if (goalRemindersEnabled.present) {
+      map['goal_reminders_enabled'] =
+          Variable<bool>(goalRemindersEnabled.value);
+    }
+    if (productUpdatesEnabled.present) {
+      map['product_updates_enabled'] =
+          Variable<bool>(productUpdatesEnabled.value);
+    }
+    if (backupDriveEmail.present) {
+      map['backup_drive_email'] = Variable<String>(backupDriveEmail.value);
+    }
+    if (backupDriveFileId.present) {
+      map['backup_drive_file_id'] = Variable<String>(backupDriveFileId.value);
+    }
+    if (lastBackupAt.present) {
+      map['last_backup_at'] = Variable<DateTime>(lastBackupAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserSettingsCompanion(')
+          ..write('userId: $userId, ')
+          ..write('themeMode: $themeMode, ')
+          ..write('notificationsEnabled: $notificationsEnabled, ')
+          ..write('billRemindersEnabled: $billRemindersEnabled, ')
+          ..write('budgetAlertsEnabled: $budgetAlertsEnabled, ')
+          ..write('goalRemindersEnabled: $goalRemindersEnabled, ')
+          ..write('productUpdatesEnabled: $productUpdatesEnabled, ')
+          ..write('backupDriveEmail: $backupDriveEmail, ')
+          ..write('backupDriveFileId: $backupDriveFileId, ')
+          ..write('lastBackupAt: $lastBackupAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3586,7 +3800,10 @@ class $SavingContributionsTable extends SavingContributions
   @override
   late final GeneratedColumn<String> goalId = GeneratedColumn<String>(
       'goal_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES saving_goals (id)'));
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<double> amount = GeneratedColumn<double>(
@@ -3954,9 +4171,26 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $RecurringExpensesTable(this);
   late final $AppPreferencesTable appPreferences = $AppPreferencesTable(this);
   late final $UserProfilesTable userProfiles = $UserProfilesTable(this);
+  late final $UserSettingsTable userSettings = $UserSettingsTable(this);
   late final $SavingGoalsTable savingGoals = $SavingGoalsTable(this);
   late final $SavingContributionsTable savingContributions =
       $SavingContributionsTable(this);
+  late final Index idxCategoriesUser = Index('idx_categories_user',
+      'CREATE INDEX idx_categories_user ON categories (user_id)');
+  late final Index idxExpensesUserDate = Index('idx_expenses_user_date',
+      'CREATE INDEX idx_expenses_user_date ON expenses (user_id, date)');
+  late final Index idxExpensesUserCategory = Index('idx_expenses_user_category',
+      'CREATE INDEX idx_expenses_user_category ON expenses (user_id, category_id)');
+  late final Index idxBudgetsUserPeriod = Index('idx_budgets_user_period',
+      'CREATE INDEX idx_budgets_user_period ON budgets (user_id, year, month)');
+  late final Index idxRecurringUserDue = Index('idx_recurring_user_due',
+      'CREATE INDEX idx_recurring_user_due ON recurring_expenses (user_id, next_due_date)');
+  late final Index idxSavingGoalsUserStatus = Index(
+      'idx_saving_goals_user_status',
+      'CREATE INDEX idx_saving_goals_user_status ON saving_goals (user_id, status)');
+  late final Index idxSavingContributionsUserGoal = Index(
+      'idx_saving_contributions_user_goal',
+      'CREATE INDEX idx_saving_contributions_user_goal ON saving_contributions (user_id, goal_id)');
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3968,8 +4202,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         recurringExpenses,
         appPreferences,
         userProfiles,
+        userSettings,
         savingGoals,
-        savingContributions
+        savingContributions,
+        idxCategoriesUser,
+        idxExpensesUserDate,
+        idxExpensesUserCategory,
+        idxBudgetsUserPeriod,
+        idxRecurringUserDue,
+        idxSavingGoalsUserStatus,
+        idxSavingContributionsUserGoal
       ];
 }
 
@@ -3993,6 +4235,58 @@ typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
   Value<double?> budgetLimit,
   Value<int> rowid,
 });
+
+final class $$CategoriesTableReferences
+    extends BaseReferences<_$AppDatabase, $CategoriesTable, CategoryRow> {
+  $$CategoriesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$ExpensesTable, List<ExpenseRow>>
+      _expensesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+          db.expenses,
+          aliasName:
+              $_aliasNameGenerator(db.categories.id, db.expenses.categoryId));
+
+  $$ExpensesTableProcessedTableManager get expensesRefs {
+    final manager = $$ExpensesTableTableManager($_db, $_db.expenses)
+        .filter((f) => f.categoryId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_expensesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$BudgetsTable, List<BudgetRow>> _budgetsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.budgets,
+          aliasName:
+              $_aliasNameGenerator(db.categories.id, db.budgets.categoryId));
+
+  $$BudgetsTableProcessedTableManager get budgetsRefs {
+    final manager = $$BudgetsTableTableManager($_db, $_db.budgets)
+        .filter((f) => f.categoryId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_budgetsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$RecurringExpensesTable, List<RecurringExpenseRow>>
+      _recurringExpensesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.recurringExpenses,
+              aliasName: $_aliasNameGenerator(
+                  db.categories.id, db.recurringExpenses.categoryId));
+
+  $$RecurringExpensesTableProcessedTableManager get recurringExpensesRefs {
+    final manager = $$RecurringExpensesTableTableManager(
+            $_db, $_db.recurringExpenses)
+        .filter((f) => f.categoryId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_recurringExpensesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
 
 class $$CategoriesTableFilterComposer
     extends Composer<_$AppDatabase, $CategoriesTable> {
@@ -4023,6 +4317,69 @@ class $$CategoriesTableFilterComposer
 
   ColumnFilters<double> get budgetLimit => $composableBuilder(
       column: $table.budgetLimit, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> expensesRefs(
+      Expression<bool> Function($$ExpensesTableFilterComposer f) f) {
+    final $$ExpensesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.expenses,
+        getReferencedColumn: (t) => t.categoryId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ExpensesTableFilterComposer(
+              $db: $db,
+              $table: $db.expenses,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> budgetsRefs(
+      Expression<bool> Function($$BudgetsTableFilterComposer f) f) {
+    final $$BudgetsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.budgets,
+        getReferencedColumn: (t) => t.categoryId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BudgetsTableFilterComposer(
+              $db: $db,
+              $table: $db.budgets,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> recurringExpensesRefs(
+      Expression<bool> Function($$RecurringExpensesTableFilterComposer f) f) {
+    final $$RecurringExpensesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.recurringExpenses,
+        getReferencedColumn: (t) => t.categoryId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecurringExpensesTableFilterComposer(
+              $db: $db,
+              $table: $db.recurringExpenses,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$CategoriesTableOrderingComposer
@@ -4085,6 +4442,70 @@ class $$CategoriesTableAnnotationComposer
 
   GeneratedColumn<double> get budgetLimit => $composableBuilder(
       column: $table.budgetLimit, builder: (column) => column);
+
+  Expression<T> expensesRefs<T extends Object>(
+      Expression<T> Function($$ExpensesTableAnnotationComposer a) f) {
+    final $$ExpensesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.expenses,
+        getReferencedColumn: (t) => t.categoryId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ExpensesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.expenses,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> budgetsRefs<T extends Object>(
+      Expression<T> Function($$BudgetsTableAnnotationComposer a) f) {
+    final $$BudgetsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.budgets,
+        getReferencedColumn: (t) => t.categoryId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BudgetsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.budgets,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> recurringExpensesRefs<T extends Object>(
+      Expression<T> Function($$RecurringExpensesTableAnnotationComposer a) f) {
+    final $$RecurringExpensesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.recurringExpenses,
+            getReferencedColumn: (t) => t.categoryId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$RecurringExpensesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.recurringExpenses,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$CategoriesTableTableManager extends RootTableManager<
@@ -4096,9 +4517,10 @@ class $$CategoriesTableTableManager extends RootTableManager<
     $$CategoriesTableAnnotationComposer,
     $$CategoriesTableCreateCompanionBuilder,
     $$CategoriesTableUpdateCompanionBuilder,
-    (CategoryRow, BaseReferences<_$AppDatabase, $CategoriesTable, CategoryRow>),
+    (CategoryRow, $$CategoriesTableReferences),
     CategoryRow,
-    PrefetchHooks Function()> {
+    PrefetchHooks Function(
+        {bool expensesRefs, bool budgetsRefs, bool recurringExpensesRefs})> {
   $$CategoriesTableTableManager(_$AppDatabase db, $CategoriesTable table)
       : super(TableManagerState(
           db: db,
@@ -4150,9 +4572,68 @@ class $$CategoriesTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable(table),
+                    $$CategoriesTableReferences(db, table, e)
+                  ))
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: (
+              {expensesRefs = false,
+              budgetsRefs = false,
+              recurringExpensesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (expensesRefs) db.expenses,
+                if (budgetsRefs) db.budgets,
+                if (recurringExpensesRefs) db.recurringExpenses
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (expensesRefs)
+                    await $_getPrefetchedData<CategoryRow, $CategoriesTable,
+                            ExpenseRow>(
+                        currentTable: table,
+                        referencedTable:
+                            $$CategoriesTableReferences._expensesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CategoriesTableReferences(db, table, p0)
+                                .expensesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.categoryId == item.id),
+                        typedResults: items),
+                  if (budgetsRefs)
+                    await $_getPrefetchedData<CategoryRow, $CategoriesTable,
+                            BudgetRow>(
+                        currentTable: table,
+                        referencedTable:
+                            $$CategoriesTableReferences._budgetsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CategoriesTableReferences(db, table, p0)
+                                .budgetsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.categoryId == item.id),
+                        typedResults: items),
+                  if (recurringExpensesRefs)
+                    await $_getPrefetchedData<CategoryRow, $CategoriesTable,
+                            RecurringExpenseRow>(
+                        currentTable: table,
+                        referencedTable: $$CategoriesTableReferences
+                            ._recurringExpensesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CategoriesTableReferences(db, table, p0)
+                                .recurringExpensesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.categoryId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
         ));
 }
 
@@ -4165,9 +4646,10 @@ typedef $$CategoriesTableProcessedTableManager = ProcessedTableManager<
     $$CategoriesTableAnnotationComposer,
     $$CategoriesTableCreateCompanionBuilder,
     $$CategoriesTableUpdateCompanionBuilder,
-    (CategoryRow, BaseReferences<_$AppDatabase, $CategoriesTable, CategoryRow>),
+    (CategoryRow, $$CategoriesTableReferences),
     CategoryRow,
-    PrefetchHooks Function()>;
+    PrefetchHooks Function(
+        {bool expensesRefs, bool budgetsRefs, bool recurringExpensesRefs})>;
 typedef $$ExpensesTableCreateCompanionBuilder = ExpensesCompanion Function({
   required String id,
   Value<String> userId,
@@ -4191,6 +4673,26 @@ typedef $$ExpensesTableUpdateCompanionBuilder = ExpensesCompanion Function({
   Value<int> rowid,
 });
 
+final class $$ExpensesTableReferences
+    extends BaseReferences<_$AppDatabase, $ExpensesTable, ExpenseRow> {
+  $$ExpensesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
+      db.categories.createAlias(
+          $_aliasNameGenerator(db.expenses.categoryId, db.categories.id));
+
+  $$CategoriesTableProcessedTableManager get categoryId {
+    final $_column = $_itemColumn<String>('category_id')!;
+
+    final manager = $$CategoriesTableTableManager($_db, $_db.categories)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
 class $$ExpensesTableFilterComposer
     extends Composer<_$AppDatabase, $ExpensesTable> {
   $$ExpensesTableFilterComposer({
@@ -4209,9 +4711,6 @@ class $$ExpensesTableFilterComposer
   ColumnFilters<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => ColumnFilters(column));
-
   ColumnFilters<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnFilters(column));
 
@@ -4223,6 +4722,26 @@ class $$ExpensesTableFilterComposer
 
   ColumnFilters<bool> get isRecurring => $composableBuilder(
       column: $table.isRecurring, builder: (column) => ColumnFilters(column));
+
+  $$CategoriesTableFilterComposer get categoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableFilterComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$ExpensesTableOrderingComposer
@@ -4243,9 +4762,6 @@ class $$ExpensesTableOrderingComposer
   ColumnOrderings<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnOrderings(column));
 
@@ -4258,6 +4774,26 @@ class $$ExpensesTableOrderingComposer
 
   ColumnOrderings<bool> get isRecurring => $composableBuilder(
       column: $table.isRecurring, builder: (column) => ColumnOrderings(column));
+
+  $$CategoriesTableOrderingComposer get categoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableOrderingComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$ExpensesTableAnnotationComposer
@@ -4278,9 +4814,6 @@ class $$ExpensesTableAnnotationComposer
   GeneratedColumn<double> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
 
-  GeneratedColumn<String> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => column);
-
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
 
@@ -4292,6 +4825,26 @@ class $$ExpensesTableAnnotationComposer
 
   GeneratedColumn<bool> get isRecurring => $composableBuilder(
       column: $table.isRecurring, builder: (column) => column);
+
+  $$CategoriesTableAnnotationComposer get categoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$ExpensesTableTableManager extends RootTableManager<
@@ -4303,9 +4856,9 @@ class $$ExpensesTableTableManager extends RootTableManager<
     $$ExpensesTableAnnotationComposer,
     $$ExpensesTableCreateCompanionBuilder,
     $$ExpensesTableUpdateCompanionBuilder,
-    (ExpenseRow, BaseReferences<_$AppDatabase, $ExpensesTable, ExpenseRow>),
+    (ExpenseRow, $$ExpensesTableReferences),
     ExpenseRow,
-    PrefetchHooks Function()> {
+    PrefetchHooks Function({bool categoryId})> {
   $$ExpensesTableTableManager(_$AppDatabase db, $ExpensesTable table)
       : super(TableManagerState(
           db: db,
@@ -4361,9 +4914,44 @@ class $$ExpensesTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) =>
+                  (e.readTable(table), $$ExpensesTableReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({categoryId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (categoryId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.categoryId,
+                    referencedTable:
+                        $$ExpensesTableReferences._categoryIdTable(db),
+                    referencedColumn:
+                        $$ExpensesTableReferences._categoryIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
         ));
 }
 
@@ -4376,9 +4964,9 @@ typedef $$ExpensesTableProcessedTableManager = ProcessedTableManager<
     $$ExpensesTableAnnotationComposer,
     $$ExpensesTableCreateCompanionBuilder,
     $$ExpensesTableUpdateCompanionBuilder,
-    (ExpenseRow, BaseReferences<_$AppDatabase, $ExpensesTable, ExpenseRow>),
+    (ExpenseRow, $$ExpensesTableReferences),
     ExpenseRow,
-    PrefetchHooks Function()>;
+    PrefetchHooks Function({bool categoryId})>;
 typedef $$BudgetsTableCreateCompanionBuilder = BudgetsCompanion Function({
   required String id,
   Value<String> userId,
@@ -4402,6 +4990,26 @@ typedef $$BudgetsTableUpdateCompanionBuilder = BudgetsCompanion Function({
   Value<int> rowid,
 });
 
+final class $$BudgetsTableReferences
+    extends BaseReferences<_$AppDatabase, $BudgetsTable, BudgetRow> {
+  $$BudgetsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
+      db.categories.createAlias(
+          $_aliasNameGenerator(db.budgets.categoryId, db.categories.id));
+
+  $$CategoriesTableProcessedTableManager? get categoryId {
+    final $_column = $_itemColumn<String>('category_id');
+    if ($_column == null) return null;
+    final manager = $$CategoriesTableTableManager($_db, $_db.categories)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
 class $$BudgetsTableFilterComposer
     extends Composer<_$AppDatabase, $BudgetsTable> {
   $$BudgetsTableFilterComposer({
@@ -4423,9 +5031,6 @@ class $$BudgetsTableFilterComposer
   ColumnFilters<double> get limitAmount => $composableBuilder(
       column: $table.limitAmount, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => ColumnFilters(column));
-
   ColumnFilters<bool> get isMonthly => $composableBuilder(
       column: $table.isMonthly, builder: (column) => ColumnFilters(column));
 
@@ -4434,6 +5039,26 @@ class $$BudgetsTableFilterComposer
 
   ColumnFilters<int> get month => $composableBuilder(
       column: $table.month, builder: (column) => ColumnFilters(column));
+
+  $$CategoriesTableFilterComposer get categoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableFilterComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$BudgetsTableOrderingComposer
@@ -4457,9 +5082,6 @@ class $$BudgetsTableOrderingComposer
   ColumnOrderings<double> get limitAmount => $composableBuilder(
       column: $table.limitAmount, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<bool> get isMonthly => $composableBuilder(
       column: $table.isMonthly, builder: (column) => ColumnOrderings(column));
 
@@ -4468,6 +5090,26 @@ class $$BudgetsTableOrderingComposer
 
   ColumnOrderings<int> get month => $composableBuilder(
       column: $table.month, builder: (column) => ColumnOrderings(column));
+
+  $$CategoriesTableOrderingComposer get categoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableOrderingComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$BudgetsTableAnnotationComposer
@@ -4491,9 +5133,6 @@ class $$BudgetsTableAnnotationComposer
   GeneratedColumn<double> get limitAmount => $composableBuilder(
       column: $table.limitAmount, builder: (column) => column);
 
-  GeneratedColumn<String> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => column);
-
   GeneratedColumn<bool> get isMonthly =>
       $composableBuilder(column: $table.isMonthly, builder: (column) => column);
 
@@ -4502,6 +5141,26 @@ class $$BudgetsTableAnnotationComposer
 
   GeneratedColumn<int> get month =>
       $composableBuilder(column: $table.month, builder: (column) => column);
+
+  $$CategoriesTableAnnotationComposer get categoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$BudgetsTableTableManager extends RootTableManager<
@@ -4513,9 +5172,9 @@ class $$BudgetsTableTableManager extends RootTableManager<
     $$BudgetsTableAnnotationComposer,
     $$BudgetsTableCreateCompanionBuilder,
     $$BudgetsTableUpdateCompanionBuilder,
-    (BudgetRow, BaseReferences<_$AppDatabase, $BudgetsTable, BudgetRow>),
+    (BudgetRow, $$BudgetsTableReferences),
     BudgetRow,
-    PrefetchHooks Function()> {
+    PrefetchHooks Function({bool categoryId})> {
   $$BudgetsTableTableManager(_$AppDatabase db, $BudgetsTable table)
       : super(TableManagerState(
           db: db,
@@ -4571,9 +5230,44 @@ class $$BudgetsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) =>
+                  (e.readTable(table), $$BudgetsTableReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({categoryId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (categoryId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.categoryId,
+                    referencedTable:
+                        $$BudgetsTableReferences._categoryIdTable(db),
+                    referencedColumn:
+                        $$BudgetsTableReferences._categoryIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
         ));
 }
 
@@ -4586,9 +5280,9 @@ typedef $$BudgetsTableProcessedTableManager = ProcessedTableManager<
     $$BudgetsTableAnnotationComposer,
     $$BudgetsTableCreateCompanionBuilder,
     $$BudgetsTableUpdateCompanionBuilder,
-    (BudgetRow, BaseReferences<_$AppDatabase, $BudgetsTable, BudgetRow>),
+    (BudgetRow, $$BudgetsTableReferences),
     BudgetRow,
-    PrefetchHooks Function()>;
+    PrefetchHooks Function({bool categoryId})>;
 typedef $$RecurringExpensesTableCreateCompanionBuilder
     = RecurringExpensesCompanion Function({
   required String id,
@@ -4614,6 +5308,27 @@ typedef $$RecurringExpensesTableUpdateCompanionBuilder
   Value<int> rowid,
 });
 
+final class $$RecurringExpensesTableReferences extends BaseReferences<
+    _$AppDatabase, $RecurringExpensesTable, RecurringExpenseRow> {
+  $$RecurringExpensesTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
+      db.categories.createAlias($_aliasNameGenerator(
+          db.recurringExpenses.categoryId, db.categories.id));
+
+  $$CategoriesTableProcessedTableManager get categoryId {
+    final $_column = $_itemColumn<String>('category_id')!;
+
+    final manager = $$CategoriesTableTableManager($_db, $_db.categories)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
 class $$RecurringExpensesTableFilterComposer
     extends Composer<_$AppDatabase, $RecurringExpensesTable> {
   $$RecurringExpensesTableFilterComposer({
@@ -4635,9 +5350,6 @@ class $$RecurringExpensesTableFilterComposer
   ColumnFilters<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => ColumnFilters(column));
-
   ColumnFilters<String> get frequency => $composableBuilder(
       column: $table.frequency, builder: (column) => ColumnFilters(column));
 
@@ -4646,6 +5358,26 @@ class $$RecurringExpensesTableFilterComposer
 
   ColumnFilters<String> get paymentMethod => $composableBuilder(
       column: $table.paymentMethod, builder: (column) => ColumnFilters(column));
+
+  $$CategoriesTableFilterComposer get categoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableFilterComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$RecurringExpensesTableOrderingComposer
@@ -4669,9 +5401,6 @@ class $$RecurringExpensesTableOrderingComposer
   ColumnOrderings<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<String> get frequency => $composableBuilder(
       column: $table.frequency, builder: (column) => ColumnOrderings(column));
 
@@ -4681,6 +5410,26 @@ class $$RecurringExpensesTableOrderingComposer
   ColumnOrderings<String> get paymentMethod => $composableBuilder(
       column: $table.paymentMethod,
       builder: (column) => ColumnOrderings(column));
+
+  $$CategoriesTableOrderingComposer get categoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableOrderingComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$RecurringExpensesTableAnnotationComposer
@@ -4704,9 +5453,6 @@ class $$RecurringExpensesTableAnnotationComposer
   GeneratedColumn<double> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
 
-  GeneratedColumn<String> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => column);
-
   GeneratedColumn<String> get frequency =>
       $composableBuilder(column: $table.frequency, builder: (column) => column);
 
@@ -4715,6 +5461,26 @@ class $$RecurringExpensesTableAnnotationComposer
 
   GeneratedColumn<String> get paymentMethod => $composableBuilder(
       column: $table.paymentMethod, builder: (column) => column);
+
+  $$CategoriesTableAnnotationComposer get categoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$RecurringExpensesTableTableManager extends RootTableManager<
@@ -4726,13 +5492,9 @@ class $$RecurringExpensesTableTableManager extends RootTableManager<
     $$RecurringExpensesTableAnnotationComposer,
     $$RecurringExpensesTableCreateCompanionBuilder,
     $$RecurringExpensesTableUpdateCompanionBuilder,
-    (
-      RecurringExpenseRow,
-      BaseReferences<_$AppDatabase, $RecurringExpensesTable,
-          RecurringExpenseRow>
-    ),
+    (RecurringExpenseRow, $$RecurringExpensesTableReferences),
     RecurringExpenseRow,
-    PrefetchHooks Function()> {
+    PrefetchHooks Function({bool categoryId})> {
   $$RecurringExpensesTableTableManager(
       _$AppDatabase db, $RecurringExpensesTable table)
       : super(TableManagerState(
@@ -4790,9 +5552,47 @@ class $$RecurringExpensesTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable(table),
+                    $$RecurringExpensesTableReferences(db, table, e)
+                  ))
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({categoryId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (categoryId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.categoryId,
+                    referencedTable:
+                        $$RecurringExpensesTableReferences._categoryIdTable(db),
+                    referencedColumn: $$RecurringExpensesTableReferences
+                        ._categoryIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
         ));
 }
 
@@ -4805,27 +5605,15 @@ typedef $$RecurringExpensesTableProcessedTableManager = ProcessedTableManager<
     $$RecurringExpensesTableAnnotationComposer,
     $$RecurringExpensesTableCreateCompanionBuilder,
     $$RecurringExpensesTableUpdateCompanionBuilder,
-    (
-      RecurringExpenseRow,
-      BaseReferences<_$AppDatabase, $RecurringExpensesTable,
-          RecurringExpenseRow>
-    ),
+    (RecurringExpenseRow, $$RecurringExpensesTableReferences),
     RecurringExpenseRow,
-    PrefetchHooks Function()>;
+    PrefetchHooks Function({bool categoryId})>;
 typedef $$AppPreferencesTableCreateCompanionBuilder = AppPreferencesCompanion
     Function({
   Value<int> id,
   required String themeMode,
   Value<bool> hasCompletedOnboarding,
   Value<String?> activeUserId,
-  Value<bool> notificationsEnabled,
-  Value<bool> billRemindersEnabled,
-  Value<bool> budgetAlertsEnabled,
-  Value<bool> goalRemindersEnabled,
-  Value<bool> productUpdatesEnabled,
-  Value<String?> backupDriveEmail,
-  Value<DateTime?> lastBackupAt,
-  Value<String?> backupDriveFileId,
   Value<bool> biometricUnlockEnabled,
   Value<String?> biometricUserId,
 });
@@ -4835,14 +5623,6 @@ typedef $$AppPreferencesTableUpdateCompanionBuilder = AppPreferencesCompanion
   Value<String> themeMode,
   Value<bool> hasCompletedOnboarding,
   Value<String?> activeUserId,
-  Value<bool> notificationsEnabled,
-  Value<bool> billRemindersEnabled,
-  Value<bool> budgetAlertsEnabled,
-  Value<bool> goalRemindersEnabled,
-  Value<bool> productUpdatesEnabled,
-  Value<String?> backupDriveEmail,
-  Value<DateTime?> lastBackupAt,
-  Value<String?> backupDriveFileId,
   Value<bool> biometricUnlockEnabled,
   Value<String?> biometricUserId,
 });
@@ -4868,37 +5648,6 @@ class $$AppPreferencesTableFilterComposer
 
   ColumnFilters<String> get activeUserId => $composableBuilder(
       column: $table.activeUserId, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get notificationsEnabled => $composableBuilder(
-      column: $table.notificationsEnabled,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get billRemindersEnabled => $composableBuilder(
-      column: $table.billRemindersEnabled,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get budgetAlertsEnabled => $composableBuilder(
-      column: $table.budgetAlertsEnabled,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get goalRemindersEnabled => $composableBuilder(
-      column: $table.goalRemindersEnabled,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get productUpdatesEnabled => $composableBuilder(
-      column: $table.productUpdatesEnabled,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get backupDriveEmail => $composableBuilder(
-      column: $table.backupDriveEmail,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get lastBackupAt => $composableBuilder(
-      column: $table.lastBackupAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get backupDriveFileId => $composableBuilder(
-      column: $table.backupDriveFileId,
-      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get biometricUnlockEnabled => $composableBuilder(
       column: $table.biometricUnlockEnabled,
@@ -4932,38 +5681,6 @@ class $$AppPreferencesTableOrderingComposer
       column: $table.activeUserId,
       builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get notificationsEnabled => $composableBuilder(
-      column: $table.notificationsEnabled,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get billRemindersEnabled => $composableBuilder(
-      column: $table.billRemindersEnabled,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get budgetAlertsEnabled => $composableBuilder(
-      column: $table.budgetAlertsEnabled,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get goalRemindersEnabled => $composableBuilder(
-      column: $table.goalRemindersEnabled,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get productUpdatesEnabled => $composableBuilder(
-      column: $table.productUpdatesEnabled,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get backupDriveEmail => $composableBuilder(
-      column: $table.backupDriveEmail,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get lastBackupAt => $composableBuilder(
-      column: $table.lastBackupAt,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get backupDriveFileId => $composableBuilder(
-      column: $table.backupDriveFileId,
-      builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<bool> get biometricUnlockEnabled => $composableBuilder(
       column: $table.biometricUnlockEnabled,
       builder: (column) => ColumnOrderings(column));
@@ -4993,30 +5710,6 @@ class $$AppPreferencesTableAnnotationComposer
 
   GeneratedColumn<String> get activeUserId => $composableBuilder(
       column: $table.activeUserId, builder: (column) => column);
-
-  GeneratedColumn<bool> get notificationsEnabled => $composableBuilder(
-      column: $table.notificationsEnabled, builder: (column) => column);
-
-  GeneratedColumn<bool> get billRemindersEnabled => $composableBuilder(
-      column: $table.billRemindersEnabled, builder: (column) => column);
-
-  GeneratedColumn<bool> get budgetAlertsEnabled => $composableBuilder(
-      column: $table.budgetAlertsEnabled, builder: (column) => column);
-
-  GeneratedColumn<bool> get goalRemindersEnabled => $composableBuilder(
-      column: $table.goalRemindersEnabled, builder: (column) => column);
-
-  GeneratedColumn<bool> get productUpdatesEnabled => $composableBuilder(
-      column: $table.productUpdatesEnabled, builder: (column) => column);
-
-  GeneratedColumn<String> get backupDriveEmail => $composableBuilder(
-      column: $table.backupDriveEmail, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get lastBackupAt => $composableBuilder(
-      column: $table.lastBackupAt, builder: (column) => column);
-
-  GeneratedColumn<String> get backupDriveFileId => $composableBuilder(
-      column: $table.backupDriveFileId, builder: (column) => column);
 
   GeneratedColumn<bool> get biometricUnlockEnabled => $composableBuilder(
       column: $table.biometricUnlockEnabled, builder: (column) => column);
@@ -5056,14 +5749,6 @@ class $$AppPreferencesTableTableManager extends RootTableManager<
             Value<String> themeMode = const Value.absent(),
             Value<bool> hasCompletedOnboarding = const Value.absent(),
             Value<String?> activeUserId = const Value.absent(),
-            Value<bool> notificationsEnabled = const Value.absent(),
-            Value<bool> billRemindersEnabled = const Value.absent(),
-            Value<bool> budgetAlertsEnabled = const Value.absent(),
-            Value<bool> goalRemindersEnabled = const Value.absent(),
-            Value<bool> productUpdatesEnabled = const Value.absent(),
-            Value<String?> backupDriveEmail = const Value.absent(),
-            Value<DateTime?> lastBackupAt = const Value.absent(),
-            Value<String?> backupDriveFileId = const Value.absent(),
             Value<bool> biometricUnlockEnabled = const Value.absent(),
             Value<String?> biometricUserId = const Value.absent(),
           }) =>
@@ -5072,14 +5757,6 @@ class $$AppPreferencesTableTableManager extends RootTableManager<
             themeMode: themeMode,
             hasCompletedOnboarding: hasCompletedOnboarding,
             activeUserId: activeUserId,
-            notificationsEnabled: notificationsEnabled,
-            billRemindersEnabled: billRemindersEnabled,
-            budgetAlertsEnabled: budgetAlertsEnabled,
-            goalRemindersEnabled: goalRemindersEnabled,
-            productUpdatesEnabled: productUpdatesEnabled,
-            backupDriveEmail: backupDriveEmail,
-            lastBackupAt: lastBackupAt,
-            backupDriveFileId: backupDriveFileId,
             biometricUnlockEnabled: biometricUnlockEnabled,
             biometricUserId: biometricUserId,
           ),
@@ -5088,14 +5765,6 @@ class $$AppPreferencesTableTableManager extends RootTableManager<
             required String themeMode,
             Value<bool> hasCompletedOnboarding = const Value.absent(),
             Value<String?> activeUserId = const Value.absent(),
-            Value<bool> notificationsEnabled = const Value.absent(),
-            Value<bool> billRemindersEnabled = const Value.absent(),
-            Value<bool> budgetAlertsEnabled = const Value.absent(),
-            Value<bool> goalRemindersEnabled = const Value.absent(),
-            Value<bool> productUpdatesEnabled = const Value.absent(),
-            Value<String?> backupDriveEmail = const Value.absent(),
-            Value<DateTime?> lastBackupAt = const Value.absent(),
-            Value<String?> backupDriveFileId = const Value.absent(),
             Value<bool> biometricUnlockEnabled = const Value.absent(),
             Value<String?> biometricUserId = const Value.absent(),
           }) =>
@@ -5104,14 +5773,6 @@ class $$AppPreferencesTableTableManager extends RootTableManager<
             themeMode: themeMode,
             hasCompletedOnboarding: hasCompletedOnboarding,
             activeUserId: activeUserId,
-            notificationsEnabled: notificationsEnabled,
-            billRemindersEnabled: billRemindersEnabled,
-            budgetAlertsEnabled: budgetAlertsEnabled,
-            goalRemindersEnabled: goalRemindersEnabled,
-            productUpdatesEnabled: productUpdatesEnabled,
-            backupDriveEmail: backupDriveEmail,
-            lastBackupAt: lastBackupAt,
-            backupDriveFileId: backupDriveFileId,
             biometricUnlockEnabled: biometricUnlockEnabled,
             biometricUserId: biometricUserId,
           ),
@@ -5166,6 +5827,26 @@ typedef $$UserProfilesTableUpdateCompanionBuilder = UserProfilesCompanion
   Value<int> rowid,
 });
 
+final class $$UserProfilesTableReferences
+    extends BaseReferences<_$AppDatabase, $UserProfilesTable, UserProfileRow> {
+  $$UserProfilesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$UserSettingsTable, List<UserSettingsRow>>
+      _userSettingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+          db.userSettings,
+          aliasName:
+              $_aliasNameGenerator(db.userProfiles.id, db.userSettings.userId));
+
+  $$UserSettingsTableProcessedTableManager get userSettingsRefs {
+    final manager = $$UserSettingsTableTableManager($_db, $_db.userSettings)
+        .filter((f) => f.userId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_userSettingsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
 class $$UserProfilesTableFilterComposer
     extends Composer<_$AppDatabase, $UserProfilesTable> {
   $$UserProfilesTableFilterComposer({
@@ -5204,6 +5885,27 @@ class $$UserProfilesTableFilterComposer
 
   ColumnFilters<DateTime> get memberSince => $composableBuilder(
       column: $table.memberSince, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> userSettingsRefs(
+      Expression<bool> Function($$UserSettingsTableFilterComposer f) f) {
+    final $$UserSettingsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.userSettings,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserSettingsTableFilterComposer(
+              $db: $db,
+              $table: $db.userSettings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$UserProfilesTableOrderingComposer
@@ -5287,6 +5989,27 @@ class $$UserProfilesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get memberSince => $composableBuilder(
       column: $table.memberSince, builder: (column) => column);
+
+  Expression<T> userSettingsRefs<T extends Object>(
+      Expression<T> Function($$UserSettingsTableAnnotationComposer a) f) {
+    final $$UserSettingsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.userSettings,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserSettingsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.userSettings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$UserProfilesTableTableManager extends RootTableManager<
@@ -5298,12 +6021,9 @@ class $$UserProfilesTableTableManager extends RootTableManager<
     $$UserProfilesTableAnnotationComposer,
     $$UserProfilesTableCreateCompanionBuilder,
     $$UserProfilesTableUpdateCompanionBuilder,
-    (
-      UserProfileRow,
-      BaseReferences<_$AppDatabase, $UserProfilesTable, UserProfileRow>
-    ),
+    (UserProfileRow, $$UserProfilesTableReferences),
     UserProfileRow,
-    PrefetchHooks Function()> {
+    PrefetchHooks Function({bool userSettingsRefs})> {
   $$UserProfilesTableTableManager(_$AppDatabase db, $UserProfilesTable table)
       : super(TableManagerState(
           db: db,
@@ -5367,9 +6087,35 @@ class $$UserProfilesTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable(table),
+                    $$UserProfilesTableReferences(db, table, e)
+                  ))
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({userSettingsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (userSettingsRefs) db.userSettings],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (userSettingsRefs)
+                    await $_getPrefetchedData<UserProfileRow,
+                            $UserProfilesTable, UserSettingsRow>(
+                        currentTable: table,
+                        referencedTable: $$UserProfilesTableReferences
+                            ._userSettingsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$UserProfilesTableReferences(db, table, p0)
+                                .userSettingsRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.userId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
         ));
 }
 
@@ -5382,12 +6128,374 @@ typedef $$UserProfilesTableProcessedTableManager = ProcessedTableManager<
     $$UserProfilesTableAnnotationComposer,
     $$UserProfilesTableCreateCompanionBuilder,
     $$UserProfilesTableUpdateCompanionBuilder,
-    (
-      UserProfileRow,
-      BaseReferences<_$AppDatabase, $UserProfilesTable, UserProfileRow>
-    ),
+    (UserProfileRow, $$UserProfilesTableReferences),
     UserProfileRow,
-    PrefetchHooks Function()>;
+    PrefetchHooks Function({bool userSettingsRefs})>;
+typedef $$UserSettingsTableCreateCompanionBuilder = UserSettingsCompanion
+    Function({
+  required String userId,
+  Value<String> themeMode,
+  Value<bool> notificationsEnabled,
+  Value<bool> billRemindersEnabled,
+  Value<bool> budgetAlertsEnabled,
+  Value<bool> goalRemindersEnabled,
+  Value<bool> productUpdatesEnabled,
+  Value<String?> backupDriveEmail,
+  Value<String?> backupDriveFileId,
+  Value<DateTime?> lastBackupAt,
+  Value<int> rowid,
+});
+typedef $$UserSettingsTableUpdateCompanionBuilder = UserSettingsCompanion
+    Function({
+  Value<String> userId,
+  Value<String> themeMode,
+  Value<bool> notificationsEnabled,
+  Value<bool> billRemindersEnabled,
+  Value<bool> budgetAlertsEnabled,
+  Value<bool> goalRemindersEnabled,
+  Value<bool> productUpdatesEnabled,
+  Value<String?> backupDriveEmail,
+  Value<String?> backupDriveFileId,
+  Value<DateTime?> lastBackupAt,
+  Value<int> rowid,
+});
+
+final class $$UserSettingsTableReferences
+    extends BaseReferences<_$AppDatabase, $UserSettingsTable, UserSettingsRow> {
+  $$UserSettingsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $UserProfilesTable _userIdTable(_$AppDatabase db) =>
+      db.userProfiles.createAlias(
+          $_aliasNameGenerator(db.userSettings.userId, db.userProfiles.id));
+
+  $$UserProfilesTableProcessedTableManager get userId {
+    final $_column = $_itemColumn<String>('user_id')!;
+
+    final manager = $$UserProfilesTableTableManager($_db, $_db.userProfiles)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$UserSettingsTableFilterComposer
+    extends Composer<_$AppDatabase, $UserSettingsTable> {
+  $$UserSettingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get themeMode => $composableBuilder(
+      column: $table.themeMode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get notificationsEnabled => $composableBuilder(
+      column: $table.notificationsEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get billRemindersEnabled => $composableBuilder(
+      column: $table.billRemindersEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get budgetAlertsEnabled => $composableBuilder(
+      column: $table.budgetAlertsEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get goalRemindersEnabled => $composableBuilder(
+      column: $table.goalRemindersEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get productUpdatesEnabled => $composableBuilder(
+      column: $table.productUpdatesEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get backupDriveEmail => $composableBuilder(
+      column: $table.backupDriveEmail,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get backupDriveFileId => $composableBuilder(
+      column: $table.backupDriveFileId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastBackupAt => $composableBuilder(
+      column: $table.lastBackupAt, builder: (column) => ColumnFilters(column));
+
+  $$UserProfilesTableFilterComposer get userId {
+    final $$UserProfilesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.userProfiles,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserProfilesTableFilterComposer(
+              $db: $db,
+              $table: $db.userProfiles,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$UserSettingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserSettingsTable> {
+  $$UserSettingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get themeMode => $composableBuilder(
+      column: $table.themeMode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get notificationsEnabled => $composableBuilder(
+      column: $table.notificationsEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get billRemindersEnabled => $composableBuilder(
+      column: $table.billRemindersEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get budgetAlertsEnabled => $composableBuilder(
+      column: $table.budgetAlertsEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get goalRemindersEnabled => $composableBuilder(
+      column: $table.goalRemindersEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get productUpdatesEnabled => $composableBuilder(
+      column: $table.productUpdatesEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get backupDriveEmail => $composableBuilder(
+      column: $table.backupDriveEmail,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get backupDriveFileId => $composableBuilder(
+      column: $table.backupDriveFileId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastBackupAt => $composableBuilder(
+      column: $table.lastBackupAt,
+      builder: (column) => ColumnOrderings(column));
+
+  $$UserProfilesTableOrderingComposer get userId {
+    final $$UserProfilesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.userProfiles,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserProfilesTableOrderingComposer(
+              $db: $db,
+              $table: $db.userProfiles,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$UserSettingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserSettingsTable> {
+  $$UserSettingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get themeMode =>
+      $composableBuilder(column: $table.themeMode, builder: (column) => column);
+
+  GeneratedColumn<bool> get notificationsEnabled => $composableBuilder(
+      column: $table.notificationsEnabled, builder: (column) => column);
+
+  GeneratedColumn<bool> get billRemindersEnabled => $composableBuilder(
+      column: $table.billRemindersEnabled, builder: (column) => column);
+
+  GeneratedColumn<bool> get budgetAlertsEnabled => $composableBuilder(
+      column: $table.budgetAlertsEnabled, builder: (column) => column);
+
+  GeneratedColumn<bool> get goalRemindersEnabled => $composableBuilder(
+      column: $table.goalRemindersEnabled, builder: (column) => column);
+
+  GeneratedColumn<bool> get productUpdatesEnabled => $composableBuilder(
+      column: $table.productUpdatesEnabled, builder: (column) => column);
+
+  GeneratedColumn<String> get backupDriveEmail => $composableBuilder(
+      column: $table.backupDriveEmail, builder: (column) => column);
+
+  GeneratedColumn<String> get backupDriveFileId => $composableBuilder(
+      column: $table.backupDriveFileId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastBackupAt => $composableBuilder(
+      column: $table.lastBackupAt, builder: (column) => column);
+
+  $$UserProfilesTableAnnotationComposer get userId {
+    final $$UserProfilesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.userProfiles,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserProfilesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.userProfiles,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$UserSettingsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $UserSettingsTable,
+    UserSettingsRow,
+    $$UserSettingsTableFilterComposer,
+    $$UserSettingsTableOrderingComposer,
+    $$UserSettingsTableAnnotationComposer,
+    $$UserSettingsTableCreateCompanionBuilder,
+    $$UserSettingsTableUpdateCompanionBuilder,
+    (UserSettingsRow, $$UserSettingsTableReferences),
+    UserSettingsRow,
+    PrefetchHooks Function({bool userId})> {
+  $$UserSettingsTableTableManager(_$AppDatabase db, $UserSettingsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserSettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserSettingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserSettingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> userId = const Value.absent(),
+            Value<String> themeMode = const Value.absent(),
+            Value<bool> notificationsEnabled = const Value.absent(),
+            Value<bool> billRemindersEnabled = const Value.absent(),
+            Value<bool> budgetAlertsEnabled = const Value.absent(),
+            Value<bool> goalRemindersEnabled = const Value.absent(),
+            Value<bool> productUpdatesEnabled = const Value.absent(),
+            Value<String?> backupDriveEmail = const Value.absent(),
+            Value<String?> backupDriveFileId = const Value.absent(),
+            Value<DateTime?> lastBackupAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              UserSettingsCompanion(
+            userId: userId,
+            themeMode: themeMode,
+            notificationsEnabled: notificationsEnabled,
+            billRemindersEnabled: billRemindersEnabled,
+            budgetAlertsEnabled: budgetAlertsEnabled,
+            goalRemindersEnabled: goalRemindersEnabled,
+            productUpdatesEnabled: productUpdatesEnabled,
+            backupDriveEmail: backupDriveEmail,
+            backupDriveFileId: backupDriveFileId,
+            lastBackupAt: lastBackupAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String userId,
+            Value<String> themeMode = const Value.absent(),
+            Value<bool> notificationsEnabled = const Value.absent(),
+            Value<bool> billRemindersEnabled = const Value.absent(),
+            Value<bool> budgetAlertsEnabled = const Value.absent(),
+            Value<bool> goalRemindersEnabled = const Value.absent(),
+            Value<bool> productUpdatesEnabled = const Value.absent(),
+            Value<String?> backupDriveEmail = const Value.absent(),
+            Value<String?> backupDriveFileId = const Value.absent(),
+            Value<DateTime?> lastBackupAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              UserSettingsCompanion.insert(
+            userId: userId,
+            themeMode: themeMode,
+            notificationsEnabled: notificationsEnabled,
+            billRemindersEnabled: billRemindersEnabled,
+            budgetAlertsEnabled: budgetAlertsEnabled,
+            goalRemindersEnabled: goalRemindersEnabled,
+            productUpdatesEnabled: productUpdatesEnabled,
+            backupDriveEmail: backupDriveEmail,
+            backupDriveFileId: backupDriveFileId,
+            lastBackupAt: lastBackupAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$UserSettingsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({userId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (userId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.userId,
+                    referencedTable:
+                        $$UserSettingsTableReferences._userIdTable(db),
+                    referencedColumn:
+                        $$UserSettingsTableReferences._userIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$UserSettingsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $UserSettingsTable,
+    UserSettingsRow,
+    $$UserSettingsTableFilterComposer,
+    $$UserSettingsTableOrderingComposer,
+    $$UserSettingsTableAnnotationComposer,
+    $$UserSettingsTableCreateCompanionBuilder,
+    $$UserSettingsTableUpdateCompanionBuilder,
+    (UserSettingsRow, $$UserSettingsTableReferences),
+    UserSettingsRow,
+    PrefetchHooks Function({bool userId})>;
 typedef $$SavingGoalsTableCreateCompanionBuilder = SavingGoalsCompanion
     Function({
   required String id,
@@ -5420,6 +6528,29 @@ typedef $$SavingGoalsTableUpdateCompanionBuilder = SavingGoalsCompanion
   Value<DateTime> updatedAt,
   Value<int> rowid,
 });
+
+final class $$SavingGoalsTableReferences
+    extends BaseReferences<_$AppDatabase, $SavingGoalsTable, SavingGoalRow> {
+  $$SavingGoalsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$SavingContributionsTable,
+      List<SavingContributionRow>> _savingContributionsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.savingContributions,
+          aliasName: $_aliasNameGenerator(
+              db.savingGoals.id, db.savingContributions.goalId));
+
+  $$SavingContributionsTableProcessedTableManager get savingContributionsRefs {
+    final manager =
+        $$SavingContributionsTableTableManager($_db, $_db.savingContributions)
+            .filter((f) => f.goalId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_savingContributionsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
 
 class $$SavingGoalsTableFilterComposer
     extends Composer<_$AppDatabase, $SavingGoalsTable> {
@@ -5465,6 +6596,27 @@ class $$SavingGoalsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> savingContributionsRefs(
+      Expression<bool> Function($$SavingContributionsTableFilterComposer f) f) {
+    final $$SavingContributionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.savingContributions,
+        getReferencedColumn: (t) => t.goalId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SavingContributionsTableFilterComposer(
+              $db: $db,
+              $table: $db.savingContributions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$SavingGoalsTableOrderingComposer
@@ -5561,6 +6713,29 @@ class $$SavingGoalsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  Expression<T> savingContributionsRefs<T extends Object>(
+      Expression<T> Function($$SavingContributionsTableAnnotationComposer a)
+          f) {
+    final $$SavingContributionsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.savingContributions,
+            getReferencedColumn: (t) => t.goalId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SavingContributionsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.savingContributions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$SavingGoalsTableTableManager extends RootTableManager<
@@ -5572,12 +6747,9 @@ class $$SavingGoalsTableTableManager extends RootTableManager<
     $$SavingGoalsTableAnnotationComposer,
     $$SavingGoalsTableCreateCompanionBuilder,
     $$SavingGoalsTableUpdateCompanionBuilder,
-    (
-      SavingGoalRow,
-      BaseReferences<_$AppDatabase, $SavingGoalsTable, SavingGoalRow>
-    ),
+    (SavingGoalRow, $$SavingGoalsTableReferences),
     SavingGoalRow,
-    PrefetchHooks Function()> {
+    PrefetchHooks Function({bool savingContributionsRefs})> {
   $$SavingGoalsTableTableManager(_$AppDatabase db, $SavingGoalsTable table)
       : super(TableManagerState(
           db: db,
@@ -5649,9 +6821,37 @@ class $$SavingGoalsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable(table),
+                    $$SavingGoalsTableReferences(db, table, e)
+                  ))
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({savingContributionsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (savingContributionsRefs) db.savingContributions
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (savingContributionsRefs)
+                    await $_getPrefetchedData<SavingGoalRow, $SavingGoalsTable,
+                            SavingContributionRow>(
+                        currentTable: table,
+                        referencedTable: $$SavingGoalsTableReferences
+                            ._savingContributionsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SavingGoalsTableReferences(db, table, p0)
+                                .savingContributionsRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.goalId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
         ));
 }
 
@@ -5664,12 +6864,9 @@ typedef $$SavingGoalsTableProcessedTableManager = ProcessedTableManager<
     $$SavingGoalsTableAnnotationComposer,
     $$SavingGoalsTableCreateCompanionBuilder,
     $$SavingGoalsTableUpdateCompanionBuilder,
-    (
-      SavingGoalRow,
-      BaseReferences<_$AppDatabase, $SavingGoalsTable, SavingGoalRow>
-    ),
+    (SavingGoalRow, $$SavingGoalsTableReferences),
     SavingGoalRow,
-    PrefetchHooks Function()>;
+    PrefetchHooks Function({bool savingContributionsRefs})>;
 typedef $$SavingContributionsTableCreateCompanionBuilder
     = SavingContributionsCompanion Function({
   required String id,
@@ -5693,6 +6890,27 @@ typedef $$SavingContributionsTableUpdateCompanionBuilder
   Value<int> rowid,
 });
 
+final class $$SavingContributionsTableReferences extends BaseReferences<
+    _$AppDatabase, $SavingContributionsTable, SavingContributionRow> {
+  $$SavingContributionsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $SavingGoalsTable _goalIdTable(_$AppDatabase db) =>
+      db.savingGoals.createAlias($_aliasNameGenerator(
+          db.savingContributions.goalId, db.savingGoals.id));
+
+  $$SavingGoalsTableProcessedTableManager get goalId {
+    final $_column = $_itemColumn<String>('goal_id')!;
+
+    final manager = $$SavingGoalsTableTableManager($_db, $_db.savingGoals)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_goalIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
 class $$SavingContributionsTableFilterComposer
     extends Composer<_$AppDatabase, $SavingContributionsTable> {
   $$SavingContributionsTableFilterComposer({
@@ -5708,9 +6926,6 @@ class $$SavingContributionsTableFilterComposer
   ColumnFilters<String> get userId => $composableBuilder(
       column: $table.userId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get goalId => $composableBuilder(
-      column: $table.goalId, builder: (column) => ColumnFilters(column));
-
   ColumnFilters<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnFilters(column));
 
@@ -5722,6 +6937,26 @@ class $$SavingContributionsTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $$SavingGoalsTableFilterComposer get goalId {
+    final $$SavingGoalsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.goalId,
+        referencedTable: $db.savingGoals,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SavingGoalsTableFilterComposer(
+              $db: $db,
+              $table: $db.savingGoals,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$SavingContributionsTableOrderingComposer
@@ -5739,9 +6974,6 @@ class $$SavingContributionsTableOrderingComposer
   ColumnOrderings<String> get userId => $composableBuilder(
       column: $table.userId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get goalId => $composableBuilder(
-      column: $table.goalId, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnOrderings(column));
 
@@ -5753,6 +6985,26 @@ class $$SavingContributionsTableOrderingComposer
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $$SavingGoalsTableOrderingComposer get goalId {
+    final $$SavingGoalsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.goalId,
+        referencedTable: $db.savingGoals,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SavingGoalsTableOrderingComposer(
+              $db: $db,
+              $table: $db.savingGoals,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$SavingContributionsTableAnnotationComposer
@@ -5770,9 +7022,6 @@ class $$SavingContributionsTableAnnotationComposer
   GeneratedColumn<String> get userId =>
       $composableBuilder(column: $table.userId, builder: (column) => column);
 
-  GeneratedColumn<String> get goalId =>
-      $composableBuilder(column: $table.goalId, builder: (column) => column);
-
   GeneratedColumn<double> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
 
@@ -5784,6 +7033,26 @@ class $$SavingContributionsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$SavingGoalsTableAnnotationComposer get goalId {
+    final $$SavingGoalsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.goalId,
+        referencedTable: $db.savingGoals,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SavingGoalsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.savingGoals,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$SavingContributionsTableTableManager extends RootTableManager<
@@ -5795,13 +7064,9 @@ class $$SavingContributionsTableTableManager extends RootTableManager<
     $$SavingContributionsTableAnnotationComposer,
     $$SavingContributionsTableCreateCompanionBuilder,
     $$SavingContributionsTableUpdateCompanionBuilder,
-    (
-      SavingContributionRow,
-      BaseReferences<_$AppDatabase, $SavingContributionsTable,
-          SavingContributionRow>
-    ),
+    (SavingContributionRow, $$SavingContributionsTableReferences),
     SavingContributionRow,
-    PrefetchHooks Function()> {
+    PrefetchHooks Function({bool goalId})> {
   $$SavingContributionsTableTableManager(
       _$AppDatabase db, $SavingContributionsTable table)
       : super(TableManagerState(
@@ -5856,9 +7121,47 @@ class $$SavingContributionsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable(table),
+                    $$SavingContributionsTableReferences(db, table, e)
+                  ))
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({goalId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (goalId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.goalId,
+                    referencedTable:
+                        $$SavingContributionsTableReferences._goalIdTable(db),
+                    referencedColumn: $$SavingContributionsTableReferences
+                        ._goalIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
         ));
 }
 
@@ -5871,13 +7174,9 @@ typedef $$SavingContributionsTableProcessedTableManager = ProcessedTableManager<
     $$SavingContributionsTableAnnotationComposer,
     $$SavingContributionsTableCreateCompanionBuilder,
     $$SavingContributionsTableUpdateCompanionBuilder,
-    (
-      SavingContributionRow,
-      BaseReferences<_$AppDatabase, $SavingContributionsTable,
-          SavingContributionRow>
-    ),
+    (SavingContributionRow, $$SavingContributionsTableReferences),
     SavingContributionRow,
-    PrefetchHooks Function()>;
+    PrefetchHooks Function({bool goalId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5894,6 +7193,8 @@ class $AppDatabaseManager {
       $$AppPreferencesTableTableManager(_db, _db.appPreferences);
   $$UserProfilesTableTableManager get userProfiles =>
       $$UserProfilesTableTableManager(_db, _db.userProfiles);
+  $$UserSettingsTableTableManager get userSettings =>
+      $$UserSettingsTableTableManager(_db, _db.userSettings);
   $$SavingGoalsTableTableManager get savingGoals =>
       $$SavingGoalsTableTableManager(_db, _db.savingGoals);
   $$SavingContributionsTableTableManager get savingContributions =>

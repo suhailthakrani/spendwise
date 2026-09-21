@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 @DataClassName('SavingGoalRow')
+@TableIndex(name: 'idx_saving_goals_user_status', columns: {#userId, #status})
 class SavingGoals extends Table {
   TextColumn get id => text()();
   TextColumn get userId =>

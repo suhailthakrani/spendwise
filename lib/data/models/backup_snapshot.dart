@@ -10,15 +10,19 @@ class BackupSnapshot {
     required this.savingGoals,
     required this.savingContributions,
     this.driveEmail,
+    this.settings = const {},
   });
 
-  static const currentFormatVersion = 1;
+  static const currentFormatVersion = 2;
   static const formatName = 'spendwise-backup';
 
   final int formatVersion;
   final DateTime exportedAt;
   final String? driveEmail;
   final Map<String, Object?> profile;
+
+  /// Account settings (theme, notification choices). Empty for version 1 files.
+  final Map<String, Object?> settings;
   final List<Map<String, Object?>> categories;
   final List<Map<String, Object?>> expenses;
   final List<Map<String, Object?>> budgets;
@@ -38,6 +42,7 @@ class BackupSnapshot {
       'exportedAt': exportedAt.toIso8601String(),
       'driveEmail': driveEmail,
       'profile': profile,
+      'settings': settings,
       'categories': categories,
       'expenses': expenses,
       'budgets': budgets,
@@ -75,6 +80,7 @@ class BackupSnapshot {
       exportedAt: DateTime.tryParse('${json['exportedAt']}') ?? DateTime.now(),
       driveEmail: json['driveEmail'] as String?,
       profile: objectMap(json['profile']),
+      settings: objectMap(json['settings']),
       categories: objectList(json['categories']),
       expenses: objectList(json['expenses']),
       budgets: objectList(json['budgets']),

@@ -7,40 +7,69 @@ import '../models/user_preferences.dart';
 abstract final class PreferencesMapper {
   static const preferencesId = 1;
 
-  static UserPreferences fromRow(PreferencesRow row) {
+  /// Merges device state with the signed-in account's settings. [settings] is
+  /// null when nobody is signed in, in which case account fields fall back to
+  /// defaults and the theme comes from the device row.
+  static UserPreferences fromRows({
+    required PreferencesRow device,
+    UserSettingsRow? settings,
+  }) {
+    final defaults = UserPreferences.defaults();
     return UserPreferences(
-      themeMode: ThemeMode.values.byName(row.themeMode),
-      hasCompletedOnboarding: row.hasCompletedOnboarding,
-      activeUserId: row.activeUserId,
-      notificationsEnabled: row.notificationsEnabled,
-      billRemindersEnabled: row.billRemindersEnabled,
-      budgetAlertsEnabled: row.budgetAlertsEnabled,
-      goalRemindersEnabled: row.goalRemindersEnabled,
-      productUpdatesEnabled: row.productUpdatesEnabled,
-      backupDriveEmail: row.backupDriveEmail,
-      lastBackupAt: row.lastBackupAt,
-      backupDriveFileId: row.backupDriveFileId,
-      biometricUnlockEnabled: row.biometricUnlockEnabled,
-      biometricUserId: row.biometricUserId,
+      themeMode: _themeMode(settings?.themeMode ?? device.themeMode),
+      hasCompletedOnboarding: device.hasCompletedOnboarding,
+      activeUserId: device.activeUserId,
+      notificationsEnabled:
+          settings?.notificationsEnabled ?? defaults.notificationsEnabled,
+      billRemindersEnabled:
+          settings?.billRemindersEnabled ?? defaults.billRemindersEnabled,
+      budgetAlertsEnabled:
+          settings?.budgetAlertsEnabled ?? defaults.budgetAlertsEnabled,
+      goalRemindersEnabled:
+          settings?.goalRemindersEnabled ?? defaults.goalRemindersEnabled,
+      productUpdatesEnabled:
+          settings?.productUpdatesEnabled ?? defaults.productUpdatesEnabled,
+      backupDriveEmail: settings?.backupDriveEmail,
+      lastBackupAt: settings?.lastBackupAt,
+      backupDriveFileId: settings?.backupDriveFileId,
+      biometricUnlockEnabled: device.biometricUnlockEnabled,
+      biometricUserId: device.biometricUserId,
     );
   }
 
-  static AppPreferencesCompanion toCompanion(UserPreferences preferences) {
+  static AppPreferencesCompanion deviceCompanion(UserPreferences preferences) {
     return AppPreferencesCompanion(
       id: const Value(preferencesId),
       themeMode: Value(preferences.themeMode.name),
       hasCompletedOnboarding: Value(preferences.hasCompletedOnboarding),
       activeUserId: Value(preferences.activeUserId),
+      biometricUnlockEnabled: Value(preferences.biometricUnlockEnabled),
+      biometricUserId: Value(preferences.biometricUserId),
+    );
+  }
+
+  static UserSettingsCompanion settingsCompanion({
+    required String userId,
+    required UserPreferences preferences,
+  }) {
+    return UserSettingsCompanion(
+      userId: Value(userId),
+      themeMode: Value(preferences.themeMode.name),
       notificationsEnabled: Value(preferences.notificationsEnabled),
       billRemindersEnabled: Value(preferences.billRemindersEnabled),
       budgetAlertsEnabled: Value(preferences.budgetAlertsEnabled),
       goalRemindersEnabled: Value(preferences.goalRemindersEnabled),
       productUpdatesEnabled: Value(preferences.productUpdatesEnabled),
       backupDriveEmail: Value(preferences.backupDriveEmail),
-      lastBackupAt: Value(preferences.lastBackupAt),
       backupDriveFileId: Value(preferences.backupDriveFileId),
-      biometricUnlockEnabled: Value(preferences.biometricUnlockEnabled),
-      biometricUserId: Value(preferences.biometricUserId),
+      lastBackupAt: Value(preferences.lastBackupAt),
     );
+  }
+
+  static ThemeMode _themeMode(String name) {
+    for (final mode in ThemeMode.values) {
+      if (mode.name == name) return mode;
+    }
+    return ThemeMode.dark;
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/database/app_database.dart';
+import '../../core/database/database_seed.dart';
 import '../../core/utils/password_hasher.dart';
 import '../models/backup_snapshot.dart';
 import '../models/goal_status.dart';
@@ -53,6 +54,9 @@ class BackupService {
     final contributions = await (_db.select(_db.savingContributions)
           ..where((t) => t.userId.equals(userId)))
         .get();
+    final settings = await (_db.select(_db.userSettings)
+          ..where((t) => t.userId.equals(userId)))
+        .getSingleOrNull();
 
     return BackupSnapshot(
       formatVersion: BackupSnapshot.currentFormatVersion,
@@ -67,6 +71,18 @@ class BackupService {
         'googleId': profile.googleId,
         'memberSince': profile.memberSince?.toIso8601String(),
       },
+      // Drive linkage is intentionally excluded: it belongs to the device that
+      // authorised it, not to the account data being restored.
+      settings: settings == null
+          ? const {}
+          : {
+              'themeMode': settings.themeMode,
+              'notificationsEnabled': settings.notificationsEnabled,
+              'billRemindersEnabled': settings.billRemindersEnabled,
+              'budgetAlertsEnabled': settings.budgetAlertsEnabled,
+              'goalRemindersEnabled': settings.goalRemindersEnabled,
+              'productUpdatesEnabled': settings.productUpdatesEnabled,
+            },
       categories: [
         for (final row in categories)
           {
@@ -153,6 +169,7 @@ class BackupService {
       await _deleteUserLedger(targetUserId);
       final safe = await _withoutIdCollisions(snapshot);
       await _insertLedger(safe, targetUserId);
+      await _restoreSettings(snapshot, targetUserId);
 
       final existing = await (_db.select(_db.userProfiles)
             ..where((t) => t.id.equals(targetUserId)))
@@ -238,9 +255,31 @@ class BackupService {
           );
       final safe = await _withoutIdCollisions(snapshot);
       await _insertLedger(safe, userId);
+      await _restoreSettings(snapshot, userId);
     });
 
     return userId;
+  }
+
+  /// Restores the account's own settings. Drive linkage and the biometric
+  /// binding belong to the device that authorised them, so they are not
+  /// carried across from a backup.
+  Future<void> _restoreSettings(BackupSnapshot snapshot, String userId) async {
+    await seedSettingsForUser(_db, userId);
+    if (snapshot.settings.isEmpty) return;
+
+    final settings = snapshot.settings;
+    await (_db.update(_db.userSettings)..where((t) => t.userId.equals(userId)))
+        .write(
+      UserSettingsCompanion(
+        themeMode: _themeMode(settings['themeMode']),
+        notificationsEnabled: _asBool(settings['notificationsEnabled']),
+        billRemindersEnabled: _asBool(settings['billRemindersEnabled']),
+        budgetAlertsEnabled: _asBool(settings['budgetAlertsEnabled']),
+        goalRemindersEnabled: _asBool(settings['goalRemindersEnabled']),
+        productUpdatesEnabled: _asBool(settings['productUpdatesEnabled']),
+      ),
+    );
   }
 
   Future<void> _deleteUserLedger(String userId) async {
@@ -297,6 +336,7 @@ class BackupService {
       exportedAt: snapshot.exportedAt,
       driveEmail: snapshot.driveEmail,
       profile: snapshot.profile,
+      settings: snapshot.settings,
       categories: [
         for (final row in snapshot.categories)
           remapRow(row, extra: categoryIds),
@@ -486,6 +526,19 @@ class BackupService {
         );
       });
     }
+  }
+
+  static Value<bool> _asBool(Object? value) {
+    if (value is bool) return Value(value);
+    if (value is num) return Value(value != 0);
+    return const Value.absent();
+  }
+
+  static Value<String> _themeMode(Object? value) {
+    for (final mode in ThemeMode.values) {
+      if (mode.name == value) return Value(mode.name);
+    }
+    return const Value.absent();
   }
 
   static int? _asInt(Object? value) {

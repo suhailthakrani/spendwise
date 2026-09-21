@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'categories_table.dart';
 
 @DataClassName('RecurringExpenseRow')
+@TableIndex(name: 'idx_recurring_user_due', columns: {#userId, #nextDueDate})
 class RecurringExpenses extends Table {
   TextColumn get id => text()();
   TextColumn get userId =>

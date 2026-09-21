@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide isNull;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spendwise/core/database/app_database.dart';
 import 'package:spendwise/core/database/database_seed.dart';
@@ -100,5 +101,101 @@ void main() {
     expect(expenses.single.note, 'Lunch');
     expect(profile.name, 'Ada restored');
     expect(profile.currencyCode, 'PKR');
+
+    // A version 1 file has no settings, so the account gets defaults rather
+    // than nothing at all.
+    final settings = await (db.select(db.userSettings)
+          ..where((t) => t.userId.equals('user_a')))
+        .getSingle();
+    expect(settings.notificationsEnabled, isTrue);
+  });
+
+  test('a snapshot carries account settings but not Drive linkage', () async {
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+
+    await db.into(db.userProfiles).insert(
+          UserProfilesCompanion.insert(
+            id: 'user_a',
+            name: 'Ada',
+            email: 'ada@example.com',
+          ),
+        );
+    await seedSettingsForUser(db, 'user_a');
+    await (db.update(db.userSettings)
+          ..where((t) => t.userId.equals('user_a')))
+        .write(
+      const UserSettingsCompanion(
+        themeMode: Value('system'),
+        budgetAlertsEnabled: Value(false),
+        backupDriveEmail: Value('ada@gmail.com'),
+        backupDriveFileId: Value('drive_file_1'),
+      ),
+    );
+
+    final snapshot = await BackupService(db).createSnapshot(userId: 'user_a');
+
+    expect(snapshot.formatVersion, 2);
+    expect(snapshot.settings['themeMode'], 'system');
+    expect(snapshot.settings['budgetAlertsEnabled'], isFalse);
+    expect(snapshot.settings['notificationsEnabled'], isTrue);
+    expect(snapshot.settings.containsKey('backupDriveEmail'), isFalse);
+    expect(snapshot.settings.containsKey('backupDriveFileId'), isFalse);
+  });
+
+  test('restoring applies settings and keeps this device Drive linkage',
+      () async {
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+
+    await db.into(db.userProfiles).insert(
+          UserProfilesCompanion.insert(
+            id: 'user_b',
+            name: 'Grace',
+            email: 'grace@example.com',
+          ),
+        );
+    await seedSettingsForUser(db, 'user_b');
+    await (db.update(db.userSettings)
+          ..where((t) => t.userId.equals('user_b')))
+        .write(
+      const UserSettingsCompanion(
+        backupDriveEmail: Value('grace@gmail.com'),
+        backupDriveFileId: Value('device_file'),
+      ),
+    );
+
+    final snapshot = BackupSnapshot(
+      formatVersion: 2,
+      exportedAt: DateTime.now(),
+      profile: {
+        'id': 'user_b',
+        'name': 'Grace',
+        'email': 'grace@example.com',
+      },
+      settings: const {
+        'themeMode': 'system',
+        'billRemindersEnabled': false,
+        'productUpdatesEnabled': true,
+      },
+      categories: const [],
+      expenses: const [],
+      budgets: const [],
+      recurringExpenses: const [],
+      savingGoals: const [],
+      savingContributions: const [],
+    );
+
+    await BackupService(db)
+        .restoreIntoUser(snapshot: snapshot, targetUserId: 'user_b');
+
+    final settings = await (db.select(db.userSettings)
+          ..where((t) => t.userId.equals('user_b')))
+        .getSingle();
+    expect(settings.themeMode, 'system');
+    expect(settings.billRemindersEnabled, isFalse);
+    expect(settings.productUpdatesEnabled, isTrue);
+    expect(settings.backupDriveEmail, 'grace@gmail.com');
+    expect(settings.backupDriveFileId, 'device_file');
   });
 }

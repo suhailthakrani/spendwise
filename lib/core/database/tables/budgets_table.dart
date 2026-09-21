@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'categories_table.dart';
 
 @DataClassName('BudgetRow')
+@TableIndex(name: 'idx_budgets_user_period', columns: {#userId, #year, #month})
 class Budgets extends Table {
   TextColumn get id => text()();
   TextColumn get userId =>
