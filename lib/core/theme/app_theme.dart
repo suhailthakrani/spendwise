@@ -9,10 +9,28 @@ abstract final class AppTheme {
   static ThemeData light() => _build(Brightness.light);
   static ThemeData dark() => _build(Brightness.dark);
 
+  /// Transparent system bars so content draws edge-to-edge.
+  /// Navigation-bar contrast stays at the platform default so 3-button
+  /// navigation keeps a scrim and gesture navigation stays clear.
+  static SystemUiOverlayStyle overlayStyle(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    return SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemStatusBarContrastEnforced: false,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarIconBrightness:
+          isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+    );
+  }
+
   static ThemeData _build(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
-    final baseTheme =
-        isDark ? ThemeData.dark(useMaterial3: true) : ThemeData.light(useMaterial3: true);
+    final baseTheme = isDark
+        ? ThemeData.dark(useMaterial3: true)
+        : ThemeData.light(useMaterial3: true);
 
     final textTheme = _textTheme(baseTheme.textTheme);
     final onSurface =
@@ -27,8 +45,7 @@ abstract final class AppTheme {
       brightness: brightness,
       primary: AppColors.primary,
       onPrimary: Colors.white,
-      primaryContainer:
-          isDark ? AppColors.primaryDark : AppColors.primaryMuted,
+      primaryContainer: isDark ? AppColors.primaryDark : AppColors.primaryMuted,
       onPrimaryContainer:
           isDark ? AppColors.primaryLight : AppColors.primaryDark,
       secondary: AppColors.accent,
@@ -64,9 +81,7 @@ abstract final class AppTheme {
         centerTitle: false,
         backgroundColor: scaffold,
         foregroundColor: onSurface,
-        systemOverlayStyle: isDark
-            ? SystemUiOverlayStyle.light
-            : SystemUiOverlayStyle.dark,
+        systemOverlayStyle: overlayStyle(brightness),
         titleTextStyle: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w700,
           letterSpacing: -0.4,
@@ -110,7 +125,8 @@ abstract final class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+          textStyle:
+              textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -133,9 +149,8 @@ abstract final class AppTheme {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         hintStyle: textTheme.bodyMedium?.copyWith(
-          color: isDark
-              ? AppColors.textTertiaryDark
-              : AppColors.textTertiaryLight,
+          color:
+              isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
         ),
         labelStyle: textTheme.bodyMedium,
       ),
@@ -166,7 +181,8 @@ abstract final class AppTheme {
         backgroundColor: card,
         elevation: 0,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
         ),
         showDragHandle: true,
         dragHandleColor: border,
@@ -194,7 +210,8 @@ abstract final class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: surface,
-        indicatorColor: AppColors.primary.withValues(alpha: isDark ? 0.22 : 0.14),
+        indicatorColor:
+            AppColors.primary.withValues(alpha: isDark ? 0.22 : 0.14),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         height: 64,

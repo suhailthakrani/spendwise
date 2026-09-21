@@ -12,6 +12,7 @@ class AppLogo extends StatelessWidget {
   });
 
   final double size;
+
   /// Use the transparent PNG (best on dark backgrounds).
   final bool transparent;
   final BorderRadius? borderRadius;
@@ -19,16 +20,18 @@ class AppLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final asset = transparent || isDark
-        ? AppImages.logoTransparent
-        : AppImages.logo;
+    final asset =
+        transparent || isDark ? AppImages.logoTransparent : AppImages.logo;
 
+    final cacheSize = (size * MediaQuery.devicePixelRatioOf(context)).ceil();
     final child = Image.asset(
       asset,
       width: size,
       height: size,
+      cacheWidth: cacheSize,
+      cacheHeight: cacheSize,
       fit: BoxFit.contain,
-      filterQuality: FilterQuality.high,
+      filterQuality: FilterQuality.medium,
       semanticLabel: 'SpendWise',
     );
 

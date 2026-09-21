@@ -3,6 +3,7 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -73,6 +74,8 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // Provides enableEdgeToEdge() for pre-Android 15 devices.
+    implementation("androidx.activity:activity:1.9.3")
 }
 
 val googleServicesFile = file("google-services.json")

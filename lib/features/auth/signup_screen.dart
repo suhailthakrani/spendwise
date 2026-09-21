@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_logo.dart';
@@ -193,7 +194,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     final keyboardOpen = bottomInset > 80;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      value: AppTheme.overlayStyle(theme.brightness),
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         body: DecoratedBox(

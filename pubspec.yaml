@@ -97,4 +97,4 @@ flutter_native_splash:
     image_dark: assets/images/spendwise_transparent.png
   ios: true
   android: true
-  fullscreen: true
+  fullscreen: false

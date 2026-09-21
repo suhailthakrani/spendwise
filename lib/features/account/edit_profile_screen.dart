@@ -64,8 +64,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     try {
       final file = await _picker.pickImage(
         source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
+        maxWidth: 512,
+        maxHeight: 512,
         imageQuality: 85,
       );
       if (file == null || !mounted) return;

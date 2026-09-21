@@ -1,25 +1,12 @@
-# Flutter
--keep class io.flutter.app.** { *; }
--keep class io.flutter.plugin.** { *; }
--keep class io.flutter.util.** { *; }
--keep class io.flutter.view.** { *; }
--keep class io.flutter.** { *; }
--keep class io.flutter.plugins.** { *; }
--dontwarn io.flutter.embedding.**
+# Flutter's Gradle plugin already applies proguard-android-optimize.txt
+# and flutter_proguard_rules.pro. R8 full mode is the AGP 8+ default.
+# Keep this file narrow. Blanket keeps on io.flutter, Firebase, or Play
+# services block the shrinking and obfuscation Play measures.
 
-# SQLCipher / sqlite3 (Drift encrypted store)
+-keepattributes SourceFile,LineNumberTable
+
+# SQLCipher / sqlite3 JNI entry points.
 -keep class net.sqlcipher.** { *; }
 -keep class org.sqlite.** { *; }
 -dontwarn net.sqlcipher.**
 -dontwarn org.sqlite.**
-
-# Firebase / Crashlytics / Google Sign-In (Credential Manager)
--keepattributes SourceFile,LineNumberTable,*Annotation*
--keep class com.google.firebase.** { *; }
--keep class com.google.android.gms.** { *; }
--keep class com.google.android.libraries.identity.** { *; }
--keep class androidx.credentials.** { *; }
--keep class io.flutter.plugins.googlesignin.** { *; }
--keep class dev.flutter.pigeon.** { *; }
--dontwarn com.google.firebase.**
--dontwarn androidx.credentials.**

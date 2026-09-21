@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../providers/preferences_providers.dart';
 
@@ -77,10 +78,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: _splashBg,
-      ),
+      value: AppTheme.overlayStyle(Brightness.dark),
       child: Scaffold(
         backgroundColor: _splashBg,
         body: DecoratedBox(

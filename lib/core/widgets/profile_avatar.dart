@@ -28,10 +28,21 @@ class ProfileAvatar extends StatelessWidget {
     final hasImage = hasFile || isNetwork;
 
     ImageProvider? image;
-    if (isNetwork) {
-      image = NetworkImage(value);
-    } else if (hasFile) {
-      image = FileImage(File(value));
+    if (hasImage) {
+      final pixels = (size * MediaQuery.devicePixelRatioOf(context)).ceil();
+      image = isNetwork
+          ? ResizeImage(
+              NetworkImage(value),
+              width: pixels,
+              height: pixels,
+              policy: ResizeImagePolicy.fit,
+            )
+          : ResizeImage(
+              FileImage(File(value)),
+              width: pixels,
+              height: pixels,
+              policy: ResizeImagePolicy.fit,
+            );
     }
 
     return Container(

@@ -1,8 +1,10 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/theme/app_theme.dart';
 import '../data/services/app_crashlytics.dart';
 import '../data/services/firebase_bootstrap.dart';
 import '../data/services/google_auth_service.dart';
@@ -13,6 +15,8 @@ import 'app.dart';
 Future<void> bootstrap() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(AppTheme.overlayStyle(Brightness.dark));
 
   final firebaseReady = await FirebaseBootstrap.initialize();
   if (firebaseReady) {

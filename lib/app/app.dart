@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/router/app_router.dart';
@@ -22,6 +23,12 @@ class SpendWiseApp extends ConsumerWidget {
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
       routerConfig: router,
+      builder: (context, child) {
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: AppTheme.overlayStyle(Theme.of(context).brightness),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }
