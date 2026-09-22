@@ -33,7 +33,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _OnboardPage(
       title: 'Private on your device',
       body:
-          'Create a local account for yourself — and others on this phone — with data kept separate.',
+          'Create a local account for yourself and others on this phone, with data kept separate.',
     ),
   ];
 
