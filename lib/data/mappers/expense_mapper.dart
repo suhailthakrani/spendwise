@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../core/database/app_database.dart';
 import '../models/expense.dart';
+import '../models/ledger_entry_type.dart';
 import '../models/payment_method.dart';
 
 abstract final class ExpenseMapper {
@@ -13,6 +14,9 @@ abstract final class ExpenseMapper {
       note: row.note,
       date: row.date,
       paymentMethod: PaymentMethod.values.byName(row.paymentMethod),
+      accountId: row.accountId,
+      type: LedgerEntryType.fromDb(row.type),
+      toAccountId: row.toAccountId,
       isRecurring: row.isRecurring,
     );
   }
@@ -30,6 +34,9 @@ abstract final class ExpenseMapper {
       date: Value(expense.date),
       paymentMethod: Value(expense.paymentMethod.name),
       isRecurring: Value(expense.isRecurring),
+      type: Value(expense.type.name),
+      accountId: Value(expense.accountId),
+      toAccountId: Value(expense.toAccountId),
     );
   }
 }

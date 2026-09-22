@@ -146,18 +146,28 @@ Each phase is shippable on its own and leaves the app in a releasable state.
 
 See section 3a for detail. Multi-user correctness and the cheap parts of ADR-4.
 
-### Phase 0b — Transaction ledger (next, schema v8)
+### Phase 0b — Ledger people need (schema v8) — **shipped**
 
-- `accounts`, `transactions` (with `type`, `accountId`, `toAccountId`), `tags`, `transaction_tags`,
-  `attachments`; audit columns and `change_log` per ADR-3.
-- Data migration from `expenses` → `transactions` (`type = expense`, default cash account), with a
-  migration test and a restore test from an existing `BackupSnapshot`.
-- `Money` value type; amounts to integer minor units (ADR-2).
-- SQL aggregation to replace the per-month Dart folding in `ReportRepository` (ADR-4).
-- `BackupSnapshot` bumped to `formatVersion` 3, still reading versions 1 and 2.
+Not an architecture dump. Only what users open a finance app for, and what unblocks
+priority phases 1, 3, 4, 5, 7.
 
-**DoD:** existing app behaviour unchanged, all screens read through the ledger, migration and restore
-tests green, no regression in dashboard/report numbers.
+**Shipped:**
+- **Accounts** with a default Cash wallet per user.
+- **Income as well as expenses** (`type`: expense | income | transfer-ready).
+- **Balance** derived from opening + income − expenses — hero on the dashboard.
+- **Real month income** in reports (`MonthlySummary.totalIncome`).
+- Expense / Income toggle on the add form; existing expense flows unchanged.
+- Safe migration: every existing expense lands on that user’s Cash account; totals unchanged.
+- Backup `formatVersion` 3 includes accounts + type/account fields; still restores v1/v2.
+
+**Parked (not user-urgent):**
+- Tags, attachments, receipt OCR
+- Soft-delete / `change_log` (sync Phase 9)
+- Integer minor-unit rewrite (ADR-2)
+- Full multi-currency accounts, debt tracking, multi-account management UI
+- SQL rewrite of every aggregate (indexes in place; GROUP BY with Phase 4)
+
+**DoD:** met — migration + balance + backup tests green.
 
 ### Phase 1 — Ultra-fast capture
 
@@ -261,32 +271,58 @@ once the single-user experience is excellent.
 
 ---
 
-## 4. The 10 power features → where they land
+## 4. Active priority track (user-selected)
 
-| Power feature | Phase |
-|---|---|
-| 1. Ultra-fast expense capture | 1 |
-| 2. Advanced budgeting & envelopes | 5 |
-| 3. Financial outlook / forecasting | 3 |
-| 4. Cash-flow calendar | 3 |
-| 5. Advanced analytics & interactive graphs | 4 |
-| 6. Smart spending insights | 4 |
-| 7. Savings & financial goals | mostly done; polish in 3 (what-if) and 5 |
-| 8. Recurring / subscription management | 1 (auto-post) + 6 |
-| 9. Deep customization | 7 |
-| 10. Privacy, offline-first, backup | mostly done; hardening in 8 + 9 |
-| AI assistant (layer on top) | 10 |
+Priority outcomes: **1, 3, 4, 5, 7** from the remains list — Phase 1, 3, 4, 5, and 7.
+
+| Priority | Phase | Outcome |
+|---|---|---|
+| 1 | **1** | Ultra-fast expense capture |
+| 2 | **3** | Forecast + financial calendar |
+| 3 | **4** | Analytics v2 + insights + search |
+| 4 | **5** | Budgeting v2 (rollover, envelopes) |
+| 5 | **7** | Customizable dashboard |
+
+**Build order (dependencies, not preference):**
+
+```text
+0b (ledger) ──► 1 (capture) ──► 3 (forecast/calendar)
+                     │                │
+                     └──────► 4 (analytics) ──► 5 (budgets v2) ──► 7 (customize)
+```
+
+- **0b is still required first.** Phases 3–5 need accounts/income/balances (or at least a ledger shape). Skipping 0b would mean rebuilding them later.
+- **Phase 2 (full money management)** is not a priority outcome, but a **thin slice** of it rides inside 0b + 3: at least one account balance, income entries enough for projected month-end, and derived balances. Full multi-wallet / debt / transfers stay deferred.
+- **Parked until this track is done:** Phase 2 remainder, 6 (subscriptions), 8–11 (privacy hardening, sync, AI, shared).
+
+### The 10 power features → where they land
+
+| Power feature | Phase | On priority track? |
+|---|---|---|
+| 1. Ultra-fast expense capture | 1 | **Yes** |
+| 2. Advanced budgeting & envelopes | 5 | **Yes** |
+| 3. Financial outlook / forecasting | 3 | **Yes** |
+| 4. Cash-flow calendar | 3 | **Yes** |
+| 5. Advanced analytics & interactive graphs | 4 | **Yes** |
+| 6. Smart spending insights | 4 | **Yes** (ships with Phase 4) |
+| 7. Savings & financial goals | mostly done; polish in 3/5 | baseline + polish |
+| 8. Recurring / subscription management | 1 (auto-post) + 6 | auto-post only with Phase 1; full UI parked |
+| 9. Deep customization | 7 | **Yes** |
+| 10. Privacy, offline-first, backup | mostly done; 8 + 9 | parked |
+| AI assistant (layer on top) | 10 | parked |
 
 ---
 
 ## 5. Deliberately deferred
 
-Not "never" — just not before the core is excellent.
+Not "never" — just not before the priority track is excellent.
 
+- Phase 2 remainder: multi-wallet UX, debt, full transfers (thin income/account slice only for forecast).
+- Phase 6: subscription intelligence (Phase 1 may still auto-post bills).
+- Phases 8–11: app lock/PDF hardening, multi-device sync, AI, shared finance.
 - Voice entry and natural-language **entry** (Phase 1 ships templates and quick-add instead; NL entry
   rides on the Phase 4 parser).
 - Receipt OCR (attachment capture lands in Phase 1; extraction follows Phase 4).
-- Shared finance, multi-device sync, AI (Phases 9–11).
 - Split expenses beyond a simple two-way split.
 - Anything requiring a backend beyond Firebase auth/messaging and Drive backup, because
   "your money, your device, your data" is the product's positioning and every server-side feature
@@ -310,7 +346,7 @@ Not "never" — just not before the core is excellent.
 
 ## 7. How we execute
 
-1. One phase at a time, in order. Phase 0 is not optional and not splittable.
+1. One phase at a time on the **priority track**: 0b → 1 → 3 → 4 → 5 → 7.
 2. Each phase starts with a short scope note appended to this file (what's in, what's out, schema
    delta) and ends with its DoD checked.
 3. Schema changes always ship with: a Drift migration, a schema-verifier test, a backup
@@ -322,9 +358,8 @@ Not "never" — just not before the core is excellent.
 
 ### Immediate next step
 
-Phase 0b, task 1: design the schema v8 ledger tables and write the migration plan, including the
-`expenses` → `transactions` backfill, the audit columns, and the `Money` conversion. No UI work until
-the migration test suite is green.
+Phase **1** — ultra-fast capture (quick-add) on the ledger foundation. Keep it to what people
+actually use daily: amount → category → save in under a few seconds.
 
 ### Known unrelated issue
 

@@ -2,15 +2,18 @@ import '../../core/utils/currency_display.dart';
 import '../models/dashboard_stats.dart';
 import '../models/expense.dart';
 import '../models/insights_period.dart';
+import '../models/ledger_entry_type.dart';
 import '../models/monthly_summary.dart';
+import 'account_repository.dart';
 import 'budget_repository.dart';
 import 'expense_repository.dart';
 
 class ReportRepository {
-  ReportRepository(this._expenses, this._budgets);
+  ReportRepository(this._expenses, this._budgets, this._accounts);
 
   final ExpenseRepository _expenses;
   final BudgetRepository _budgets;
+  final AccountRepository _accounts;
 
   static const _monthLabels = InsightsPeriod.monthNames;
 
@@ -21,14 +24,20 @@ class ReportRepository {
 
     final todayTotalUsd = await _expenses.sumForDay(today);
     final monthTotalUsd = await _expenses.sumForMonth(month: now);
+    final monthIncomeUsd = await _expenses.sumForMonth(
+      month: now,
+      type: LedgerEntryType.income,
+    );
+    final balanceUsd = await _accounts.totalBalance();
 
-    final allExpenses = await _expenses.search(
+    final monthExpenses = await _expenses.search(
       startDate: monthStart,
+      type: LedgerEntryType.expense,
       toDisplayAmount: currency.toDisplayAmount,
     );
 
     final categoryTotals = <String, double>{};
-    for (final expense in allExpenses) {
+    for (final expense in monthExpenses) {
       final converted = currency.toDisplayAmount(expense.amount);
       categoryTotals[expense.categoryId] =
           (categoryTotals[expense.categoryId] ?? 0) + converted;
@@ -63,6 +72,8 @@ class ReportRepository {
     final monthlyBudgetUsd = monthly?.limit ?? 0.0;
 
     return DashboardStats(
+      totalBalance: currency.toDisplayAmount(balanceUsd),
+      totalIncomeThisMonth: currency.toDisplayAmount(monthIncomeUsd),
       totalSpentToday: currency.toDisplayAmount(todayTotalUsd),
       totalSpentThisMonth: totalMonthDisplay,
       monthlyBudget: currency.toDisplayAmount(monthlyBudgetUsd),
@@ -86,12 +97,17 @@ class ReportRepository {
   }) async {
     final reference = DateTime(year, month, 1);
     final totalExpensesUsd = await _expenses.sumForMonth(month: reference);
+    final totalIncomeUsd = await _expenses.sumForMonth(
+      month: reference,
+      type: LedgerEntryType.income,
+    );
 
     final monthStart = DateTime(year, month, 1);
     final monthEnd = DateTime(year, month + 1, 0, 23, 59, 59);
     final expenses = await _expenses.search(
       startDate: monthStart,
       endDate: monthEnd,
+      type: LedgerEntryType.expense,
       toDisplayAmount: currency.toDisplayAmount,
     );
 
@@ -105,7 +121,7 @@ class ReportRepository {
     return MonthlySummary(
       month: month,
       year: year,
-      totalIncome: 0,
+      totalIncome: currency.toDisplayAmount(totalIncomeUsd),
       totalExpenses: currency.toDisplayAmount(totalExpensesUsd),
       categoryBreakdown: breakdown,
     );
@@ -137,9 +153,11 @@ class ReportRepository {
     required CurrencyDisplay currency,
     DateTime? now,
   }) {
+    final spending =
+        expenses.where((e) => e.type == LedgerEntryType.expense).toList();
     final n = now ?? DateTime.now();
     DateTime? earliest;
-    for (final expense in expenses) {
+    for (final expense in spending) {
       if (earliest == null || expense.date.isBefore(earliest)) {
         earliest = expense.date;
       }
@@ -151,7 +169,7 @@ class ReportRepository {
         _summarizeBucket(
           period: period,
           bucket: bucket,
-          expenses: expenses,
+          expenses: spending,
           currency: currency,
         ),
     ];
@@ -173,7 +191,7 @@ class ReportRepository {
           start: rangeStart,
           end: rangeEnd,
         ),
-        expenses: expenses,
+        expenses: spending,
         currency: currency,
       ),
       history: history,

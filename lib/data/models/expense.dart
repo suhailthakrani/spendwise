@@ -1,3 +1,4 @@
+import 'ledger_entry_type.dart';
 import 'payment_method.dart';
 
 class Expense {
@@ -8,6 +9,9 @@ class Expense {
     required this.note,
     required this.date,
     required this.paymentMethod,
+    required this.accountId,
+    this.type = LedgerEntryType.expense,
+    this.toAccountId,
     this.isRecurring = false,
   });
 
@@ -18,7 +22,13 @@ class Expense {
   final String note;
   final DateTime date;
   final PaymentMethod paymentMethod;
+  final String accountId;
+  final LedgerEntryType type;
+  final String? toAccountId;
   final bool isRecurring;
+
+  bool get isExpense => type == LedgerEntryType.expense;
+  bool get isIncome => type == LedgerEntryType.income;
 
   Expense copyWith({
     String? id,
@@ -27,6 +37,10 @@ class Expense {
     String? note,
     DateTime? date,
     PaymentMethod? paymentMethod,
+    String? accountId,
+    LedgerEntryType? type,
+    String? toAccountId,
+    bool clearToAccountId = false,
     bool? isRecurring,
   }) {
     return Expense(
@@ -36,6 +50,10 @@ class Expense {
       note: note ?? this.note,
       date: date ?? this.date,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      accountId: accountId ?? this.accountId,
+      type: type ?? this.type,
+      toAccountId:
+          clearToAccountId ? null : (toAccountId ?? this.toAccountId),
       isRecurring: isRecurring ?? this.isRecurring,
     );
   }

@@ -9,6 +9,7 @@ import 'package:sqlite3/open.dart';
 
 import 'database_key_store.dart';
 import 'database_seed.dart';
+import 'tables/accounts_table.dart';
 import 'tables/app_preferences_table.dart';
 import 'tables/budgets_table.dart';
 import 'tables/categories_table.dart';
@@ -24,6 +25,7 @@ part 'app_database.g.dart';
 @DriftDatabase(
   tables: [
     Categories,
+    Accounts,
     Expenses,
     Budgets,
     RecurringExpenses,
@@ -41,7 +43,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -115,8 +117,50 @@ class AppDatabase extends _$AppDatabase {
           if (from < 7) {
             await _moveSettingsToUsers(migrator);
           }
+          if (from < 8) {
+            await _addAccountsAndLedgerTypes(migrator);
+          }
         },
       );
+
+  /// Accounts + income/expense types. Existing expenses keep their amounts and
+  /// land on each user's default Cash account — totals must not change.
+  Future<void> _addAccountsAndLedgerTypes(Migrator migrator) async {
+    await migrator.createTable(accounts);
+
+    final profiles = await select(userProfiles).get();
+    for (final profile in profiles) {
+      await seedAccountsForUser(this, profile.id);
+      await seedIncomeCategoryForUser(this, profile.id);
+    }
+
+    await migrator.addColumn(expenses, expenses.type);
+    await migrator.addColumn(expenses, expenses.accountId);
+    await migrator.addColumn(expenses, expenses.toAccountId);
+
+    await customStatement('''
+UPDATE expenses
+SET account_id = (
+  SELECT a.id FROM accounts a
+  WHERE a.user_id = expenses.user_id AND a.is_default = 1
+  LIMIT 1
+)
+WHERE account_id IS NULL OR account_id = ''
+''');
+
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_expenses_user_type '
+      'ON expenses (user_id, type)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_expenses_user_account '
+      'ON expenses (user_id, account_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_accounts_user '
+      'ON accounts (user_id)',
+    );
+  }
 
   /// Splits the single device preferences row into device state plus per-account
   /// settings, so a second account can never inherit the first one's

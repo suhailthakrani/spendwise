@@ -12,6 +12,8 @@ class CategorySpending {
 
 class DashboardStats {
   const DashboardStats({
+    required this.totalBalance,
+    required this.totalIncomeThisMonth,
     required this.totalSpentToday,
     required this.totalSpentThisMonth,
     required this.monthlyBudget,
@@ -19,6 +21,9 @@ class DashboardStats {
     required this.recentExpenseIds,
   });
 
+  /// Net money across all accounts (what people check first).
+  final double totalBalance;
+  final double totalIncomeThisMonth;
   final double totalSpentToday;
   final double totalSpentThisMonth;
   final double monthlyBudget;

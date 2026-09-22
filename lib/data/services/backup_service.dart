@@ -39,6 +39,9 @@ class BackupService {
     final categories = await (_db.select(_db.categories)
           ..where((t) => t.userId.equals(userId)))
         .get();
+    final accounts = await (_db.select(_db.accounts)
+          ..where((t) => t.userId.equals(userId)))
+        .get();
     final expenses = await (_db.select(_db.expenses)
           ..where((t) => t.userId.equals(userId)))
         .get();
@@ -83,6 +86,16 @@ class BackupService {
               'goalRemindersEnabled': settings.goalRemindersEnabled,
               'productUpdatesEnabled': settings.productUpdatesEnabled,
             },
+      accounts: [
+        for (final row in accounts)
+          {
+            'id': row.id,
+            'name': row.name,
+            'type': row.type,
+            'openingBalance': row.openingBalance,
+            'isDefault': row.isDefault,
+          },
+      ],
       categories: [
         for (final row in categories)
           {
@@ -104,6 +117,9 @@ class BackupService {
             'date': row.date.toIso8601String(),
             'paymentMethod': row.paymentMethod,
             'isRecurring': row.isRecurring,
+            'type': row.type,
+            'accountId': row.accountId,
+            'toAccountId': row.toAccountId,
           },
       ],
       budgets: [
@@ -296,6 +312,8 @@ class BackupService {
         .go();
     await (_db.delete(_db.categories)..where((t) => t.userId.equals(userId)))
         .go();
+    await (_db.delete(_db.accounts)..where((t) => t.userId.equals(userId)))
+        .go();
   }
 
   Future<BackupSnapshot> _withoutIdCollisions(BackupSnapshot snapshot) async {
@@ -312,6 +330,10 @@ class BackupService {
 
     final categoryIds = <String, String>{
       for (final row in snapshot.categories)
+        row['id'] as String: take(row['id'] as String),
+    };
+    final accountIds = <String, String>{
+      for (final row in snapshot.accounts)
         row['id'] as String: take(row['id'] as String),
     };
     final goalIds = <String, String>{
@@ -337,6 +359,9 @@ class BackupService {
       driveEmail: snapshot.driveEmail,
       profile: snapshot.profile,
       settings: snapshot.settings,
+      accounts: [
+        for (final row in snapshot.accounts) remapRow(row, extra: accountIds),
+      ],
       categories: [
         for (final row in snapshot.categories)
           remapRow(row, extra: categoryIds),
@@ -347,6 +372,13 @@ class BackupService {
             ...remapRow(row),
             'categoryId':
                 categoryIds[row['categoryId'] as String] ?? row['categoryId'],
+            'accountId': row['accountId'] == null
+                ? null
+                : (accountIds[row['accountId'] as String] ?? row['accountId']),
+            'toAccountId': row['toAccountId'] == null
+                ? null
+                : (accountIds[row['toAccountId'] as String] ??
+                    row['toAccountId']),
           },
       ],
       budgets: [
@@ -382,6 +414,7 @@ class BackupService {
 
   Future<Set<String>> _occupiedIds() async {
     final ids = <String>{};
+    ids.addAll((await _db.select(_db.accounts).get()).map((r) => r.id));
     ids.addAll((await _db.select(_db.categories).get()).map((r) => r.id));
     ids.addAll((await _db.select(_db.expenses).get()).map((r) => r.id));
     ids.addAll((await _db.select(_db.budgets).get()).map((r) => r.id));
@@ -396,6 +429,27 @@ class BackupService {
   }
 
   Future<void> _insertLedger(BackupSnapshot snapshot, String userId) async {
+    if (snapshot.accounts.isNotEmpty) {
+      await _db.batch((batch) {
+        batch.insertAll(
+          _db.accounts,
+          [
+            for (final row in snapshot.accounts)
+              AccountsCompanion.insert(
+                id: row['id'] as String,
+                userId: userId,
+                name: row['name'] as String? ?? 'Cash',
+                type: row['type'] as String? ?? 'cash',
+                openingBalance: Value(_asDouble(row['openingBalance']) ?? 0),
+                isDefault: Value(row['isDefault'] as bool? ?? false),
+              ),
+          ],
+        );
+      });
+    } else {
+      await seedAccountsForUser(_db, userId);
+    }
+
     if (snapshot.categories.isNotEmpty) {
       await _db.batch((batch) {
         batch.insertAll(
@@ -417,6 +471,16 @@ class BackupService {
       });
     }
 
+    await seedIncomeCategoryForUser(_db, userId);
+
+    final defaultAccountId = (await (_db.select(_db.accounts)
+              ..where(
+                (t) => t.userId.equals(userId) & t.isDefault.equals(true),
+              ))
+            .getSingleOrNull())
+        ?.id ??
+        defaultCashAccountId(userId);
+
     if (snapshot.expenses.isNotEmpty) {
       await _db.batch((batch) {
         batch.insertAll(
@@ -432,6 +496,11 @@ class BackupService {
                 date: _asDate(row['date']) ?? DateTime.now(),
                 paymentMethod: _payment(row['paymentMethod']),
                 isRecurring: Value(row['isRecurring'] as bool? ?? false),
+                type: Value(row['type'] as String? ?? 'expense'),
+                accountId: Value(
+                  row['accountId'] as String? ?? defaultAccountId,
+                ),
+                toAccountId: Value(row['toAccountId'] as String?),
               ),
           ],
         );

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/utils/goal_pace_calculator.dart';
+import '../data/models/account.dart';
 import '../data/models/budget.dart';
 import '../data/models/category.dart';
 import '../data/models/dashboard_stats.dart';
@@ -19,8 +20,18 @@ final categoriesProvider = StreamProvider<List<ExpenseCategory>>((ref) {
   return ref.watch(categoryRepositoryProvider).watchAll();
 });
 
+/// Spending only — expenses tab, budgets, category usage.
 final expensesProvider = StreamProvider<List<Expense>>((ref) {
+  return ref.watch(expenseRepositoryProvider).watchExpenses();
+});
+
+/// Full ledger (expenses + income + transfers) for recent activity / search.
+final ledgerProvider = StreamProvider<List<Expense>>((ref) {
   return ref.watch(expenseRepositoryProvider).watchAll();
+});
+
+final accountsProvider = StreamProvider<List<Account>>((ref) {
+  return ref.watch(accountRepositoryProvider).watchAll();
 });
 
 /// Categories ordered by how often they've been used in expenses (most first).
@@ -62,7 +73,8 @@ final recurringExpensesProvider = StreamProvider<List<RecurringExpense>>((ref) {
 final userProfileProvider = currentUserProvider;
 final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   final currency = ref.watch(currencyDisplayProvider);
-  ref.watch(expensesProvider);
+  ref.watch(ledgerProvider);
+  ref.watch(accountsProvider);
   return ref.watch(reportRepositoryProvider).dashboardStats(currency);
 });
 
@@ -70,7 +82,7 @@ final insightsPeriodProvider =
     StateProvider<InsightsPeriod>((ref) => InsightsPeriod.oneYear);
 
 final insightsReportProvider = Provider<InsightsReport>((ref) {
-  final expenses = ref.watch(expensesProvider).valueOrNull ?? [];
+  final expenses = ref.watch(ledgerProvider).valueOrNull ?? [];
   final currency = ref.watch(currencyDisplayProvider);
   final period = ref.watch(insightsPeriodProvider);
   return ReportRepository.summarizePeriods(
@@ -82,7 +94,7 @@ final insightsReportProvider = Provider<InsightsReport>((ref) {
 
 final currentMonthSummaryProvider = FutureProvider<MonthlySummary>((ref) async {
   final currency = ref.watch(currencyDisplayProvider);
-  ref.watch(expensesProvider);
+  ref.watch(ledgerProvider);
   return ref.watch(reportRepositoryProvider).currentMonthSummary(currency);
 });
 

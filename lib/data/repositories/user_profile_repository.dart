@@ -103,6 +103,7 @@ class UserProfileRepository {
         );
     await seedCategoriesForUser(_db, userId);
     await seedSettingsForUser(_db, userId);
+    await seedAccountsForUser(_db, userId);
 
     final profile = await getById(userId);
     if (profile == null) {
@@ -213,6 +214,7 @@ class UserProfileRepository {
         );
     await seedCategoriesForUser(_db, userId);
     await seedSettingsForUser(_db, userId);
+    await seedAccountsForUser(_db, userId);
 
     final profile = await getById(userId);
     if (profile == null) {
@@ -423,6 +425,8 @@ class UserProfileRepository {
             ..where((t) => t.userId.equals(userId)))
           .go();
       await (_db.delete(_db.categories)..where((t) => t.userId.equals(userId)))
+          .go();
+      await (_db.delete(_db.accounts)..where((t) => t.userId.equals(userId)))
           .go();
       // Before the profile: user_settings references it.
       await (_db.delete(_db.userSettings)

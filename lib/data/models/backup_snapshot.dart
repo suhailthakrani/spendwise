@@ -11,9 +11,10 @@ class BackupSnapshot {
     required this.savingContributions,
     this.driveEmail,
     this.settings = const {},
+    this.accounts = const [],
   });
 
-  static const currentFormatVersion = 2;
+  static const currentFormatVersion = 3;
   static const formatName = 'spendwise-backup';
 
   final int formatVersion;
@@ -23,6 +24,9 @@ class BackupSnapshot {
 
   /// Account settings (theme, notification choices). Empty for version 1 files.
   final Map<String, Object?> settings;
+
+  /// Wallets. Empty for version ≤2 files — restore seeds a default Cash account.
+  final List<Map<String, Object?>> accounts;
   final List<Map<String, Object?>> categories;
   final List<Map<String, Object?>> expenses;
   final List<Map<String, Object?>> budgets;
@@ -43,6 +47,7 @@ class BackupSnapshot {
       'driveEmail': driveEmail,
       'profile': profile,
       'settings': settings,
+      'accounts': accounts,
       'categories': categories,
       'expenses': expenses,
       'budgets': budgets,
@@ -81,6 +86,7 @@ class BackupSnapshot {
       driveEmail: json['driveEmail'] as String?,
       profile: objectMap(json['profile']),
       settings: objectMap(json['settings']),
+      accounts: objectList(json['accounts']),
       categories: objectList(json['categories']),
       expenses: objectList(json['expenses']),
       budgets: objectList(json['budgets']),

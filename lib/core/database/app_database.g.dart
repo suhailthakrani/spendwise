@@ -392,6 +392,881 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
   }
 }
 
+class $UserProfilesTable extends UserProfiles
+    with TableInfo<$UserProfilesTable, UserProfileRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserProfilesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+      'email', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _passwordHashMeta =
+      const VerificationMeta('passwordHash');
+  @override
+  late final GeneratedColumn<String> passwordHash = GeneratedColumn<String>(
+      'password_hash', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _passwordSaltMeta =
+      const VerificationMeta('passwordSalt');
+  @override
+  late final GeneratedColumn<String> passwordSalt = GeneratedColumn<String>(
+      'password_salt', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _regionCodeMeta =
+      const VerificationMeta('regionCode');
+  @override
+  late final GeneratedColumn<String> regionCode = GeneratedColumn<String>(
+      'region_code', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('US'));
+  static const VerificationMeta _currencyCodeMeta =
+      const VerificationMeta('currencyCode');
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+      'currency_code', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('USD'));
+  static const VerificationMeta _avatarUrlMeta =
+      const VerificationMeta('avatarUrl');
+  @override
+  late final GeneratedColumn<String> avatarUrl = GeneratedColumn<String>(
+      'avatar_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _googleIdMeta =
+      const VerificationMeta('googleId');
+  @override
+  late final GeneratedColumn<String> googleId = GeneratedColumn<String>(
+      'google_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _memberSinceMeta =
+      const VerificationMeta('memberSince');
+  @override
+  late final GeneratedColumn<DateTime> memberSince = GeneratedColumn<DateTime>(
+      'member_since', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        email,
+        passwordHash,
+        passwordSalt,
+        regionCode,
+        currencyCode,
+        avatarUrl,
+        googleId,
+        memberSince
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_profiles';
+  @override
+  VerificationContext validateIntegrity(Insertable<UserProfileRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+          _emailMeta, email.isAcceptableOrUnknown(data['email']!, _emailMeta));
+    } else if (isInserting) {
+      context.missing(_emailMeta);
+    }
+    if (data.containsKey('password_hash')) {
+      context.handle(
+          _passwordHashMeta,
+          passwordHash.isAcceptableOrUnknown(
+              data['password_hash']!, _passwordHashMeta));
+    }
+    if (data.containsKey('password_salt')) {
+      context.handle(
+          _passwordSaltMeta,
+          passwordSalt.isAcceptableOrUnknown(
+              data['password_salt']!, _passwordSaltMeta));
+    }
+    if (data.containsKey('region_code')) {
+      context.handle(
+          _regionCodeMeta,
+          regionCode.isAcceptableOrUnknown(
+              data['region_code']!, _regionCodeMeta));
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+          _currencyCodeMeta,
+          currencyCode.isAcceptableOrUnknown(
+              data['currency_code']!, _currencyCodeMeta));
+    }
+    if (data.containsKey('avatar_url')) {
+      context.handle(_avatarUrlMeta,
+          avatarUrl.isAcceptableOrUnknown(data['avatar_url']!, _avatarUrlMeta));
+    }
+    if (data.containsKey('google_id')) {
+      context.handle(_googleIdMeta,
+          googleId.isAcceptableOrUnknown(data['google_id']!, _googleIdMeta));
+    }
+    if (data.containsKey('member_since')) {
+      context.handle(
+          _memberSinceMeta,
+          memberSince.isAcceptableOrUnknown(
+              data['member_since']!, _memberSinceMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserProfileRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserProfileRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      email: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}email'])!,
+      passwordHash: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}password_hash'])!,
+      passwordSalt: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}password_salt'])!,
+      regionCode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}region_code'])!,
+      currencyCode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}currency_code'])!,
+      avatarUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}avatar_url']),
+      googleId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}google_id']),
+      memberSince: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}member_since']),
+    );
+  }
+
+  @override
+  $UserProfilesTable createAlias(String alias) {
+    return $UserProfilesTable(attachedDatabase, alias);
+  }
+}
+
+class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
+  final String id;
+  final String name;
+  final String email;
+  final String passwordHash;
+  final String passwordSalt;
+  final String regionCode;
+  final String currencyCode;
+  final String? avatarUrl;
+  final String? googleId;
+  final DateTime? memberSince;
+  const UserProfileRow(
+      {required this.id,
+      required this.name,
+      required this.email,
+      required this.passwordHash,
+      required this.passwordSalt,
+      required this.regionCode,
+      required this.currencyCode,
+      this.avatarUrl,
+      this.googleId,
+      this.memberSince});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['email'] = Variable<String>(email);
+    map['password_hash'] = Variable<String>(passwordHash);
+    map['password_salt'] = Variable<String>(passwordSalt);
+    map['region_code'] = Variable<String>(regionCode);
+    map['currency_code'] = Variable<String>(currencyCode);
+    if (!nullToAbsent || avatarUrl != null) {
+      map['avatar_url'] = Variable<String>(avatarUrl);
+    }
+    if (!nullToAbsent || googleId != null) {
+      map['google_id'] = Variable<String>(googleId);
+    }
+    if (!nullToAbsent || memberSince != null) {
+      map['member_since'] = Variable<DateTime>(memberSince);
+    }
+    return map;
+  }
+
+  UserProfilesCompanion toCompanion(bool nullToAbsent) {
+    return UserProfilesCompanion(
+      id: Value(id),
+      name: Value(name),
+      email: Value(email),
+      passwordHash: Value(passwordHash),
+      passwordSalt: Value(passwordSalt),
+      regionCode: Value(regionCode),
+      currencyCode: Value(currencyCode),
+      avatarUrl: avatarUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarUrl),
+      googleId: googleId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(googleId),
+      memberSince: memberSince == null && nullToAbsent
+          ? const Value.absent()
+          : Value(memberSince),
+    );
+  }
+
+  factory UserProfileRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserProfileRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      email: serializer.fromJson<String>(json['email']),
+      passwordHash: serializer.fromJson<String>(json['passwordHash']),
+      passwordSalt: serializer.fromJson<String>(json['passwordSalt']),
+      regionCode: serializer.fromJson<String>(json['regionCode']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      avatarUrl: serializer.fromJson<String?>(json['avatarUrl']),
+      googleId: serializer.fromJson<String?>(json['googleId']),
+      memberSince: serializer.fromJson<DateTime?>(json['memberSince']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'email': serializer.toJson<String>(email),
+      'passwordHash': serializer.toJson<String>(passwordHash),
+      'passwordSalt': serializer.toJson<String>(passwordSalt),
+      'regionCode': serializer.toJson<String>(regionCode),
+      'currencyCode': serializer.toJson<String>(currencyCode),
+      'avatarUrl': serializer.toJson<String?>(avatarUrl),
+      'googleId': serializer.toJson<String?>(googleId),
+      'memberSince': serializer.toJson<DateTime?>(memberSince),
+    };
+  }
+
+  UserProfileRow copyWith(
+          {String? id,
+          String? name,
+          String? email,
+          String? passwordHash,
+          String? passwordSalt,
+          String? regionCode,
+          String? currencyCode,
+          Value<String?> avatarUrl = const Value.absent(),
+          Value<String?> googleId = const Value.absent(),
+          Value<DateTime?> memberSince = const Value.absent()}) =>
+      UserProfileRow(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        email: email ?? this.email,
+        passwordHash: passwordHash ?? this.passwordHash,
+        passwordSalt: passwordSalt ?? this.passwordSalt,
+        regionCode: regionCode ?? this.regionCode,
+        currencyCode: currencyCode ?? this.currencyCode,
+        avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
+        googleId: googleId.present ? googleId.value : this.googleId,
+        memberSince: memberSince.present ? memberSince.value : this.memberSince,
+      );
+  UserProfileRow copyWithCompanion(UserProfilesCompanion data) {
+    return UserProfileRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      email: data.email.present ? data.email.value : this.email,
+      passwordHash: data.passwordHash.present
+          ? data.passwordHash.value
+          : this.passwordHash,
+      passwordSalt: data.passwordSalt.present
+          ? data.passwordSalt.value
+          : this.passwordSalt,
+      regionCode:
+          data.regionCode.present ? data.regionCode.value : this.regionCode,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      avatarUrl: data.avatarUrl.present ? data.avatarUrl.value : this.avatarUrl,
+      googleId: data.googleId.present ? data.googleId.value : this.googleId,
+      memberSince:
+          data.memberSince.present ? data.memberSince.value : this.memberSince,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfileRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('email: $email, ')
+          ..write('passwordHash: $passwordHash, ')
+          ..write('passwordSalt: $passwordSalt, ')
+          ..write('regionCode: $regionCode, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('avatarUrl: $avatarUrl, ')
+          ..write('googleId: $googleId, ')
+          ..write('memberSince: $memberSince')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, email, passwordHash, passwordSalt,
+      regionCode, currencyCode, avatarUrl, googleId, memberSince);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserProfileRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.email == this.email &&
+          other.passwordHash == this.passwordHash &&
+          other.passwordSalt == this.passwordSalt &&
+          other.regionCode == this.regionCode &&
+          other.currencyCode == this.currencyCode &&
+          other.avatarUrl == this.avatarUrl &&
+          other.googleId == this.googleId &&
+          other.memberSince == this.memberSince);
+}
+
+class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> email;
+  final Value<String> passwordHash;
+  final Value<String> passwordSalt;
+  final Value<String> regionCode;
+  final Value<String> currencyCode;
+  final Value<String?> avatarUrl;
+  final Value<String?> googleId;
+  final Value<DateTime?> memberSince;
+  final Value<int> rowid;
+  const UserProfilesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.email = const Value.absent(),
+    this.passwordHash = const Value.absent(),
+    this.passwordSalt = const Value.absent(),
+    this.regionCode = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.avatarUrl = const Value.absent(),
+    this.googleId = const Value.absent(),
+    this.memberSince = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserProfilesCompanion.insert({
+    required String id,
+    required String name,
+    required String email,
+    this.passwordHash = const Value.absent(),
+    this.passwordSalt = const Value.absent(),
+    this.regionCode = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.avatarUrl = const Value.absent(),
+    this.googleId = const Value.absent(),
+    this.memberSince = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name),
+        email = Value(email);
+  static Insertable<UserProfileRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? email,
+    Expression<String>? passwordHash,
+    Expression<String>? passwordSalt,
+    Expression<String>? regionCode,
+    Expression<String>? currencyCode,
+    Expression<String>? avatarUrl,
+    Expression<String>? googleId,
+    Expression<DateTime>? memberSince,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (email != null) 'email': email,
+      if (passwordHash != null) 'password_hash': passwordHash,
+      if (passwordSalt != null) 'password_salt': passwordSalt,
+      if (regionCode != null) 'region_code': regionCode,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (avatarUrl != null) 'avatar_url': avatarUrl,
+      if (googleId != null) 'google_id': googleId,
+      if (memberSince != null) 'member_since': memberSince,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserProfilesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? name,
+      Value<String>? email,
+      Value<String>? passwordHash,
+      Value<String>? passwordSalt,
+      Value<String>? regionCode,
+      Value<String>? currencyCode,
+      Value<String?>? avatarUrl,
+      Value<String?>? googleId,
+      Value<DateTime?>? memberSince,
+      Value<int>? rowid}) {
+    return UserProfilesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      passwordHash: passwordHash ?? this.passwordHash,
+      passwordSalt: passwordSalt ?? this.passwordSalt,
+      regionCode: regionCode ?? this.regionCode,
+      currencyCode: currencyCode ?? this.currencyCode,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      googleId: googleId ?? this.googleId,
+      memberSince: memberSince ?? this.memberSince,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (passwordHash.present) {
+      map['password_hash'] = Variable<String>(passwordHash.value);
+    }
+    if (passwordSalt.present) {
+      map['password_salt'] = Variable<String>(passwordSalt.value);
+    }
+    if (regionCode.present) {
+      map['region_code'] = Variable<String>(regionCode.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (avatarUrl.present) {
+      map['avatar_url'] = Variable<String>(avatarUrl.value);
+    }
+    if (googleId.present) {
+      map['google_id'] = Variable<String>(googleId.value);
+    }
+    if (memberSince.present) {
+      map['member_since'] = Variable<DateTime>(memberSince.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfilesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('email: $email, ')
+          ..write('passwordHash: $passwordHash, ')
+          ..write('passwordSalt: $passwordSalt, ')
+          ..write('regionCode: $regionCode, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('avatarUrl: $avatarUrl, ')
+          ..write('googleId: $googleId, ')
+          ..write('memberSince: $memberSince, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AccountsTable extends Accounts
+    with TableInfo<$AccountsTable, AccountRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AccountsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES user_profiles (id)'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _openingBalanceMeta =
+      const VerificationMeta('openingBalance');
+  @override
+  late final GeneratedColumn<double> openingBalance = GeneratedColumn<double>(
+      'opening_balance', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _isDefaultMeta =
+      const VerificationMeta('isDefault');
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+      'is_default', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_default" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, userId, name, type, openingBalance, isDefault];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'accounts';
+  @override
+  VerificationContext validateIntegrity(Insertable<AccountRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('opening_balance')) {
+      context.handle(
+          _openingBalanceMeta,
+          openingBalance.isAcceptableOrUnknown(
+              data['opening_balance']!, _openingBalanceMeta));
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(_isDefaultMeta,
+          isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AccountRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AccountRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      openingBalance: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}opening_balance'])!,
+      isDefault: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_default'])!,
+    );
+  }
+
+  @override
+  $AccountsTable createAlias(String alias) {
+    return $AccountsTable(attachedDatabase, alias);
+  }
+}
+
+class AccountRow extends DataClass implements Insertable<AccountRow> {
+  final String id;
+  final String userId;
+  final String name;
+
+  /// cash | bank | card | wallet
+  final String type;
+
+  /// Opening balance in the app base currency (USD), same as expenses.amount.
+  final double openingBalance;
+  final bool isDefault;
+  const AccountRow(
+      {required this.id,
+      required this.userId,
+      required this.name,
+      required this.type,
+      required this.openingBalance,
+      required this.isDefault});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['name'] = Variable<String>(name);
+    map['type'] = Variable<String>(type);
+    map['opening_balance'] = Variable<double>(openingBalance);
+    map['is_default'] = Variable<bool>(isDefault);
+    return map;
+  }
+
+  AccountsCompanion toCompanion(bool nullToAbsent) {
+    return AccountsCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      name: Value(name),
+      type: Value(type),
+      openingBalance: Value(openingBalance),
+      isDefault: Value(isDefault),
+    );
+  }
+
+  factory AccountRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AccountRow(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      name: serializer.fromJson<String>(json['name']),
+      type: serializer.fromJson<String>(json['type']),
+      openingBalance: serializer.fromJson<double>(json['openingBalance']),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'name': serializer.toJson<String>(name),
+      'type': serializer.toJson<String>(type),
+      'openingBalance': serializer.toJson<double>(openingBalance),
+      'isDefault': serializer.toJson<bool>(isDefault),
+    };
+  }
+
+  AccountRow copyWith(
+          {String? id,
+          String? userId,
+          String? name,
+          String? type,
+          double? openingBalance,
+          bool? isDefault}) =>
+      AccountRow(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        name: name ?? this.name,
+        type: type ?? this.type,
+        openingBalance: openingBalance ?? this.openingBalance,
+        isDefault: isDefault ?? this.isDefault,
+      );
+  AccountRow copyWithCompanion(AccountsCompanion data) {
+    return AccountRow(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      name: data.name.present ? data.name.value : this.name,
+      type: data.type.present ? data.type.value : this.type,
+      openingBalance: data.openingBalance.present
+          ? data.openingBalance.value
+          : this.openingBalance,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountRow(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('openingBalance: $openingBalance, ')
+          ..write('isDefault: $isDefault')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, userId, name, type, openingBalance, isDefault);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AccountRow &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.name == this.name &&
+          other.type == this.type &&
+          other.openingBalance == this.openingBalance &&
+          other.isDefault == this.isDefault);
+}
+
+class AccountsCompanion extends UpdateCompanion<AccountRow> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> name;
+  final Value<String> type;
+  final Value<double> openingBalance;
+  final Value<bool> isDefault;
+  final Value<int> rowid;
+  const AccountsCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.type = const Value.absent(),
+    this.openingBalance = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AccountsCompanion.insert({
+    required String id,
+    required String userId,
+    required String name,
+    required String type,
+    this.openingBalance = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        userId = Value(userId),
+        name = Value(name),
+        type = Value(type);
+  static Insertable<AccountRow> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? name,
+    Expression<String>? type,
+    Expression<double>? openingBalance,
+    Expression<bool>? isDefault,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (name != null) 'name': name,
+      if (type != null) 'type': type,
+      if (openingBalance != null) 'opening_balance': openingBalance,
+      if (isDefault != null) 'is_default': isDefault,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AccountsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? userId,
+      Value<String>? name,
+      Value<String>? type,
+      Value<double>? openingBalance,
+      Value<bool>? isDefault,
+      Value<int>? rowid}) {
+    return AccountsCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      openingBalance: openingBalance ?? this.openingBalance,
+      isDefault: isDefault ?? this.isDefault,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (openingBalance.present) {
+      map['opening_balance'] = Variable<double>(openingBalance.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountsCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('openingBalance: $openingBalance, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ExpensesTable extends Expenses
     with TableInfo<$ExpensesTable, ExpenseRow> {
   @override
@@ -452,9 +1327,46 @@ class $ExpensesTable extends Expenses
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_recurring" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, userId, amount, categoryId, note, date, paymentMethod, isRecurring];
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('expense'));
+  static const VerificationMeta _accountIdMeta =
+      const VerificationMeta('accountId');
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+      'account_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES accounts (id)'),
+      defaultValue: const Constant(''));
+  static const VerificationMeta _toAccountIdMeta =
+      const VerificationMeta('toAccountId');
+  @override
+  late final GeneratedColumn<String> toAccountId = GeneratedColumn<String>(
+      'to_account_id', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES accounts (id)'));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        userId,
+        amount,
+        categoryId,
+        note,
+        date,
+        paymentMethod,
+        isRecurring,
+        type,
+        accountId,
+        toAccountId
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -512,6 +1424,20 @@ class $ExpensesTable extends Expenses
           isRecurring.isAcceptableOrUnknown(
               data['is_recurring']!, _isRecurringMeta));
     }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(_accountIdMeta,
+          accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta));
+    }
+    if (data.containsKey('to_account_id')) {
+      context.handle(
+          _toAccountIdMeta,
+          toAccountId.isAcceptableOrUnknown(
+              data['to_account_id']!, _toAccountIdMeta));
+    }
     return context;
   }
 
@@ -537,6 +1463,12 @@ class $ExpensesTable extends Expenses
           .read(DriftSqlType.string, data['${effectivePrefix}payment_method'])!,
       isRecurring: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_recurring'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      accountId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}account_id'])!,
+      toAccountId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}to_account_id']),
     );
   }
 
@@ -555,6 +1487,16 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
   final DateTime date;
   final String paymentMethod;
   final bool isRecurring;
+
+  /// expense | income | transfer
+  final String type;
+
+  /// Wallet this entry hits. Default only exists so schema upgrades can add
+  /// the column; the app always writes a real account id on create.
+  final String accountId;
+
+  /// Destination account when [type] is transfer; otherwise null.
+  final String? toAccountId;
   const ExpenseRow(
       {required this.id,
       required this.userId,
@@ -563,7 +1505,10 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       required this.note,
       required this.date,
       required this.paymentMethod,
-      required this.isRecurring});
+      required this.isRecurring,
+      required this.type,
+      required this.accountId,
+      this.toAccountId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -575,6 +1520,11 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     map['date'] = Variable<DateTime>(date);
     map['payment_method'] = Variable<String>(paymentMethod);
     map['is_recurring'] = Variable<bool>(isRecurring);
+    map['type'] = Variable<String>(type);
+    map['account_id'] = Variable<String>(accountId);
+    if (!nullToAbsent || toAccountId != null) {
+      map['to_account_id'] = Variable<String>(toAccountId);
+    }
     return map;
   }
 
@@ -588,6 +1538,11 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       date: Value(date),
       paymentMethod: Value(paymentMethod),
       isRecurring: Value(isRecurring),
+      type: Value(type),
+      accountId: Value(accountId),
+      toAccountId: toAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(toAccountId),
     );
   }
 
@@ -603,6 +1558,9 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       date: serializer.fromJson<DateTime>(json['date']),
       paymentMethod: serializer.fromJson<String>(json['paymentMethod']),
       isRecurring: serializer.fromJson<bool>(json['isRecurring']),
+      type: serializer.fromJson<String>(json['type']),
+      accountId: serializer.fromJson<String>(json['accountId']),
+      toAccountId: serializer.fromJson<String?>(json['toAccountId']),
     );
   }
   @override
@@ -617,6 +1575,9 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       'date': serializer.toJson<DateTime>(date),
       'paymentMethod': serializer.toJson<String>(paymentMethod),
       'isRecurring': serializer.toJson<bool>(isRecurring),
+      'type': serializer.toJson<String>(type),
+      'accountId': serializer.toJson<String>(accountId),
+      'toAccountId': serializer.toJson<String?>(toAccountId),
     };
   }
 
@@ -628,7 +1589,10 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           String? note,
           DateTime? date,
           String? paymentMethod,
-          bool? isRecurring}) =>
+          bool? isRecurring,
+          String? type,
+          String? accountId,
+          Value<String?> toAccountId = const Value.absent()}) =>
       ExpenseRow(
         id: id ?? this.id,
         userId: userId ?? this.userId,
@@ -638,6 +1602,9 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
         date: date ?? this.date,
         paymentMethod: paymentMethod ?? this.paymentMethod,
         isRecurring: isRecurring ?? this.isRecurring,
+        type: type ?? this.type,
+        accountId: accountId ?? this.accountId,
+        toAccountId: toAccountId.present ? toAccountId.value : this.toAccountId,
       );
   ExpenseRow copyWithCompanion(ExpensesCompanion data) {
     return ExpenseRow(
@@ -653,6 +1620,10 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           : this.paymentMethod,
       isRecurring:
           data.isRecurring.present ? data.isRecurring.value : this.isRecurring,
+      type: data.type.present ? data.type.value : this.type,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      toAccountId:
+          data.toAccountId.present ? data.toAccountId.value : this.toAccountId,
     );
   }
 
@@ -666,14 +1637,17 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           ..write('note: $note, ')
           ..write('date: $date, ')
           ..write('paymentMethod: $paymentMethod, ')
-          ..write('isRecurring: $isRecurring')
+          ..write('isRecurring: $isRecurring, ')
+          ..write('type: $type, ')
+          ..write('accountId: $accountId, ')
+          ..write('toAccountId: $toAccountId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, userId, amount, categoryId, note, date, paymentMethod, isRecurring);
+  int get hashCode => Object.hash(id, userId, amount, categoryId, note, date,
+      paymentMethod, isRecurring, type, accountId, toAccountId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -685,7 +1659,10 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           other.note == this.note &&
           other.date == this.date &&
           other.paymentMethod == this.paymentMethod &&
-          other.isRecurring == this.isRecurring);
+          other.isRecurring == this.isRecurring &&
+          other.type == this.type &&
+          other.accountId == this.accountId &&
+          other.toAccountId == this.toAccountId);
 }
 
 class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
@@ -697,6 +1674,9 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
   final Value<DateTime> date;
   final Value<String> paymentMethod;
   final Value<bool> isRecurring;
+  final Value<String> type;
+  final Value<String> accountId;
+  final Value<String?> toAccountId;
   final Value<int> rowid;
   const ExpensesCompanion({
     this.id = const Value.absent(),
@@ -707,6 +1687,9 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     this.date = const Value.absent(),
     this.paymentMethod = const Value.absent(),
     this.isRecurring = const Value.absent(),
+    this.type = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.toAccountId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExpensesCompanion.insert({
@@ -718,6 +1701,9 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     required DateTime date,
     required String paymentMethod,
     this.isRecurring = const Value.absent(),
+    this.type = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.toAccountId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         amount = Value(amount),
@@ -733,6 +1719,9 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     Expression<DateTime>? date,
     Expression<String>? paymentMethod,
     Expression<bool>? isRecurring,
+    Expression<String>? type,
+    Expression<String>? accountId,
+    Expression<String>? toAccountId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -744,6 +1733,9 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       if (date != null) 'date': date,
       if (paymentMethod != null) 'payment_method': paymentMethod,
       if (isRecurring != null) 'is_recurring': isRecurring,
+      if (type != null) 'type': type,
+      if (accountId != null) 'account_id': accountId,
+      if (toAccountId != null) 'to_account_id': toAccountId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -757,6 +1749,9 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       Value<DateTime>? date,
       Value<String>? paymentMethod,
       Value<bool>? isRecurring,
+      Value<String>? type,
+      Value<String>? accountId,
+      Value<String?>? toAccountId,
       Value<int>? rowid}) {
     return ExpensesCompanion(
       id: id ?? this.id,
@@ -767,6 +1762,9 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       date: date ?? this.date,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       isRecurring: isRecurring ?? this.isRecurring,
+      type: type ?? this.type,
+      accountId: accountId ?? this.accountId,
+      toAccountId: toAccountId ?? this.toAccountId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -798,6 +1796,15 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     if (isRecurring.present) {
       map['is_recurring'] = Variable<bool>(isRecurring.value);
     }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (toAccountId.present) {
+      map['to_account_id'] = Variable<String>(toAccountId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -815,6 +1822,9 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
           ..write('date: $date, ')
           ..write('paymentMethod: $paymentMethod, ')
           ..write('isRecurring: $isRecurring, ')
+          ..write('type: $type, ')
+          ..write('accountId: $accountId, ')
+          ..write('toAccountId: $toAccountId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2065,526 +3075,6 @@ class AppPreferencesCompanion extends UpdateCompanion<PreferencesRow> {
           ..write('activeUserId: $activeUserId, ')
           ..write('biometricUnlockEnabled: $biometricUnlockEnabled, ')
           ..write('biometricUserId: $biometricUserId')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $UserProfilesTable extends UserProfiles
-    with TableInfo<$UserProfilesTable, UserProfileRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $UserProfilesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-      'id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _emailMeta = const VerificationMeta('email');
-  @override
-  late final GeneratedColumn<String> email = GeneratedColumn<String>(
-      'email', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _passwordHashMeta =
-      const VerificationMeta('passwordHash');
-  @override
-  late final GeneratedColumn<String> passwordHash = GeneratedColumn<String>(
-      'password_hash', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(''));
-  static const VerificationMeta _passwordSaltMeta =
-      const VerificationMeta('passwordSalt');
-  @override
-  late final GeneratedColumn<String> passwordSalt = GeneratedColumn<String>(
-      'password_salt', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(''));
-  static const VerificationMeta _regionCodeMeta =
-      const VerificationMeta('regionCode');
-  @override
-  late final GeneratedColumn<String> regionCode = GeneratedColumn<String>(
-      'region_code', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('US'));
-  static const VerificationMeta _currencyCodeMeta =
-      const VerificationMeta('currencyCode');
-  @override
-  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
-      'currency_code', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('USD'));
-  static const VerificationMeta _avatarUrlMeta =
-      const VerificationMeta('avatarUrl');
-  @override
-  late final GeneratedColumn<String> avatarUrl = GeneratedColumn<String>(
-      'avatar_url', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _googleIdMeta =
-      const VerificationMeta('googleId');
-  @override
-  late final GeneratedColumn<String> googleId = GeneratedColumn<String>(
-      'google_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _memberSinceMeta =
-      const VerificationMeta('memberSince');
-  @override
-  late final GeneratedColumn<DateTime> memberSince = GeneratedColumn<DateTime>(
-      'member_since', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  @override
-  List<GeneratedColumn> get $columns => [
-        id,
-        name,
-        email,
-        passwordHash,
-        passwordSalt,
-        regionCode,
-        currencyCode,
-        avatarUrl,
-        googleId,
-        memberSince
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'user_profiles';
-  @override
-  VerificationContext validateIntegrity(Insertable<UserProfileRow> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('email')) {
-      context.handle(
-          _emailMeta, email.isAcceptableOrUnknown(data['email']!, _emailMeta));
-    } else if (isInserting) {
-      context.missing(_emailMeta);
-    }
-    if (data.containsKey('password_hash')) {
-      context.handle(
-          _passwordHashMeta,
-          passwordHash.isAcceptableOrUnknown(
-              data['password_hash']!, _passwordHashMeta));
-    }
-    if (data.containsKey('password_salt')) {
-      context.handle(
-          _passwordSaltMeta,
-          passwordSalt.isAcceptableOrUnknown(
-              data['password_salt']!, _passwordSaltMeta));
-    }
-    if (data.containsKey('region_code')) {
-      context.handle(
-          _regionCodeMeta,
-          regionCode.isAcceptableOrUnknown(
-              data['region_code']!, _regionCodeMeta));
-    }
-    if (data.containsKey('currency_code')) {
-      context.handle(
-          _currencyCodeMeta,
-          currencyCode.isAcceptableOrUnknown(
-              data['currency_code']!, _currencyCodeMeta));
-    }
-    if (data.containsKey('avatar_url')) {
-      context.handle(_avatarUrlMeta,
-          avatarUrl.isAcceptableOrUnknown(data['avatar_url']!, _avatarUrlMeta));
-    }
-    if (data.containsKey('google_id')) {
-      context.handle(_googleIdMeta,
-          googleId.isAcceptableOrUnknown(data['google_id']!, _googleIdMeta));
-    }
-    if (data.containsKey('member_since')) {
-      context.handle(
-          _memberSinceMeta,
-          memberSince.isAcceptableOrUnknown(
-              data['member_since']!, _memberSinceMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  UserProfileRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return UserProfileRow(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      email: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}email'])!,
-      passwordHash: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}password_hash'])!,
-      passwordSalt: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}password_salt'])!,
-      regionCode: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}region_code'])!,
-      currencyCode: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}currency_code'])!,
-      avatarUrl: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}avatar_url']),
-      googleId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}google_id']),
-      memberSince: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}member_since']),
-    );
-  }
-
-  @override
-  $UserProfilesTable createAlias(String alias) {
-    return $UserProfilesTable(attachedDatabase, alias);
-  }
-}
-
-class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
-  final String id;
-  final String name;
-  final String email;
-  final String passwordHash;
-  final String passwordSalt;
-  final String regionCode;
-  final String currencyCode;
-  final String? avatarUrl;
-  final String? googleId;
-  final DateTime? memberSince;
-  const UserProfileRow(
-      {required this.id,
-      required this.name,
-      required this.email,
-      required this.passwordHash,
-      required this.passwordSalt,
-      required this.regionCode,
-      required this.currencyCode,
-      this.avatarUrl,
-      this.googleId,
-      this.memberSince});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    map['name'] = Variable<String>(name);
-    map['email'] = Variable<String>(email);
-    map['password_hash'] = Variable<String>(passwordHash);
-    map['password_salt'] = Variable<String>(passwordSalt);
-    map['region_code'] = Variable<String>(regionCode);
-    map['currency_code'] = Variable<String>(currencyCode);
-    if (!nullToAbsent || avatarUrl != null) {
-      map['avatar_url'] = Variable<String>(avatarUrl);
-    }
-    if (!nullToAbsent || googleId != null) {
-      map['google_id'] = Variable<String>(googleId);
-    }
-    if (!nullToAbsent || memberSince != null) {
-      map['member_since'] = Variable<DateTime>(memberSince);
-    }
-    return map;
-  }
-
-  UserProfilesCompanion toCompanion(bool nullToAbsent) {
-    return UserProfilesCompanion(
-      id: Value(id),
-      name: Value(name),
-      email: Value(email),
-      passwordHash: Value(passwordHash),
-      passwordSalt: Value(passwordSalt),
-      regionCode: Value(regionCode),
-      currencyCode: Value(currencyCode),
-      avatarUrl: avatarUrl == null && nullToAbsent
-          ? const Value.absent()
-          : Value(avatarUrl),
-      googleId: googleId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(googleId),
-      memberSince: memberSince == null && nullToAbsent
-          ? const Value.absent()
-          : Value(memberSince),
-    );
-  }
-
-  factory UserProfileRow.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return UserProfileRow(
-      id: serializer.fromJson<String>(json['id']),
-      name: serializer.fromJson<String>(json['name']),
-      email: serializer.fromJson<String>(json['email']),
-      passwordHash: serializer.fromJson<String>(json['passwordHash']),
-      passwordSalt: serializer.fromJson<String>(json['passwordSalt']),
-      regionCode: serializer.fromJson<String>(json['regionCode']),
-      currencyCode: serializer.fromJson<String>(json['currencyCode']),
-      avatarUrl: serializer.fromJson<String?>(json['avatarUrl']),
-      googleId: serializer.fromJson<String?>(json['googleId']),
-      memberSince: serializer.fromJson<DateTime?>(json['memberSince']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'name': serializer.toJson<String>(name),
-      'email': serializer.toJson<String>(email),
-      'passwordHash': serializer.toJson<String>(passwordHash),
-      'passwordSalt': serializer.toJson<String>(passwordSalt),
-      'regionCode': serializer.toJson<String>(regionCode),
-      'currencyCode': serializer.toJson<String>(currencyCode),
-      'avatarUrl': serializer.toJson<String?>(avatarUrl),
-      'googleId': serializer.toJson<String?>(googleId),
-      'memberSince': serializer.toJson<DateTime?>(memberSince),
-    };
-  }
-
-  UserProfileRow copyWith(
-          {String? id,
-          String? name,
-          String? email,
-          String? passwordHash,
-          String? passwordSalt,
-          String? regionCode,
-          String? currencyCode,
-          Value<String?> avatarUrl = const Value.absent(),
-          Value<String?> googleId = const Value.absent(),
-          Value<DateTime?> memberSince = const Value.absent()}) =>
-      UserProfileRow(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        email: email ?? this.email,
-        passwordHash: passwordHash ?? this.passwordHash,
-        passwordSalt: passwordSalt ?? this.passwordSalt,
-        regionCode: regionCode ?? this.regionCode,
-        currencyCode: currencyCode ?? this.currencyCode,
-        avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
-        googleId: googleId.present ? googleId.value : this.googleId,
-        memberSince: memberSince.present ? memberSince.value : this.memberSince,
-      );
-  UserProfileRow copyWithCompanion(UserProfilesCompanion data) {
-    return UserProfileRow(
-      id: data.id.present ? data.id.value : this.id,
-      name: data.name.present ? data.name.value : this.name,
-      email: data.email.present ? data.email.value : this.email,
-      passwordHash: data.passwordHash.present
-          ? data.passwordHash.value
-          : this.passwordHash,
-      passwordSalt: data.passwordSalt.present
-          ? data.passwordSalt.value
-          : this.passwordSalt,
-      regionCode:
-          data.regionCode.present ? data.regionCode.value : this.regionCode,
-      currencyCode: data.currencyCode.present
-          ? data.currencyCode.value
-          : this.currencyCode,
-      avatarUrl: data.avatarUrl.present ? data.avatarUrl.value : this.avatarUrl,
-      googleId: data.googleId.present ? data.googleId.value : this.googleId,
-      memberSince:
-          data.memberSince.present ? data.memberSince.value : this.memberSince,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('UserProfileRow(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('email: $email, ')
-          ..write('passwordHash: $passwordHash, ')
-          ..write('passwordSalt: $passwordSalt, ')
-          ..write('regionCode: $regionCode, ')
-          ..write('currencyCode: $currencyCode, ')
-          ..write('avatarUrl: $avatarUrl, ')
-          ..write('googleId: $googleId, ')
-          ..write('memberSince: $memberSince')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(id, name, email, passwordHash, passwordSalt,
-      regionCode, currencyCode, avatarUrl, googleId, memberSince);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is UserProfileRow &&
-          other.id == this.id &&
-          other.name == this.name &&
-          other.email == this.email &&
-          other.passwordHash == this.passwordHash &&
-          other.passwordSalt == this.passwordSalt &&
-          other.regionCode == this.regionCode &&
-          other.currencyCode == this.currencyCode &&
-          other.avatarUrl == this.avatarUrl &&
-          other.googleId == this.googleId &&
-          other.memberSince == this.memberSince);
-}
-
-class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
-  final Value<String> id;
-  final Value<String> name;
-  final Value<String> email;
-  final Value<String> passwordHash;
-  final Value<String> passwordSalt;
-  final Value<String> regionCode;
-  final Value<String> currencyCode;
-  final Value<String?> avatarUrl;
-  final Value<String?> googleId;
-  final Value<DateTime?> memberSince;
-  final Value<int> rowid;
-  const UserProfilesCompanion({
-    this.id = const Value.absent(),
-    this.name = const Value.absent(),
-    this.email = const Value.absent(),
-    this.passwordHash = const Value.absent(),
-    this.passwordSalt = const Value.absent(),
-    this.regionCode = const Value.absent(),
-    this.currencyCode = const Value.absent(),
-    this.avatarUrl = const Value.absent(),
-    this.googleId = const Value.absent(),
-    this.memberSince = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  UserProfilesCompanion.insert({
-    required String id,
-    required String name,
-    required String email,
-    this.passwordHash = const Value.absent(),
-    this.passwordSalt = const Value.absent(),
-    this.regionCode = const Value.absent(),
-    this.currencyCode = const Value.absent(),
-    this.avatarUrl = const Value.absent(),
-    this.googleId = const Value.absent(),
-    this.memberSince = const Value.absent(),
-    this.rowid = const Value.absent(),
-  })  : id = Value(id),
-        name = Value(name),
-        email = Value(email);
-  static Insertable<UserProfileRow> custom({
-    Expression<String>? id,
-    Expression<String>? name,
-    Expression<String>? email,
-    Expression<String>? passwordHash,
-    Expression<String>? passwordSalt,
-    Expression<String>? regionCode,
-    Expression<String>? currencyCode,
-    Expression<String>? avatarUrl,
-    Expression<String>? googleId,
-    Expression<DateTime>? memberSince,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (name != null) 'name': name,
-      if (email != null) 'email': email,
-      if (passwordHash != null) 'password_hash': passwordHash,
-      if (passwordSalt != null) 'password_salt': passwordSalt,
-      if (regionCode != null) 'region_code': regionCode,
-      if (currencyCode != null) 'currency_code': currencyCode,
-      if (avatarUrl != null) 'avatar_url': avatarUrl,
-      if (googleId != null) 'google_id': googleId,
-      if (memberSince != null) 'member_since': memberSince,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  UserProfilesCompanion copyWith(
-      {Value<String>? id,
-      Value<String>? name,
-      Value<String>? email,
-      Value<String>? passwordHash,
-      Value<String>? passwordSalt,
-      Value<String>? regionCode,
-      Value<String>? currencyCode,
-      Value<String?>? avatarUrl,
-      Value<String?>? googleId,
-      Value<DateTime?>? memberSince,
-      Value<int>? rowid}) {
-    return UserProfilesCompanion(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      email: email ?? this.email,
-      passwordHash: passwordHash ?? this.passwordHash,
-      passwordSalt: passwordSalt ?? this.passwordSalt,
-      regionCode: regionCode ?? this.regionCode,
-      currencyCode: currencyCode ?? this.currencyCode,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
-      googleId: googleId ?? this.googleId,
-      memberSince: memberSince ?? this.memberSince,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (email.present) {
-      map['email'] = Variable<String>(email.value);
-    }
-    if (passwordHash.present) {
-      map['password_hash'] = Variable<String>(passwordHash.value);
-    }
-    if (passwordSalt.present) {
-      map['password_salt'] = Variable<String>(passwordSalt.value);
-    }
-    if (regionCode.present) {
-      map['region_code'] = Variable<String>(regionCode.value);
-    }
-    if (currencyCode.present) {
-      map['currency_code'] = Variable<String>(currencyCode.value);
-    }
-    if (avatarUrl.present) {
-      map['avatar_url'] = Variable<String>(avatarUrl.value);
-    }
-    if (googleId.present) {
-      map['google_id'] = Variable<String>(googleId.value);
-    }
-    if (memberSince.present) {
-      map['member_since'] = Variable<DateTime>(memberSince.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('UserProfilesCompanion(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('email: $email, ')
-          ..write('passwordHash: $passwordHash, ')
-          ..write('passwordSalt: $passwordSalt, ')
-          ..write('regionCode: $regionCode, ')
-          ..write('currencyCode: $currencyCode, ')
-          ..write('avatarUrl: $avatarUrl, ')
-          ..write('googleId: $googleId, ')
-          ..write('memberSince: $memberSince, ')
-          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -4165,22 +4655,29 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
+  late final $UserProfilesTable userProfiles = $UserProfilesTable(this);
+  late final $AccountsTable accounts = $AccountsTable(this);
   late final $ExpensesTable expenses = $ExpensesTable(this);
   late final $BudgetsTable budgets = $BudgetsTable(this);
   late final $RecurringExpensesTable recurringExpenses =
       $RecurringExpensesTable(this);
   late final $AppPreferencesTable appPreferences = $AppPreferencesTable(this);
-  late final $UserProfilesTable userProfiles = $UserProfilesTable(this);
   late final $UserSettingsTable userSettings = $UserSettingsTable(this);
   late final $SavingGoalsTable savingGoals = $SavingGoalsTable(this);
   late final $SavingContributionsTable savingContributions =
       $SavingContributionsTable(this);
   late final Index idxCategoriesUser = Index('idx_categories_user',
       'CREATE INDEX idx_categories_user ON categories (user_id)');
+  late final Index idxAccountsUser = Index('idx_accounts_user',
+      'CREATE INDEX idx_accounts_user ON accounts (user_id)');
   late final Index idxExpensesUserDate = Index('idx_expenses_user_date',
       'CREATE INDEX idx_expenses_user_date ON expenses (user_id, date)');
   late final Index idxExpensesUserCategory = Index('idx_expenses_user_category',
       'CREATE INDEX idx_expenses_user_category ON expenses (user_id, category_id)');
+  late final Index idxExpensesUserType = Index('idx_expenses_user_type',
+      'CREATE INDEX idx_expenses_user_type ON expenses (user_id, type)');
+  late final Index idxExpensesUserAccount = Index('idx_expenses_user_account',
+      'CREATE INDEX idx_expenses_user_account ON expenses (user_id, account_id)');
   late final Index idxBudgetsUserPeriod = Index('idx_budgets_user_period',
       'CREATE INDEX idx_budgets_user_period ON budgets (user_id, year, month)');
   late final Index idxRecurringUserDue = Index('idx_recurring_user_due',
@@ -4197,17 +4694,21 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         categories,
+        userProfiles,
+        accounts,
         expenses,
         budgets,
         recurringExpenses,
         appPreferences,
-        userProfiles,
         userSettings,
         savingGoals,
         savingContributions,
         idxCategoriesUser,
+        idxAccountsUser,
         idxExpensesUserDate,
         idxExpensesUserCategory,
+        idxExpensesUserType,
+        idxExpensesUserAccount,
         idxBudgetsUserPeriod,
         idxRecurringUserDue,
         idxSavingGoalsUserStatus,
@@ -4650,6 +5151,850 @@ typedef $$CategoriesTableProcessedTableManager = ProcessedTableManager<
     CategoryRow,
     PrefetchHooks Function(
         {bool expensesRefs, bool budgetsRefs, bool recurringExpensesRefs})>;
+typedef $$UserProfilesTableCreateCompanionBuilder = UserProfilesCompanion
+    Function({
+  required String id,
+  required String name,
+  required String email,
+  Value<String> passwordHash,
+  Value<String> passwordSalt,
+  Value<String> regionCode,
+  Value<String> currencyCode,
+  Value<String?> avatarUrl,
+  Value<String?> googleId,
+  Value<DateTime?> memberSince,
+  Value<int> rowid,
+});
+typedef $$UserProfilesTableUpdateCompanionBuilder = UserProfilesCompanion
+    Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> email,
+  Value<String> passwordHash,
+  Value<String> passwordSalt,
+  Value<String> regionCode,
+  Value<String> currencyCode,
+  Value<String?> avatarUrl,
+  Value<String?> googleId,
+  Value<DateTime?> memberSince,
+  Value<int> rowid,
+});
+
+final class $$UserProfilesTableReferences
+    extends BaseReferences<_$AppDatabase, $UserProfilesTable, UserProfileRow> {
+  $$UserProfilesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$AccountsTable, List<AccountRow>>
+      _accountsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.accounts,
+              aliasName:
+                  $_aliasNameGenerator(db.userProfiles.id, db.accounts.userId));
+
+  $$AccountsTableProcessedTableManager get accountsRefs {
+    final manager = $$AccountsTableTableManager($_db, $_db.accounts)
+        .filter((f) => f.userId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_accountsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$UserSettingsTable, List<UserSettingsRow>>
+      _userSettingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+          db.userSettings,
+          aliasName:
+              $_aliasNameGenerator(db.userProfiles.id, db.userSettings.userId));
+
+  $$UserSettingsTableProcessedTableManager get userSettingsRefs {
+    final manager = $$UserSettingsTableTableManager($_db, $_db.userSettings)
+        .filter((f) => f.userId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_userSettingsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$UserProfilesTableFilterComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get email => $composableBuilder(
+      column: $table.email, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get passwordHash => $composableBuilder(
+      column: $table.passwordHash, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get passwordSalt => $composableBuilder(
+      column: $table.passwordSalt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get regionCode => $composableBuilder(
+      column: $table.regionCode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+      column: $table.currencyCode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get avatarUrl => $composableBuilder(
+      column: $table.avatarUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get googleId => $composableBuilder(
+      column: $table.googleId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get memberSince => $composableBuilder(
+      column: $table.memberSince, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> accountsRefs(
+      Expression<bool> Function($$AccountsTableFilterComposer f) f) {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableFilterComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> userSettingsRefs(
+      Expression<bool> Function($$UserSettingsTableFilterComposer f) f) {
+    final $$UserSettingsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.userSettings,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserSettingsTableFilterComposer(
+              $db: $db,
+              $table: $db.userSettings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$UserProfilesTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get email => $composableBuilder(
+      column: $table.email, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get passwordHash => $composableBuilder(
+      column: $table.passwordHash,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get passwordSalt => $composableBuilder(
+      column: $table.passwordSalt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get regionCode => $composableBuilder(
+      column: $table.regionCode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+      column: $table.currencyCode,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get avatarUrl => $composableBuilder(
+      column: $table.avatarUrl, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get googleId => $composableBuilder(
+      column: $table.googleId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get memberSince => $composableBuilder(
+      column: $table.memberSince, builder: (column) => ColumnOrderings(column));
+}
+
+class $$UserProfilesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get passwordHash => $composableBuilder(
+      column: $table.passwordHash, builder: (column) => column);
+
+  GeneratedColumn<String> get passwordSalt => $composableBuilder(
+      column: $table.passwordSalt, builder: (column) => column);
+
+  GeneratedColumn<String> get regionCode => $composableBuilder(
+      column: $table.regionCode, builder: (column) => column);
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+      column: $table.currencyCode, builder: (column) => column);
+
+  GeneratedColumn<String> get avatarUrl =>
+      $composableBuilder(column: $table.avatarUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get googleId =>
+      $composableBuilder(column: $table.googleId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get memberSince => $composableBuilder(
+      column: $table.memberSince, builder: (column) => column);
+
+  Expression<T> accountsRefs<T extends Object>(
+      Expression<T> Function($$AccountsTableAnnotationComposer a) f) {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> userSettingsRefs<T extends Object>(
+      Expression<T> Function($$UserSettingsTableAnnotationComposer a) f) {
+    final $$UserSettingsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.userSettings,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserSettingsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.userSettings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$UserProfilesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $UserProfilesTable,
+    UserProfileRow,
+    $$UserProfilesTableFilterComposer,
+    $$UserProfilesTableOrderingComposer,
+    $$UserProfilesTableAnnotationComposer,
+    $$UserProfilesTableCreateCompanionBuilder,
+    $$UserProfilesTableUpdateCompanionBuilder,
+    (UserProfileRow, $$UserProfilesTableReferences),
+    UserProfileRow,
+    PrefetchHooks Function({bool accountsRefs, bool userSettingsRefs})> {
+  $$UserProfilesTableTableManager(_$AppDatabase db, $UserProfilesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserProfilesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserProfilesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserProfilesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> email = const Value.absent(),
+            Value<String> passwordHash = const Value.absent(),
+            Value<String> passwordSalt = const Value.absent(),
+            Value<String> regionCode = const Value.absent(),
+            Value<String> currencyCode = const Value.absent(),
+            Value<String?> avatarUrl = const Value.absent(),
+            Value<String?> googleId = const Value.absent(),
+            Value<DateTime?> memberSince = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              UserProfilesCompanion(
+            id: id,
+            name: name,
+            email: email,
+            passwordHash: passwordHash,
+            passwordSalt: passwordSalt,
+            regionCode: regionCode,
+            currencyCode: currencyCode,
+            avatarUrl: avatarUrl,
+            googleId: googleId,
+            memberSince: memberSince,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String name,
+            required String email,
+            Value<String> passwordHash = const Value.absent(),
+            Value<String> passwordSalt = const Value.absent(),
+            Value<String> regionCode = const Value.absent(),
+            Value<String> currencyCode = const Value.absent(),
+            Value<String?> avatarUrl = const Value.absent(),
+            Value<String?> googleId = const Value.absent(),
+            Value<DateTime?> memberSince = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              UserProfilesCompanion.insert(
+            id: id,
+            name: name,
+            email: email,
+            passwordHash: passwordHash,
+            passwordSalt: passwordSalt,
+            regionCode: regionCode,
+            currencyCode: currencyCode,
+            avatarUrl: avatarUrl,
+            googleId: googleId,
+            memberSince: memberSince,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$UserProfilesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {accountsRefs = false, userSettingsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (accountsRefs) db.accounts,
+                if (userSettingsRefs) db.userSettings
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (accountsRefs)
+                    await $_getPrefetchedData<UserProfileRow, $UserProfilesTable,
+                            AccountRow>(
+                        currentTable: table,
+                        referencedTable: $$UserProfilesTableReferences
+                            ._accountsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$UserProfilesTableReferences(db, table, p0)
+                                .accountsRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.userId == item.id),
+                        typedResults: items),
+                  if (userSettingsRefs)
+                    await $_getPrefetchedData<UserProfileRow,
+                            $UserProfilesTable, UserSettingsRow>(
+                        currentTable: table,
+                        referencedTable: $$UserProfilesTableReferences
+                            ._userSettingsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$UserProfilesTableReferences(db, table, p0)
+                                .userSettingsRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.userId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$UserProfilesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $UserProfilesTable,
+    UserProfileRow,
+    $$UserProfilesTableFilterComposer,
+    $$UserProfilesTableOrderingComposer,
+    $$UserProfilesTableAnnotationComposer,
+    $$UserProfilesTableCreateCompanionBuilder,
+    $$UserProfilesTableUpdateCompanionBuilder,
+    (UserProfileRow, $$UserProfilesTableReferences),
+    UserProfileRow,
+    PrefetchHooks Function({bool accountsRefs, bool userSettingsRefs})>;
+typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
+  required String id,
+  required String userId,
+  required String name,
+  required String type,
+  Value<double> openingBalance,
+  Value<bool> isDefault,
+  Value<int> rowid,
+});
+typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
+  Value<String> id,
+  Value<String> userId,
+  Value<String> name,
+  Value<String> type,
+  Value<double> openingBalance,
+  Value<bool> isDefault,
+  Value<int> rowid,
+});
+
+final class $$AccountsTableReferences
+    extends BaseReferences<_$AppDatabase, $AccountsTable, AccountRow> {
+  $$AccountsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $UserProfilesTable _userIdTable(_$AppDatabase db) =>
+      db.userProfiles.createAlias(
+          $_aliasNameGenerator(db.accounts.userId, db.userProfiles.id));
+
+  $$UserProfilesTableProcessedTableManager get userId {
+    final $_column = $_itemColumn<String>('user_id')!;
+
+    final manager = $$UserProfilesTableTableManager($_db, $_db.userProfiles)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$ExpensesTable, List<ExpenseRow>>
+      _expensesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.expenses,
+              aliasName:
+                  $_aliasNameGenerator(db.accounts.id, db.expenses.accountId));
+
+  $$ExpensesTableProcessedTableManager get expensesRefs {
+    final manager = $$ExpensesTableTableManager($_db, $_db.expenses)
+        .filter((f) => f.accountId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_expensesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ExpensesTable, List<ExpenseRow>>
+      _transferDestinationTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.expenses,
+              aliasName: $_aliasNameGenerator(
+                  db.accounts.id, db.expenses.toAccountId));
+
+  $$ExpensesTableProcessedTableManager get transferDestination {
+    final manager = $$ExpensesTableTableManager($_db, $_db.expenses)
+        .filter((f) => f.toAccountId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_transferDestinationTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$AccountsTableFilterComposer
+    extends Composer<_$AppDatabase, $AccountsTable> {
+  $$AccountsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get openingBalance => $composableBuilder(
+      column: $table.openingBalance,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+      column: $table.isDefault, builder: (column) => ColumnFilters(column));
+
+  $$UserProfilesTableFilterComposer get userId {
+    final $$UserProfilesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.userProfiles,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserProfilesTableFilterComposer(
+              $db: $db,
+              $table: $db.userProfiles,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> expensesRefs(
+      Expression<bool> Function($$ExpensesTableFilterComposer f) f) {
+    final $$ExpensesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.expenses,
+        getReferencedColumn: (t) => t.accountId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ExpensesTableFilterComposer(
+              $db: $db,
+              $table: $db.expenses,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> transferDestination(
+      Expression<bool> Function($$ExpensesTableFilterComposer f) f) {
+    final $$ExpensesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.expenses,
+        getReferencedColumn: (t) => t.toAccountId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ExpensesTableFilterComposer(
+              $db: $db,
+              $table: $db.expenses,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$AccountsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AccountsTable> {
+  $$AccountsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get openingBalance => $composableBuilder(
+      column: $table.openingBalance,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+      column: $table.isDefault, builder: (column) => ColumnOrderings(column));
+
+  $$UserProfilesTableOrderingComposer get userId {
+    final $$UserProfilesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.userProfiles,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserProfilesTableOrderingComposer(
+              $db: $db,
+              $table: $db.userProfiles,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AccountsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AccountsTable> {
+  $$AccountsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<double> get openingBalance => $composableBuilder(
+      column: $table.openingBalance, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  $$UserProfilesTableAnnotationComposer get userId {
+    final $$UserProfilesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.userProfiles,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserProfilesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.userProfiles,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> expensesRefs<T extends Object>(
+      Expression<T> Function($$ExpensesTableAnnotationComposer a) f) {
+    final $$ExpensesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.expenses,
+        getReferencedColumn: (t) => t.accountId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ExpensesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.expenses,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> transferDestination<T extends Object>(
+      Expression<T> Function($$ExpensesTableAnnotationComposer a) f) {
+    final $$ExpensesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.expenses,
+        getReferencedColumn: (t) => t.toAccountId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ExpensesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.expenses,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$AccountsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AccountsTable,
+    AccountRow,
+    $$AccountsTableFilterComposer,
+    $$AccountsTableOrderingComposer,
+    $$AccountsTableAnnotationComposer,
+    $$AccountsTableCreateCompanionBuilder,
+    $$AccountsTableUpdateCompanionBuilder,
+    (AccountRow, $$AccountsTableReferences),
+    AccountRow,
+    PrefetchHooks Function(
+        {bool userId, bool expensesRefs, bool transferDestination})> {
+  $$AccountsTableTableManager(_$AppDatabase db, $AccountsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AccountsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AccountsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AccountsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<double> openingBalance = const Value.absent(),
+            Value<bool> isDefault = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AccountsCompanion(
+            id: id,
+            userId: userId,
+            name: name,
+            type: type,
+            openingBalance: openingBalance,
+            isDefault: isDefault,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String userId,
+            required String name,
+            required String type,
+            Value<double> openingBalance = const Value.absent(),
+            Value<bool> isDefault = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AccountsCompanion.insert(
+            id: id,
+            userId: userId,
+            name: name,
+            type: type,
+            openingBalance: openingBalance,
+            isDefault: isDefault,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) =>
+                  (e.readTable(table), $$AccountsTableReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: (
+              {userId = false,
+              expensesRefs = false,
+              transferDestination = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (expensesRefs) db.expenses,
+                if (transferDestination) db.expenses
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (userId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.userId,
+                    referencedTable: $$AccountsTableReferences._userIdTable(db),
+                    referencedColumn:
+                        $$AccountsTableReferences._userIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (expensesRefs)
+                    await $_getPrefetchedData<AccountRow, $AccountsTable,
+                            ExpenseRow>(
+                        currentTable: table,
+                        referencedTable:
+                            $$AccountsTableReferences._expensesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AccountsTableReferences(db, table, p0)
+                                .expensesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.accountId == item.id),
+                        typedResults: items),
+                  if (transferDestination)
+                    await $_getPrefetchedData<AccountRow, $AccountsTable,
+                            ExpenseRow>(
+                        currentTable: table,
+                        referencedTable: $$AccountsTableReferences
+                            ._transferDestinationTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AccountsTableReferences(db, table, p0)
+                                .transferDestination,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.toAccountId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$AccountsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AccountsTable,
+    AccountRow,
+    $$AccountsTableFilterComposer,
+    $$AccountsTableOrderingComposer,
+    $$AccountsTableAnnotationComposer,
+    $$AccountsTableCreateCompanionBuilder,
+    $$AccountsTableUpdateCompanionBuilder,
+    (AccountRow, $$AccountsTableReferences),
+    AccountRow,
+    PrefetchHooks Function(
+        {bool userId, bool expensesRefs, bool transferDestination})>;
 typedef $$ExpensesTableCreateCompanionBuilder = ExpensesCompanion Function({
   required String id,
   Value<String> userId,
@@ -4659,6 +6004,9 @@ typedef $$ExpensesTableCreateCompanionBuilder = ExpensesCompanion Function({
   required DateTime date,
   required String paymentMethod,
   Value<bool> isRecurring,
+  Value<String> type,
+  Value<String> accountId,
+  Value<String?> toAccountId,
   Value<int> rowid,
 });
 typedef $$ExpensesTableUpdateCompanionBuilder = ExpensesCompanion Function({
@@ -4670,6 +6018,9 @@ typedef $$ExpensesTableUpdateCompanionBuilder = ExpensesCompanion Function({
   Value<DateTime> date,
   Value<String> paymentMethod,
   Value<bool> isRecurring,
+  Value<String> type,
+  Value<String> accountId,
+  Value<String?> toAccountId,
   Value<int> rowid,
 });
 
@@ -4687,6 +6038,35 @@ final class $$ExpensesTableReferences
     final manager = $$CategoriesTableTableManager($_db, $_db.categories)
         .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $AccountsTable _accountIdTable(_$AppDatabase db) => db.accounts
+      .createAlias($_aliasNameGenerator(db.expenses.accountId, db.accounts.id));
+
+  $$AccountsTableProcessedTableManager get accountId {
+    final $_column = $_itemColumn<String>('account_id')!;
+
+    final manager = $$AccountsTableTableManager($_db, $_db.accounts)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_accountIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $AccountsTable _toAccountIdTable(_$AppDatabase db) =>
+      db.accounts.createAlias(
+          $_aliasNameGenerator(db.expenses.toAccountId, db.accounts.id));
+
+  $$AccountsTableProcessedTableManager? get toAccountId {
+    final $_column = $_itemColumn<String>('to_account_id');
+    if ($_column == null) return null;
+    final manager = $$AccountsTableTableManager($_db, $_db.accounts)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_toAccountIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -4723,6 +6103,9 @@ class $$ExpensesTableFilterComposer
   ColumnFilters<bool> get isRecurring => $composableBuilder(
       column: $table.isRecurring, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
   $$CategoriesTableFilterComposer get categoryId {
     final $$CategoriesTableFilterComposer composer = $composerBuilder(
         composer: this,
@@ -4735,6 +6118,46 @@ class $$ExpensesTableFilterComposer
             $$CategoriesTableFilterComposer(
               $db: $db,
               $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableFilterComposer get accountId {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableFilterComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableFilterComposer get toAccountId {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.toAccountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableFilterComposer(
+              $db: $db,
+              $table: $db.accounts,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -4775,6 +6198,9 @@ class $$ExpensesTableOrderingComposer
   ColumnOrderings<bool> get isRecurring => $composableBuilder(
       column: $table.isRecurring, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
   $$CategoriesTableOrderingComposer get categoryId {
     final $$CategoriesTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -4787,6 +6213,46 @@ class $$ExpensesTableOrderingComposer
             $$CategoriesTableOrderingComposer(
               $db: $db,
               $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableOrderingComposer get accountId {
+    final $$AccountsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableOrderingComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableOrderingComposer get toAccountId {
+    final $$AccountsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.toAccountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableOrderingComposer(
+              $db: $db,
+              $table: $db.accounts,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -4826,6 +6292,9 @@ class $$ExpensesTableAnnotationComposer
   GeneratedColumn<bool> get isRecurring => $composableBuilder(
       column: $table.isRecurring, builder: (column) => column);
 
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
   $$CategoriesTableAnnotationComposer get categoryId {
     final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
         composer: this,
@@ -4838,6 +6307,46 @@ class $$ExpensesTableAnnotationComposer
             $$CategoriesTableAnnotationComposer(
               $db: $db,
               $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableAnnotationComposer get accountId {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableAnnotationComposer get toAccountId {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.toAccountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accounts,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -4858,7 +6367,8 @@ class $$ExpensesTableTableManager extends RootTableManager<
     $$ExpensesTableUpdateCompanionBuilder,
     (ExpenseRow, $$ExpensesTableReferences),
     ExpenseRow,
-    PrefetchHooks Function({bool categoryId})> {
+    PrefetchHooks Function(
+        {bool categoryId, bool accountId, bool toAccountId})> {
   $$ExpensesTableTableManager(_$AppDatabase db, $ExpensesTable table)
       : super(TableManagerState(
           db: db,
@@ -4878,6 +6388,9 @@ class $$ExpensesTableTableManager extends RootTableManager<
             Value<DateTime> date = const Value.absent(),
             Value<String> paymentMethod = const Value.absent(),
             Value<bool> isRecurring = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String> accountId = const Value.absent(),
+            Value<String?> toAccountId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ExpensesCompanion(
@@ -4889,6 +6402,9 @@ class $$ExpensesTableTableManager extends RootTableManager<
             date: date,
             paymentMethod: paymentMethod,
             isRecurring: isRecurring,
+            type: type,
+            accountId: accountId,
+            toAccountId: toAccountId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -4900,6 +6416,9 @@ class $$ExpensesTableTableManager extends RootTableManager<
             required DateTime date,
             required String paymentMethod,
             Value<bool> isRecurring = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String> accountId = const Value.absent(),
+            Value<String?> toAccountId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ExpensesCompanion.insert(
@@ -4911,13 +6430,17 @@ class $$ExpensesTableTableManager extends RootTableManager<
             date: date,
             paymentMethod: paymentMethod,
             isRecurring: isRecurring,
+            type: type,
+            accountId: accountId,
+            toAccountId: toAccountId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>
                   (e.readTable(table), $$ExpensesTableReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({categoryId = false}) {
+          prefetchHooksCallback: (
+              {categoryId = false, accountId = false, toAccountId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -4944,6 +6467,26 @@ class $$ExpensesTableTableManager extends RootTableManager<
                         $$ExpensesTableReferences._categoryIdTable(db).id,
                   ) as T;
                 }
+                if (accountId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.accountId,
+                    referencedTable:
+                        $$ExpensesTableReferences._accountIdTable(db),
+                    referencedColumn:
+                        $$ExpensesTableReferences._accountIdTable(db).id,
+                  ) as T;
+                }
+                if (toAccountId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.toAccountId,
+                    referencedTable:
+                        $$ExpensesTableReferences._toAccountIdTable(db),
+                    referencedColumn:
+                        $$ExpensesTableReferences._toAccountIdTable(db).id,
+                  ) as T;
+                }
 
                 return state;
               },
@@ -4966,7 +6509,8 @@ typedef $$ExpensesTableProcessedTableManager = ProcessedTableManager<
     $$ExpensesTableUpdateCompanionBuilder,
     (ExpenseRow, $$ExpensesTableReferences),
     ExpenseRow,
-    PrefetchHooks Function({bool categoryId})>;
+    PrefetchHooks Function(
+        {bool categoryId, bool accountId, bool toAccountId})>;
 typedef $$BudgetsTableCreateCompanionBuilder = BudgetsCompanion Function({
   required String id,
   Value<String> userId,
@@ -5798,339 +7342,6 @@ typedef $$AppPreferencesTableProcessedTableManager = ProcessedTableManager<
     ),
     PreferencesRow,
     PrefetchHooks Function()>;
-typedef $$UserProfilesTableCreateCompanionBuilder = UserProfilesCompanion
-    Function({
-  required String id,
-  required String name,
-  required String email,
-  Value<String> passwordHash,
-  Value<String> passwordSalt,
-  Value<String> regionCode,
-  Value<String> currencyCode,
-  Value<String?> avatarUrl,
-  Value<String?> googleId,
-  Value<DateTime?> memberSince,
-  Value<int> rowid,
-});
-typedef $$UserProfilesTableUpdateCompanionBuilder = UserProfilesCompanion
-    Function({
-  Value<String> id,
-  Value<String> name,
-  Value<String> email,
-  Value<String> passwordHash,
-  Value<String> passwordSalt,
-  Value<String> regionCode,
-  Value<String> currencyCode,
-  Value<String?> avatarUrl,
-  Value<String?> googleId,
-  Value<DateTime?> memberSince,
-  Value<int> rowid,
-});
-
-final class $$UserProfilesTableReferences
-    extends BaseReferences<_$AppDatabase, $UserProfilesTable, UserProfileRow> {
-  $$UserProfilesTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$UserSettingsTable, List<UserSettingsRow>>
-      _userSettingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-          db.userSettings,
-          aliasName:
-              $_aliasNameGenerator(db.userProfiles.id, db.userSettings.userId));
-
-  $$UserSettingsTableProcessedTableManager get userSettingsRefs {
-    final manager = $$UserSettingsTableTableManager($_db, $_db.userSettings)
-        .filter((f) => f.userId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_userSettingsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-}
-
-class $$UserProfilesTableFilterComposer
-    extends Composer<_$AppDatabase, $UserProfilesTable> {
-  $$UserProfilesTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get email => $composableBuilder(
-      column: $table.email, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get passwordHash => $composableBuilder(
-      column: $table.passwordHash, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get passwordSalt => $composableBuilder(
-      column: $table.passwordSalt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get regionCode => $composableBuilder(
-      column: $table.regionCode, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get currencyCode => $composableBuilder(
-      column: $table.currencyCode, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get avatarUrl => $composableBuilder(
-      column: $table.avatarUrl, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get googleId => $composableBuilder(
-      column: $table.googleId, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get memberSince => $composableBuilder(
-      column: $table.memberSince, builder: (column) => ColumnFilters(column));
-
-  Expression<bool> userSettingsRefs(
-      Expression<bool> Function($$UserSettingsTableFilterComposer f) f) {
-    final $$UserSettingsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.userSettings,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$UserSettingsTableFilterComposer(
-              $db: $db,
-              $table: $db.userSettings,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-}
-
-class $$UserProfilesTableOrderingComposer
-    extends Composer<_$AppDatabase, $UserProfilesTable> {
-  $$UserProfilesTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get email => $composableBuilder(
-      column: $table.email, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get passwordHash => $composableBuilder(
-      column: $table.passwordHash,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get passwordSalt => $composableBuilder(
-      column: $table.passwordSalt,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get regionCode => $composableBuilder(
-      column: $table.regionCode, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get currencyCode => $composableBuilder(
-      column: $table.currencyCode,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get avatarUrl => $composableBuilder(
-      column: $table.avatarUrl, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get googleId => $composableBuilder(
-      column: $table.googleId, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get memberSince => $composableBuilder(
-      column: $table.memberSince, builder: (column) => ColumnOrderings(column));
-}
-
-class $$UserProfilesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $UserProfilesTable> {
-  $$UserProfilesTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get email =>
-      $composableBuilder(column: $table.email, builder: (column) => column);
-
-  GeneratedColumn<String> get passwordHash => $composableBuilder(
-      column: $table.passwordHash, builder: (column) => column);
-
-  GeneratedColumn<String> get passwordSalt => $composableBuilder(
-      column: $table.passwordSalt, builder: (column) => column);
-
-  GeneratedColumn<String> get regionCode => $composableBuilder(
-      column: $table.regionCode, builder: (column) => column);
-
-  GeneratedColumn<String> get currencyCode => $composableBuilder(
-      column: $table.currencyCode, builder: (column) => column);
-
-  GeneratedColumn<String> get avatarUrl =>
-      $composableBuilder(column: $table.avatarUrl, builder: (column) => column);
-
-  GeneratedColumn<String> get googleId =>
-      $composableBuilder(column: $table.googleId, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get memberSince => $composableBuilder(
-      column: $table.memberSince, builder: (column) => column);
-
-  Expression<T> userSettingsRefs<T extends Object>(
-      Expression<T> Function($$UserSettingsTableAnnotationComposer a) f) {
-    final $$UserSettingsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.userSettings,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$UserSettingsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.userSettings,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-}
-
-class $$UserProfilesTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $UserProfilesTable,
-    UserProfileRow,
-    $$UserProfilesTableFilterComposer,
-    $$UserProfilesTableOrderingComposer,
-    $$UserProfilesTableAnnotationComposer,
-    $$UserProfilesTableCreateCompanionBuilder,
-    $$UserProfilesTableUpdateCompanionBuilder,
-    (UserProfileRow, $$UserProfilesTableReferences),
-    UserProfileRow,
-    PrefetchHooks Function({bool userSettingsRefs})> {
-  $$UserProfilesTableTableManager(_$AppDatabase db, $UserProfilesTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$UserProfilesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$UserProfilesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$UserProfilesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> id = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<String> email = const Value.absent(),
-            Value<String> passwordHash = const Value.absent(),
-            Value<String> passwordSalt = const Value.absent(),
-            Value<String> regionCode = const Value.absent(),
-            Value<String> currencyCode = const Value.absent(),
-            Value<String?> avatarUrl = const Value.absent(),
-            Value<String?> googleId = const Value.absent(),
-            Value<DateTime?> memberSince = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              UserProfilesCompanion(
-            id: id,
-            name: name,
-            email: email,
-            passwordHash: passwordHash,
-            passwordSalt: passwordSalt,
-            regionCode: regionCode,
-            currencyCode: currencyCode,
-            avatarUrl: avatarUrl,
-            googleId: googleId,
-            memberSince: memberSince,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String id,
-            required String name,
-            required String email,
-            Value<String> passwordHash = const Value.absent(),
-            Value<String> passwordSalt = const Value.absent(),
-            Value<String> regionCode = const Value.absent(),
-            Value<String> currencyCode = const Value.absent(),
-            Value<String?> avatarUrl = const Value.absent(),
-            Value<String?> googleId = const Value.absent(),
-            Value<DateTime?> memberSince = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              UserProfilesCompanion.insert(
-            id: id,
-            name: name,
-            email: email,
-            passwordHash: passwordHash,
-            passwordSalt: passwordSalt,
-            regionCode: regionCode,
-            currencyCode: currencyCode,
-            avatarUrl: avatarUrl,
-            googleId: googleId,
-            memberSince: memberSince,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable(table),
-                    $$UserProfilesTableReferences(db, table, e)
-                  ))
-              .toList(),
-          prefetchHooksCallback: ({userSettingsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (userSettingsRefs) db.userSettings],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (userSettingsRefs)
-                    await $_getPrefetchedData<UserProfileRow,
-                            $UserProfilesTable, UserSettingsRow>(
-                        currentTable: table,
-                        referencedTable: $$UserProfilesTableReferences
-                            ._userSettingsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$UserProfilesTableReferences(db, table, p0)
-                                .userSettingsRefs,
-                        referencedItemsForCurrentItem: (item,
-                                referencedItems) =>
-                            referencedItems.where((e) => e.userId == item.id),
-                        typedResults: items)
-                ];
-              },
-            );
-          },
-        ));
-}
-
-typedef $$UserProfilesTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $UserProfilesTable,
-    UserProfileRow,
-    $$UserProfilesTableFilterComposer,
-    $$UserProfilesTableOrderingComposer,
-    $$UserProfilesTableAnnotationComposer,
-    $$UserProfilesTableCreateCompanionBuilder,
-    $$UserProfilesTableUpdateCompanionBuilder,
-    (UserProfileRow, $$UserProfilesTableReferences),
-    UserProfileRow,
-    PrefetchHooks Function({bool userSettingsRefs})>;
 typedef $$UserSettingsTableCreateCompanionBuilder = UserSettingsCompanion
     Function({
   required String userId,
@@ -7183,6 +8394,10 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$CategoriesTableTableManager get categories =>
       $$CategoriesTableTableManager(_db, _db.categories);
+  $$UserProfilesTableTableManager get userProfiles =>
+      $$UserProfilesTableTableManager(_db, _db.userProfiles);
+  $$AccountsTableTableManager get accounts =>
+      $$AccountsTableTableManager(_db, _db.accounts);
   $$ExpensesTableTableManager get expenses =>
       $$ExpensesTableTableManager(_db, _db.expenses);
   $$BudgetsTableTableManager get budgets =>
@@ -7191,8 +8406,6 @@ class $AppDatabaseManager {
       $$RecurringExpensesTableTableManager(_db, _db.recurringExpenses);
   $$AppPreferencesTableTableManager get appPreferences =>
       $$AppPreferencesTableTableManager(_db, _db.appPreferences);
-  $$UserProfilesTableTableManager get userProfiles =>
-      $$UserProfilesTableTableManager(_db, _db.userProfiles);
   $$UserSettingsTableTableManager get userSettings =>
       $$UserSettingsTableTableManager(_db, _db.userSettings);
   $$SavingGoalsTableTableManager get savingGoals =>

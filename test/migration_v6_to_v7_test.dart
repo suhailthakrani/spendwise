@@ -66,8 +66,18 @@ void main() {
     expect(expenses.single.amount, 12.5);
     expect(expenses.single.userId, 'user_a');
 
-    final categories = await db.select(db.categories).get();
-    expect(categories, hasLength(1));
+    final categories =
+        await (db.select(db.categories)..where((t) => t.userId.equals('user_a')))
+            .get();
+    expect(categories.map((c) => c.name), contains('Food'));
+    // Schema 8 also seeds an Income category for existing users.
+    expect(categories.map((c) => c.name), contains('Income'));
+
+    final accounts =
+        await (db.select(db.accounts)..where((t) => t.userId.equals('user_a')))
+            .get();
+    expect(accounts.single.name, 'Cash');
+    expect(expenses.single.accountId, accounts.single.id);
   });
 
   test('the merged preferences view is unchanged for the active user', () async {

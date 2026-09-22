@@ -14,6 +14,7 @@ import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../data/models/category.dart';
 import '../../data/models/expense.dart';
+import '../../data/models/ledger_entry_type.dart';
 import '../../data/models/payment_method.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
@@ -37,8 +38,10 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   final _amountFocus = FocusNode();
 
   late String _categoryId;
+  late String _accountId;
   late PaymentMethod _paymentMethod;
   late DateTime _date;
+  late LedgerEntryType _type;
   bool _isRecurring = false;
   bool _initialized = false;
 
@@ -49,13 +52,17 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     super.initState();
     _paymentMethod = PaymentMethod.card;
     _date = DateTime.now();
+    _type = LedgerEntryType.expense;
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
   }
 
   Future<void> _loadInitial() async {
     final categories =
         await ref.read(categoryRepositoryProvider).watchAll().first;
-    final expenses = await ref.read(expenseRepositoryProvider).watchAll().first;
+    final expenses =
+        await ref.read(expenseRepositoryProvider).watchExpenses().first;
+    final defaultAccount =
+        await ref.read(accountRepositoryProvider).getDefault();
     final currency = ref.read(currencyDisplayProvider);
 
     final counts = <String, int>{};
@@ -68,14 +75,18 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
         return a.name.toLowerCase().compareTo(b.name.toLowerCase());
       });
 
+    _accountId = defaultAccount?.id ?? '';
+
     if (widget.expenseId != null) {
       final expense =
           await ref.read(expenseRepositoryProvider).getById(widget.expenseId!);
       if (!mounted || expense == null) return;
       _categoryId = expense.categoryId;
+      _accountId = expense.accountId;
       _paymentMethod = expense.paymentMethod;
       _date = expense.date;
       _isRecurring = expense.isRecurring;
+      _type = expense.type;
       _amountController.text = currency.formatForInput(expense.amount);
       _noteController.text = expense.note;
     } else {
@@ -105,15 +116,19 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     }
 
     final repo = ref.read(expenseRepositoryProvider);
+    final isIncome = _type == LedgerEntryType.income;
+    final noteFallback = isIncome ? 'Income' : 'Expense';
     final expense = Expense(
       id: widget.expenseId ?? repo.newId(),
       amount: currency.toStorageAmount(amountDisplay),
       categoryId: _categoryId,
       note: _noteController.text.trim().isEmpty
-          ? 'Expense'
+          ? noteFallback
           : _noteController.text.trim(),
       date: _date,
       paymentMethod: _paymentMethod,
+      accountId: _accountId,
+      type: _type,
       isRecurring: _isRecurring,
     );
 
@@ -128,7 +143,11 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     context.pop();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(isEditing ? 'Expense updated' : 'Expense saved'),
+        content: Text(
+          isEditing
+              ? (isIncome ? 'Income updated' : 'Expense updated')
+              : (isIncome ? 'Income saved' : 'Expense saved'),
+        ),
       ),
     );
   }
@@ -171,7 +190,15 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
           size: 40,
         ),
         leadingWidth: 64,
-        title: Text(isEditing ? 'Edit expense' : 'New expense'),
+        title: Text(
+          isEditing
+              ? (_type == LedgerEntryType.income
+                  ? 'Edit income'
+                  : 'Edit expense')
+              : (_type == LedgerEntryType.income
+                  ? 'New income'
+                  : 'New expense'),
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -182,6 +209,37 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (!isEditing) ...[
+                      SegmentedButton<LedgerEntryType>(
+                        segments: const [
+                          ButtonSegment(
+                            value: LedgerEntryType.expense,
+                            label: Text('Expense'),
+                          ),
+                          ButtonSegment(
+                            value: LedgerEntryType.income,
+                            label: Text('Income'),
+                          ),
+                        ],
+                        selected: {_type},
+                        onSelectionChanged: (next) {
+                          final type = next.first;
+                          setState(() {
+                            _type = type;
+                            if (type == LedgerEntryType.income) {
+                              final income = categories
+                                  .where(
+                                    (c) =>
+                                        c.name.toLowerCase() == 'income',
+                                  )
+                                  .firstOrNull;
+                              if (income != null) _categoryId = income.id;
+                            }
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,

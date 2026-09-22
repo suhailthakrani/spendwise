@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/repositories/account_repository.dart';
 import '../data/repositories/budget_repository.dart';
 import '../data/repositories/category_repository.dart';
 import '../data/repositories/expense_repository.dart';
@@ -27,6 +28,10 @@ String _requireUserId(Ref ref) {
 
 final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) {
   return ExpenseRepository(ref.watch(databaseProvider), _requireUserId(ref));
+});
+
+final accountRepositoryProvider = Provider<AccountRepository>((ref) {
+  return AccountRepository(ref.watch(databaseProvider), _requireUserId(ref));
 });
 
 final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
@@ -58,6 +63,7 @@ final reportRepositoryProvider = Provider<ReportRepository>((ref) {
   return ReportRepository(
     ref.watch(expenseRepositoryProvider),
     ref.watch(budgetRepositoryProvider),
+    ref.watch(accountRepositoryProvider),
   );
 });
 

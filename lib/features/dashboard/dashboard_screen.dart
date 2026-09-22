@@ -24,7 +24,7 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
-    final expensesAsync = ref.watch(expensesProvider);
+    final expensesAsync = ref.watch(ledgerProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
     final currency = ref.watch(currencyDisplayProvider);
     final theme = Theme.of(context);
@@ -49,7 +49,8 @@ class DashboardScreen extends ConsumerWidget {
             color: AppColors.primary,
             onRefresh: () async {
               ref.invalidate(dashboardStatsProvider);
-              ref.invalidate(expensesProvider);
+              ref.invalidate(ledgerProvider);
+              ref.invalidate(accountsProvider);
             },
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(
@@ -501,7 +502,7 @@ class _SpendingHeroCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Spent this month',
+                              'Balance',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: Colors.white.withValues(alpha: 0.78),
                                 fontWeight: FontWeight.w500,
@@ -513,7 +514,7 @@ class _SpendingHeroCard extends StatelessWidget {
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 currency.formatInUserCurrency(
-                                  stats.totalSpentThisMonth,
+                                  stats.totalBalance,
                                 ),
                                 maxLines: 1,
                                 style: theme.textTheme.headlineMedium?.copyWith(
@@ -540,6 +541,28 @@ class _SpendingHeroCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 22),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _GlassStatChip(
+                          label: 'Spent',
+                          value: currency.formatInUserCurrency(
+                            stats.totalSpentThisMonth,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _GlassStatChip(
+                          label: 'Income',
+                          value: currency.formatInUserCurrency(
+                            stats.totalIncomeThisMonth,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
