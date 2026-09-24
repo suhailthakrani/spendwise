@@ -39,9 +39,6 @@ class BackupService {
     final categories = await (_db.select(_db.categories)
           ..where((t) => t.userId.equals(userId)))
         .get();
-    final accounts = await (_db.select(_db.accounts)
-          ..where((t) => t.userId.equals(userId)))
-        .get();
     final expenses = await (_db.select(_db.expenses)
           ..where((t) => t.userId.equals(userId)))
         .get();
@@ -55,6 +52,15 @@ class BackupService {
           ..where((t) => t.userId.equals(userId)))
         .get();
     final contributions = await (_db.select(_db.savingContributions)
+          ..where((t) => t.userId.equals(userId)))
+        .get();
+    final templates = await (_db.select(_db.transactionTemplates)
+          ..where((t) => t.userId.equals(userId)))
+        .get();
+    final envelopes = await (_db.select(_db.envelopes)
+          ..where((t) => t.userId.equals(userId)))
+        .get();
+    final moneyLogs = await (_db.select(_db.moneyLogs)
           ..where((t) => t.userId.equals(userId)))
         .get();
     final settings = await (_db.select(_db.userSettings)
@@ -85,17 +91,12 @@ class BackupService {
               'budgetAlertsEnabled': settings.budgetAlertsEnabled,
               'goalRemindersEnabled': settings.goalRemindersEnabled,
               'productUpdatesEnabled': settings.productUpdatesEnabled,
+              'defaultCategoryId': settings.defaultCategoryId,
+              'lastUsedCategoryId': settings.lastUsedCategoryId,
+              'dashboardLayoutJson': settings.dashboardLayoutJson,
+              'analyticsPeriod': settings.analyticsPeriod,
+              'quickActionsJson': settings.quickActionsJson,
             },
-      accounts: [
-        for (final row in accounts)
-          {
-            'id': row.id,
-            'name': row.name,
-            'type': row.type,
-            'openingBalance': row.openingBalance,
-            'isDefault': row.isDefault,
-          },
-      ],
       categories: [
         for (final row in categories)
           {
@@ -118,8 +119,8 @@ class BackupService {
             'paymentMethod': row.paymentMethod,
             'isRecurring': row.isRecurring,
             'type': row.type,
-            'accountId': row.accountId,
-            'toAccountId': row.toAccountId,
+            'tags': row.tags,
+            'attachmentPath': row.attachmentPath,
           },
       ],
       budgets: [
@@ -132,6 +133,12 @@ class BackupService {
             'isMonthly': row.isMonthly,
             'year': row.year,
             'month': row.month,
+            'periodType': row.periodType,
+            'startDate': row.startDate?.toIso8601String(),
+            'endDate': row.endDate?.toIso8601String(),
+            'rolloverEnabled': row.rolloverEnabled,
+            'rolloverAmount': row.rolloverAmount,
+            'isSpendingLimit': row.isSpendingLimit,
           },
       ],
       recurringExpenses: [
@@ -144,6 +151,8 @@ class BackupService {
             'frequency': row.frequency,
             'nextDueDate': row.nextDueDate.toIso8601String(),
             'paymentMethod': row.paymentMethod,
+            'entryType': row.entryType,
+            'autoPost': row.autoPost,
           },
       ],
       savingGoals: [
@@ -171,6 +180,42 @@ class BackupService {
             'note': row.note,
             'date': row.date.toIso8601String(),
             'createdAt': row.createdAt.toIso8601String(),
+          },
+      ],
+      templates: [
+        for (final row in templates)
+          {
+            'id': row.id,
+            'name': row.name,
+            'amount': row.amount,
+            'categoryId': row.categoryId,
+            'type': row.type,
+            'note': row.note,
+            'paymentMethod': row.paymentMethod,
+            'isFavourite': row.isFavourite,
+            'useCount': row.useCount,
+            'lastUsedAt': row.lastUsedAt?.toIso8601String(),
+          },
+      ],
+      envelopes: [
+        for (final row in envelopes)
+          {
+            'id': row.id,
+            'name': row.name,
+            'allocated': row.allocated,
+            'spent': row.spent,
+            'categoryId': row.categoryId,
+            'year': row.year,
+            'month': row.month,
+          },
+      ],
+      moneyLogs: [
+        for (final row in moneyLogs)
+          {
+            'id': row.id,
+            'amount': row.amount,
+            'message': row.message,
+            'date': row.date.toIso8601String(),
           },
       ],
     );
@@ -294,6 +339,20 @@ class BackupService {
         budgetAlertsEnabled: _asBool(settings['budgetAlertsEnabled']),
         goalRemindersEnabled: _asBool(settings['goalRemindersEnabled']),
         productUpdatesEnabled: _asBool(settings['productUpdatesEnabled']),
+        defaultCategoryId: _asOptionalString(settings['defaultCategoryId']),
+        lastUsedCategoryId: _asOptionalString(settings['lastUsedCategoryId']),
+        dashboardLayoutJson: _asStringValue(
+          settings['dashboardLayoutJson'],
+          defaultValue: '',
+        ),
+        analyticsPeriod: _asStringValue(
+          settings['analyticsPeriod'],
+          defaultValue: 'oneYear',
+        ),
+        quickActionsJson: _asStringValue(
+          settings['quickActionsJson'],
+          defaultValue: '',
+        ),
       ),
     );
   }
@@ -310,9 +369,14 @@ class BackupService {
     await (_db.delete(_db.recurringExpenses)
           ..where((t) => t.userId.equals(userId)))
         .go();
-    await (_db.delete(_db.categories)..where((t) => t.userId.equals(userId)))
+    await (_db.delete(_db.transactionTemplates)
+          ..where((t) => t.userId.equals(userId)))
         .go();
-    await (_db.delete(_db.accounts)..where((t) => t.userId.equals(userId)))
+    await (_db.delete(_db.envelopes)..where((t) => t.userId.equals(userId)))
+        .go();
+    await (_db.delete(_db.moneyLogs)..where((t) => t.userId.equals(userId)))
+        .go();
+    await (_db.delete(_db.categories)..where((t) => t.userId.equals(userId)))
         .go();
   }
 
@@ -332,10 +396,6 @@ class BackupService {
       for (final row in snapshot.categories)
         row['id'] as String: take(row['id'] as String),
     };
-    final accountIds = <String, String>{
-      for (final row in snapshot.accounts)
-        row['id'] as String: take(row['id'] as String),
-    };
     final goalIds = <String, String>{
       for (final row in snapshot.savingGoals)
         row['id'] as String: take(row['id'] as String),
@@ -353,15 +413,24 @@ class BackupService {
       return next;
     }
 
+    String? remapCategory(Object? id) {
+      if (id == null) return null;
+      final key = id as String;
+      return categoryIds[key] ?? key;
+    }
+
+    String normalizeType(Object? value) {
+      final name = '$value';
+      if (name == 'income') return 'income';
+      return 'expense';
+    }
+
     return BackupSnapshot(
       formatVersion: snapshot.formatVersion,
       exportedAt: snapshot.exportedAt,
       driveEmail: snapshot.driveEmail,
       profile: snapshot.profile,
       settings: snapshot.settings,
-      accounts: [
-        for (final row in snapshot.accounts) remapRow(row, extra: accountIds),
-      ],
       categories: [
         for (final row in snapshot.categories)
           remapRow(row, extra: categoryIds),
@@ -372,23 +441,14 @@ class BackupService {
             ...remapRow(row),
             'categoryId':
                 categoryIds[row['categoryId'] as String] ?? row['categoryId'],
-            'accountId': row['accountId'] == null
-                ? null
-                : (accountIds[row['accountId'] as String] ?? row['accountId']),
-            'toAccountId': row['toAccountId'] == null
-                ? null
-                : (accountIds[row['toAccountId'] as String] ??
-                    row['toAccountId']),
+            'type': normalizeType(row['type']),
           },
       ],
       budgets: [
         for (final row in snapshot.budgets)
           {
             ...remapRow(row),
-            'categoryId': row['categoryId'] == null
-                ? null
-                : (categoryIds[row['categoryId'] as String] ??
-                    row['categoryId']),
+            'categoryId': remapCategory(row['categoryId']),
           },
       ],
       recurringExpenses: [
@@ -397,6 +457,7 @@ class BackupService {
             ...remapRow(row),
             'categoryId':
                 categoryIds[row['categoryId'] as String] ?? row['categoryId'],
+            'entryType': normalizeType(row['entryType']),
           },
       ],
       savingGoals: [
@@ -409,12 +470,30 @@ class BackupService {
             'goalId': goalIds[row['goalId'] as String] ?? row['goalId'],
           },
       ],
+      templates: [
+        for (final row in snapshot.templates)
+          {
+            ...remapRow(row),
+            'categoryId':
+                categoryIds[row['categoryId'] as String] ?? row['categoryId'],
+            'type': normalizeType(row['type']),
+          },
+      ],
+      envelopes: [
+        for (final row in snapshot.envelopes)
+          {
+            ...remapRow(row),
+            'categoryId': remapCategory(row['categoryId']),
+          },
+      ],
+      moneyLogs: [
+        for (final row in snapshot.moneyLogs) remapRow(row),
+      ],
     );
   }
 
   Future<Set<String>> _occupiedIds() async {
     final ids = <String>{};
-    ids.addAll((await _db.select(_db.accounts).get()).map((r) => r.id));
     ids.addAll((await _db.select(_db.categories).get()).map((r) => r.id));
     ids.addAll((await _db.select(_db.expenses).get()).map((r) => r.id));
     ids.addAll((await _db.select(_db.budgets).get()).map((r) => r.id));
@@ -425,31 +504,15 @@ class BackupService {
     ids.addAll(
       (await _db.select(_db.savingContributions).get()).map((r) => r.id),
     );
+    ids.addAll(
+      (await _db.select(_db.transactionTemplates).get()).map((r) => r.id),
+    );
+    ids.addAll((await _db.select(_db.envelopes).get()).map((r) => r.id));
+    ids.addAll((await _db.select(_db.moneyLogs).get()).map((r) => r.id));
     return ids;
   }
 
   Future<void> _insertLedger(BackupSnapshot snapshot, String userId) async {
-    if (snapshot.accounts.isNotEmpty) {
-      await _db.batch((batch) {
-        batch.insertAll(
-          _db.accounts,
-          [
-            for (final row in snapshot.accounts)
-              AccountsCompanion.insert(
-                id: row['id'] as String,
-                userId: userId,
-                name: row['name'] as String? ?? 'Cash',
-                type: row['type'] as String? ?? 'cash',
-                openingBalance: Value(_asDouble(row['openingBalance']) ?? 0),
-                isDefault: Value(row['isDefault'] as bool? ?? false),
-              ),
-          ],
-        );
-      });
-    } else {
-      await seedAccountsForUser(_db, userId);
-    }
-
     if (snapshot.categories.isNotEmpty) {
       await _db.batch((batch) {
         batch.insertAll(
@@ -473,14 +536,6 @@ class BackupService {
 
     await seedIncomeCategoryForUser(_db, userId);
 
-    final defaultAccountId = (await (_db.select(_db.accounts)
-              ..where(
-                (t) => t.userId.equals(userId) & t.isDefault.equals(true),
-              ))
-            .getSingleOrNull())
-        ?.id ??
-        defaultCashAccountId(userId);
-
     if (snapshot.expenses.isNotEmpty) {
       await _db.batch((batch) {
         batch.insertAll(
@@ -496,11 +551,9 @@ class BackupService {
                 date: _asDate(row['date']) ?? DateTime.now(),
                 paymentMethod: _payment(row['paymentMethod']),
                 isRecurring: Value(row['isRecurring'] as bool? ?? false),
-                type: Value(row['type'] as String? ?? 'expense'),
-                accountId: Value(
-                  row['accountId'] as String? ?? defaultAccountId,
-                ),
-                toAccountId: Value(row['toAccountId'] as String?),
+                type: Value(_ledgerType(row['type'])),
+                tags: Value(row['tags'] as String? ?? ''),
+                attachmentPath: Value(row['attachmentPath'] as String?),
               ),
           ],
         );
@@ -522,6 +575,13 @@ class BackupService {
                 isMonthly: Value(row['isMonthly'] as bool? ?? true),
                 year: row['year'] as int? ?? DateTime.now().year,
                 month: row['month'] as int? ?? DateTime.now().month,
+                periodType: Value(row['periodType'] as String? ?? 'monthly'),
+                startDate: Value(_asDate(row['startDate'])),
+                endDate: Value(_asDate(row['endDate'])),
+                rolloverEnabled: Value(row['rolloverEnabled'] as bool? ?? false),
+                rolloverAmount: Value(_asDouble(row['rolloverAmount']) ?? 0),
+                isSpendingLimit:
+                    Value(row['isSpendingLimit'] as bool? ?? false),
               ),
           ],
         );
@@ -543,6 +603,8 @@ class BackupService {
                 frequency: _frequency(row['frequency']),
                 nextDueDate: _asDate(row['nextDueDate']) ?? DateTime.now(),
                 paymentMethod: _payment(row['paymentMethod']),
+                entryType: Value(_ledgerType(row['entryType'])),
+                autoPost: Value(row['autoPost'] as bool? ?? false),
               ),
           ],
         );
@@ -595,12 +657,100 @@ class BackupService {
         );
       });
     }
+
+    if (snapshot.templates.isNotEmpty) {
+      await _db.batch((batch) {
+        batch.insertAll(
+          _db.transactionTemplates,
+          [
+            for (final row in snapshot.templates)
+              TransactionTemplatesCompanion.insert(
+                id: row['id'] as String,
+                userId: userId,
+                name: row['name'] as String? ?? 'Template',
+                amount: _asDouble(row['amount']) ?? 0,
+                categoryId: row['categoryId'] as String,
+                type: Value(_ledgerType(row['type'])),
+                note: Value(row['note'] as String? ?? ''),
+                paymentMethod: _payment(row['paymentMethod']),
+                isFavourite: Value(row['isFavourite'] as bool? ?? false),
+                useCount: Value(_asInt(row['useCount']) ?? 0),
+                lastUsedAt: Value(_asDate(row['lastUsedAt'])),
+              ),
+          ],
+        );
+      });
+    }
+
+    if (snapshot.envelopes.isNotEmpty) {
+      await _db.batch((batch) {
+        batch.insertAll(
+          _db.envelopes,
+          [
+            for (final row in snapshot.envelopes)
+              EnvelopesCompanion.insert(
+                id: row['id'] as String,
+                userId: userId,
+                name: row['name'] as String? ?? 'Envelope',
+                allocated: Value(_asDouble(row['allocated']) ?? 0),
+                spent: Value(_asDouble(row['spent']) ?? 0),
+                categoryId: Value(row['categoryId'] as String?),
+                year: row['year'] as int? ?? DateTime.now().year,
+                month: row['month'] as int? ?? DateTime.now().month,
+              ),
+          ],
+        );
+      });
+    }
+
+    if (snapshot.moneyLogs.isNotEmpty) {
+      await _db.batch((batch) {
+        batch.insertAll(
+          _db.moneyLogs,
+          [
+            for (final row in snapshot.moneyLogs)
+              MoneyLogsCompanion.insert(
+                id: row['id'] as String,
+                userId: userId,
+                amount: _asDouble(row['amount']) ?? 0,
+                message: row['message'] as String? ?? '',
+                date: _asDate(row['date']) ?? DateTime.now(),
+              ),
+          ],
+        );
+      });
+    }
+  }
+
+  /// Legacy backups may still say `transfer`; treat those as expenses.
+  static String _ledgerType(Object? value) {
+    final name = '$value';
+    if (name == 'income') return 'income';
+    return 'expense';
   }
 
   static Value<bool> _asBool(Object? value) {
+
     if (value is bool) return Value(value);
     if (value is num) return Value(value != 0);
     return const Value.absent();
+  }
+
+  static Value<String?> _asOptionalString(Object? value) {
+    if (value == null) return const Value.absent();
+    final text = '$value';
+    if (text.isEmpty || text == 'null') return const Value(null);
+    return Value(text);
+  }
+
+  static Value<String> _asStringValue(
+    Object? value, {
+    required String defaultValue,
+  }) {
+    if (value == null) return Value(defaultValue);
+    final text = '$value';
+    if (text == 'null') return Value(defaultValue);
+    return Value(text);
   }
 
   static Value<String> _themeMode(Object? value) {

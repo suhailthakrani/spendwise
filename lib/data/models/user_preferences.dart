@@ -15,6 +15,11 @@ class UserPreferences {
     this.backupDriveFileId,
     this.biometricUnlockEnabled = false,
     this.biometricUserId,
+    this.defaultCategoryId,
+    this.lastUsedCategoryId,
+    this.dashboardLayoutJson = '',
+    this.analyticsPeriod = 'oneYear',
+    this.quickActionsJson = '',
   });
 
   final ThemeMode themeMode;
@@ -30,6 +35,11 @@ class UserPreferences {
   final String? backupDriveFileId;
   final bool biometricUnlockEnabled;
   final String? biometricUserId;
+  final String? defaultCategoryId;
+  final String? lastUsedCategoryId;
+  final String dashboardLayoutJson;
+  final String analyticsPeriod;
+  final String quickActionsJson;
 
   bool get isSignedIn =>
       activeUserId != null && activeUserId!.trim().isNotEmpty;
@@ -74,6 +84,13 @@ class UserPreferences {
     bool? biometricUnlockEnabled,
     String? biometricUserId,
     bool clearBiometricUserId = false,
+    String? defaultCategoryId,
+    bool clearDefaultCategoryId = false,
+    String? lastUsedCategoryId,
+    bool clearLastUsedCategoryId = false,
+    String? dashboardLayoutJson,
+    String? analyticsPeriod,
+    String? quickActionsJson,
   }) {
     return UserPreferences(
       themeMode: themeMode ?? this.themeMode,
@@ -100,6 +117,15 @@ class UserPreferences {
       biometricUserId: clearBiometricUserId
           ? null
           : (biometricUserId ?? this.biometricUserId),
+      defaultCategoryId: clearDefaultCategoryId
+          ? null
+          : (defaultCategoryId ?? this.defaultCategoryId),
+      lastUsedCategoryId: clearLastUsedCategoryId
+          ? null
+          : (lastUsedCategoryId ?? this.lastUsedCategoryId),
+      dashboardLayoutJson: dashboardLayoutJson ?? this.dashboardLayoutJson,
+      analyticsPeriod: analyticsPeriod ?? this.analyticsPeriod,
+      quickActionsJson: quickActionsJson ?? this.quickActionsJson,
     );
   }
 }

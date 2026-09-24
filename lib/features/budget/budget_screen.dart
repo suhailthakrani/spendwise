@@ -14,9 +14,11 @@ import '../../core/widgets/expense_widgets.dart';
 import '../../core/widgets/goal_progress_banner.dart';
 import '../../core/widgets/month_picker.dart';
 import '../../data/models/category.dart';
+import '../../data/models/envelope.dart';
 import '../../data/models/recurring_expense.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
+import '../../providers/repository_providers.dart';
 
 class BudgetScreen extends ConsumerWidget {
   const BudgetScreen({super.key});
@@ -25,6 +27,8 @@ class BudgetScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final budgetsAsync = ref.watch(budgetsProvider);
     final recurringAsync = ref.watch(recurringExpensesProvider);
+    final autoPostAsync = ref.watch(autoPostQueueProvider);
+    final envelopesAsync = ref.watch(envelopesProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
     final selectedMonth = ref.watch(budgetMonthProvider);
     final currency = ref.watch(currencyDisplayProvider);
@@ -88,6 +92,8 @@ class BudgetScreen extends ConsumerWidget {
         data: (rawBudgets) {
           final categories = categoriesAsync.valueOrNull ?? [];
           final recurring = recurringAsync.valueOrNull ?? [];
+          final autoPostQueue = autoPostAsync.valueOrNull ?? [];
+          final envelopes = envelopesAsync.valueOrNull ?? [];
           final monthBudgets = rawBudgets
               .where(
                 (b) =>
@@ -428,6 +434,54 @@ class BudgetScreen extends ConsumerWidget {
                   ),
                 ),
               ],
+              if (autoPostQueue.isNotEmpty) ...[
+                const SectionHeader(title: 'Auto-post queue'),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.page,
+                  ),
+                  child: Card(
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < autoPostQueue.length; i++) ...[
+                          ListTile(
+                            title: Text(autoPostQueue[i].title),
+                            subtitle: Text(
+                              'Due ${DateFormatter.short(autoPostQueue[i].nextDueDate)}',
+                            ),
+                            trailing: FilledButton.tonal(
+                              onPressed: () async {
+                                final repo =
+                                    ref.read(recurringExpenseRepositoryProvider);
+                                final expenses =
+                                    ref.read(expenseRepositoryProvider);
+                                await repo.postNow(
+                                  autoPostQueue[i],
+                                  expenses: expenses,
+                                  newExpenseId: expenses.newId,
+                                );
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Posted to ledger'),
+                                  ),
+                                );
+                              },
+                              child: const Text('Confirm'),
+                            ),
+                          ),
+                          if (i < autoPostQueue.length - 1)
+                            Divider(
+                              height: 1,
+                              indent: 16,
+                              color: AppColors.border(context),
+                            ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               if (recurring.isNotEmpty) ...[
                 const SectionHeader(title: 'Recurring'),
                 Padding(
@@ -457,6 +511,49 @@ class BudgetScreen extends ConsumerWidget {
                   ),
                 ),
               ],
+              SectionHeader(
+                title: 'Envelopes',
+                actionLabel: 'Add',
+                onActionTap: () => _showAddEnvelopeDialog(context, ref),
+              ),
+              if (envelopes.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.page,
+                  ),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Text(
+                        'No envelopes yet. Allocate cash for specific spending pots.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.secondaryText(context),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.page,
+                  ),
+                  child: Card(
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < envelopes.length; i++) ...[
+                          _EnvelopeTile(envelope: envelopes[i]),
+                          if (i < envelopes.length - 1)
+                            Divider(
+                              height: 1,
+                              indent: 16,
+                              color: AppColors.border(context),
+                            ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
               const _GoalsShortcut(),
             ],
           );
@@ -464,6 +561,73 @@ class BudgetScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+Future<void> _showAddEnvelopeDialog(BuildContext context, WidgetRef ref) async {
+  final nameController = TextEditingController();
+  final amountController = TextEditingController();
+  final currency = ref.read(currencyDisplayProvider);
+  final month = ref.read(budgetMonthProvider);
+
+  final created = await showDialog<bool>(
+    context: context,
+    builder: (ctx) {
+      return AlertDialog(
+        title: const Text('New envelope'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(hintText: 'Name'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                hintText: 'Allocated',
+                prefixText: '${currency.symbol} ',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Create'),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (created != true) {
+    nameController.dispose();
+    amountController.dispose();
+    return;
+  }
+
+  final allocatedDisplay = currency.parseInput(amountController.text) ?? 0;
+  final repo = ref.read(envelopeRepositoryProvider);
+  await repo.create(
+    Envelope(
+      id: repo.newId(),
+      name: nameController.text.trim().isEmpty
+          ? 'Envelope'
+          : nameController.text.trim(),
+      allocated: currency.toStorageAmount(allocatedDisplay),
+      spent: 0,
+      year: month.year,
+      month: month.month,
+    ),
+  );
+  nameController.dispose();
+  amountController.dispose();
 }
 
 class _GoalsShortcut extends ConsumerWidget {
@@ -493,6 +657,31 @@ class _GoalsShortcut extends ConsumerWidget {
           subtitle: const Text('Track progress toward a wishlist or fund'),
           trailing: const AppIcon(AppIcons.chevronRight, size: 18),
           onTap: () => context.push(AppRoutes.goals),
+        ),
+      ),
+    );
+  }
+}
+
+class _EnvelopeTile extends ConsumerWidget {
+  const _EnvelopeTile({required this.envelope});
+
+  final Envelope envelope;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currency = ref.watch(currencyDisplayProvider);
+    final theme = Theme.of(context);
+    return ListTile(
+      title: Text(envelope.name),
+      subtitle: Text(
+        '${currency.format(envelope.spent)} spent · '
+        '${currency.format(envelope.remaining)} left',
+      ),
+      trailing: Text(
+        currency.format(envelope.allocated),
+        style: theme.textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -545,6 +734,33 @@ class _RecurringTile extends ConsumerWidget {
                   '$frequencyLabel · Due ${DateFormatter.short(recurring.nextDueDate)}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.secondaryText(context),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      final repo =
+                          ref.read(recurringExpenseRepositoryProvider);
+                      final expenses = ref.read(expenseRepositoryProvider);
+                      await repo.postNow(
+                        recurring,
+                        expenses: expenses,
+                        newExpenseId: expenses.newId,
+                      );
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Posted ${recurring.title}'),
+                        ),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    child: const Text('Post now'),
                   ),
                 ),
               ],

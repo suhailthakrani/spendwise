@@ -80,9 +80,14 @@ class ReportsScreen extends ConsumerWidget {
                     bottom: AppSpacing.navClearance,
                   ),
                   children: [
+                    const _SmartInsightsSection(),
+                    const _MomComparisonSection(),
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.page,
+                      padding: const EdgeInsets.only(
+                        left: AppSpacing.page,
+                        right: AppSpacing.page,
+                        top: 12,
+                        bottom: 12,
                       ),
                       child: _SummaryTile(
                         label: period.spendLabel,
@@ -188,6 +193,103 @@ class ReportsScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SmartInsightsSection extends ConsumerWidget {
+  const _SmartInsightsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final insights = ref.watch(insightsEngineProvider).insights;
+    if (insights.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SectionHeader(title: 'Smart insights'),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+          child: Card(
+            child: Column(
+              children: [
+                for (var i = 0; i < insights.length; i++) ...[
+                  ListTile(
+                    leading: const AppIconBox(
+                      asset: AppIcons.reports,
+                      color: AppColors.primary,
+                      size: 40,
+                      iconSize: 18,
+                    ),
+                    title: Text(insights[i].title),
+                    subtitle: Text(insights[i].body),
+                  ),
+                  if (i < insights.length - 1)
+                    Divider(
+                      height: 1,
+                      indent: 72,
+                      color: AppColors.border(context),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MomComparisonSection extends ConsumerWidget {
+  const _MomComparisonSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final report = ref.watch(insightsReportProvider);
+    final currency = ref.watch(currencyDisplayProvider);
+    if (report.history.length < 2) return const SizedBox.shrink();
+
+    final thisMonth = report.history.last.totalExpenses;
+    final lastMonth = report.history[report.history.length - 2].totalExpenses;
+    if (thisMonth <= 0 && lastMonth <= 0) return const SizedBox.shrink();
+
+    final deltaPct = lastMonth <= 0
+        ? (thisMonth > 0 ? 100.0 : 0.0)
+        : ((thisMonth - lastMonth) / lastMonth) * 100;
+    final up = deltaPct > 0.5;
+    final down = deltaPct < -0.5;
+    final label = up
+        ? 'Up ${deltaPct.abs().toStringAsFixed(0)}% vs last month'
+        : down
+            ? 'Down ${deltaPct.abs().toStringAsFixed(0)}% vs last month'
+            : 'Flat vs last month';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        12,
+        AppSpacing.page,
+        12,
+      ),
+      child: Card(
+        child: ListTile(
+          leading: AppIconBox(
+            asset: AppIcons.reports,
+            color: up
+                ? AppColors.error
+                : down
+                    ? AppColors.primary
+                    : AppColors.accent,
+            size: 40,
+            iconSize: 18,
+          ),
+          title: const Text('Month over month'),
+          subtitle: Text(
+            '$label · ${currency.formatInUserCurrency(thisMonth)} this month',
+          ),
+        ),
       ),
     );
   }

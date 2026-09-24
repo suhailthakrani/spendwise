@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../core/database/app_database.dart';
+import '../models/ledger_entry_type.dart';
 import '../models/payment_method.dart';
 import '../models/recurring_expense.dart';
 
@@ -14,6 +15,8 @@ abstract final class RecurringExpenseMapper {
       frequency: RecurrenceFrequency.values.byName(row.frequency),
       nextDueDate: row.nextDueDate,
       paymentMethod: PaymentMethod.values.byName(row.paymentMethod),
+      entryType: LedgerEntryType.fromDb(row.entryType),
+      autoPost: row.autoPost,
     );
   }
 
@@ -30,6 +33,8 @@ abstract final class RecurringExpenseMapper {
       frequency: Value(expense.frequency.name),
       nextDueDate: Value(expense.nextDueDate),
       paymentMethod: Value(expense.paymentMethod.name),
+      entryType: Value(expense.entryType.name),
+      autoPost: Value(expense.autoPost),
     );
   }
 }

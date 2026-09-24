@@ -13,7 +13,12 @@ import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/chart_widgets.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/expense_widgets.dart';
+import '../../core/widgets/goal_progress_banner.dart';
+import '../../data/models/category.dart';
+import '../../data/models/dashboard_layout.dart';
 import '../../data/models/dashboard_stats.dart';
+import '../../data/models/expense.dart';
+import '../../data/models/forecast.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
 import '../../providers/repository_providers.dart';
@@ -26,8 +31,10 @@ class DashboardScreen extends ConsumerWidget {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final expensesAsync = ref.watch(ledgerProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
+    final prefs = ref.watch(preferencesProvider).valueOrNull;
     final currency = ref.watch(currencyDisplayProvider);
     final theme = Theme.of(context);
+    final layout = DashboardLayout.fromJson(prefs?.dashboardLayoutJson);
 
     return Scaffold(
       body: statsAsync.when(
@@ -36,288 +43,45 @@ class DashboardScreen extends ConsumerWidget {
         data: (stats) {
           final expenses = expensesAsync.valueOrNull ?? [];
           final categories = categoriesAsync.valueOrNull ?? [];
-          final now = DateTime.now();
-          final transactionsThisMonth = expenses
-              .where(
-                (e) => e.date.year == now.year && e.date.month == now.month,
-              )
-              .length;
 
           return _HomeRatingGate(
             expenseCount: expenses.length,
             child: RefreshIndicator(
-            color: AppColors.primary,
-            onRefresh: () async {
-              ref.invalidate(dashboardStatsProvider);
-              ref.invalidate(ledgerProvider);
-              ref.invalidate(accountsProvider);
-            },
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              slivers: [
-                SliverAppBar(
-                  floating: true,
-                  snap: true,
-                  elevation: 0,
-                  scrolledUnderElevation: 0,
-                  backgroundColor: theme.scaffoldBackgroundColor,
-                  toolbarHeight: 76,
-                  title: _DashboardTitle(greeting: _greeting()),
-                  actions: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: SoftIconButton(
-                        asset: AppIcons.search,
-                        onPressed: () => context.push(AppRoutes.search),
-                      ),
-                    ),
-                  ],
+              color: AppColors.primary,
+              onRefresh: () async {
+                ref.invalidate(dashboardStatsProvider);
+                ref.invalidate(ledgerProvider);
+                ref.invalidate(forecastProvider);
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
                 ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.page,
-                      4,
-                      AppSpacing.page,
-                      0,
-                    ),
-                    child: _SpendingHeroCard(
+                slivers: [
+                  SliverAppBar(
+                    floating: true,
+                    snap: true,
+                    elevation: 0,
+                    scrolledUnderElevation: 0,
+                    backgroundColor: theme.scaffoldBackgroundColor,
+                    toolbarHeight: 76,
+                    title: _DashboardTitle(greeting: _greeting()),
+                  ),
+                  for (final widgetId in layout.widgets)
+                    ..._sliversFor(
+                      context: context,
+                      ref: ref,
+                      id: widgetId,
                       stats: stats,
                       currency: currency,
+                      expenses: expenses,
+                      categories: categories,
                     ),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: AppSpacing.navClearance),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.page,
-                      14,
-                      AppSpacing.page,
-                      0,
-                    ),
-                    child: IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: StatCard(
-                              label: 'Transactions',
-                              value: '$transactionsThisMonth',
-                              subtitle: transactionsThisMonth == 1
-                                  ? 'This month'
-                                  : 'This month',
-                              iconAsset: AppIcons.expenses,
-                              iconColor: AppColors.primary,
-                              onTap: () => context.go(AppRoutes.expenses),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: StatCard(
-                              label: 'Budget left',
-                              value: stats.monthlyBudget > 0
-                                  ? currency.formatInUserCurrency(
-                                      stats.budgetRemaining
-                                          .clamp(0, double.infinity),
-                                    )
-                                  : '—',
-                              subtitle: stats.monthlyBudget > 0
-                                  ? '${(stats.budgetProgress * 100).toStringAsFixed(0)}% used'
-                                  : 'Set a budget',
-                              iconAsset: AppIcons.wallet,
-                              iconColor: AppColors.accent,
-                              progress: stats.monthlyBudget > 0
-                                  ? stats.budgetProgress.clamp(0.0, 1.0)
-                                  : null,
-                              onTap: () => context.go(AppRoutes.budget),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(
-                  child: SectionHeader(title: 'Top categories'),
-                ),
-                const SliverToBoxAdapter(child: _DashboardCategoryBars()),
-                SliverToBoxAdapter(
-                  child: SectionHeader(
-                    title: 'Recent activity',
-                    actionLabel: stats.recentExpenseIds.isNotEmpty
-                        ? 'See all'
-                        : null,
-                    onActionTap: stats.recentExpenseIds.isNotEmpty
-                        ? () => context.go(AppRoutes.expenses)
-                        : null,
-                  ),
-                ),
-                if (stats.recentExpenseIds.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.page,
-                      ),
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 28,
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Center(
-                                  child: AppIcon(
-                                    AppIcons.expenses,
-                                    size: 26,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                              Text(
-                                'No transactions yet',
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Tap Add to log your first spend',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: AppColors.secondaryText(context),
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.page,
-                      ),
-                      child: Card(
-                        child: Column(
-                          children: [
-                            for (var i = 0;
-                                i < stats.recentExpenseIds.length;
-                                i++) ...[
-                              Builder(
-                                builder: (context) {
-                                  final id = stats.recentExpenseIds[i];
-                                  final expense = expenses
-                                      .where((e) => e.id == id)
-                                      .firstOrNull;
-                                  if (expense == null) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  final category = categoryById(
-                                    categories,
-                                    expense.categoryId,
-                                  );
-                                  if (category == null) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return ExpenseTile(
-                                    expense: expense,
-                                    category: category,
-                                    dense: true,
-                                    onTap: () => context.push('/expenses/$id'),
-                                  );
-                                },
-                              ),
-                              if (i < stats.recentExpenseIds.length - 1)
-                                Divider(
-                                  height: 1,
-                                  indent: 78,
-                                  color: AppColors.border(context),
-                                ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.page,
-                      8,
-                      AppSpacing.page,
-                      AppSpacing.navClearance,
-                    ),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                AppIconBox(
-                                  asset: AppIcons.reports,
-                                  color: AppColors.primary,
-                                  size: 36,
-                                  iconSize: 18,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Spending trend',
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: -0.3,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Last 6 months',
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color:
-                                              AppColors.secondaryText(context),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      context.go(AppRoutes.reports),
-                                  child: const Text('Insights'),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            const MonthlyTrendChart(showHeader: false),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                ],
+              ),
             ),
           );
         },
@@ -325,11 +89,530 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
+  static List<Widget> _sliversFor({
+    required BuildContext context,
+    required WidgetRef ref,
+    required DashboardWidgetId id,
+    required DashboardStats stats,
+    required CurrencyDisplay currency,
+    required List<Expense> expenses,
+    required List<ExpenseCategory> categories,
+  }) {
+    switch (id) {
+      case DashboardWidgetId.balance:
+        return [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                4,
+                AppSpacing.page,
+                0,
+              ),
+              child: _SpendingHeroCard(stats: stats, currency: currency),
+            ),
+          ),
+        ];
+      case DashboardWidgetId.safeToSpend:
+        return [
+          const SliverToBoxAdapter(child: _SafeToSpendSection()),
+        ];
+      case DashboardWidgetId.forecast:
+        return [
+          const SliverToBoxAdapter(child: _ForecastOutlookSection()),
+        ];
+      case DashboardWidgetId.budgets:
+        return [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                14,
+                AppSpacing.page,
+                0,
+              ),
+              child: StatCard(
+                label: 'Budget left',
+                value: stats.monthlyBudget > 0
+                    ? currency.formatInUserCurrency(
+                        stats.budgetRemaining.clamp(0, double.infinity),
+                      )
+                    : '—',
+                subtitle: stats.monthlyBudget > 0
+                    ? '${(stats.budgetProgress * 100).toStringAsFixed(0)}% used'
+                    : 'Set a budget',
+                iconAsset: AppIcons.wallet,
+                iconColor: AppColors.accent,
+                progress: stats.monthlyBudget > 0
+                    ? stats.budgetProgress.clamp(0.0, 1.0)
+                    : null,
+                onTap: () => context.go(AppRoutes.budget),
+              ),
+            ),
+          ),
+        ];
+      case DashboardWidgetId.goals:
+        return [
+          const SliverToBoxAdapter(child: GoalProgressBanner()),
+        ];
+      case DashboardWidgetId.recent:
+        return _recentSlivers(context, stats, expenses, categories);
+      case DashboardWidgetId.calendar:
+        return [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                14,
+                AppSpacing.page,
+                0,
+              ),
+              child: Card(
+                child: ListTile(
+                  leading: const AppIconBox(
+                    asset: AppIcons.calendar,
+                    color: AppColors.primary,
+                    size: 42,
+                    iconSize: 20,
+                  ),
+                  title: const Text('Financial calendar'),
+                  subtitle: const Text('Bills, income, and goal due dates'),
+                  trailing: const AppIcon(AppIcons.chevronRight, size: 18),
+                  onTap: () => context.push(AppRoutes.calendar),
+                ),
+              ),
+            ),
+          ),
+        ];
+      case DashboardWidgetId.charts:
+        return [
+          const SliverToBoxAdapter(child: SectionHeader(title: 'Trend')),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Spending trend',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => context.go(AppRoutes.reports),
+                            child: const Text('Insights'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      const MonthlyTrendChart(showHeader: false),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ];
+      case DashboardWidgetId.insights:
+        return [
+          const SliverToBoxAdapter(child: _InsightsTeaserSection()),
+        ];
+    }
+  }
+
+  static List<Widget> _recentSlivers(
+    BuildContext context,
+    DashboardStats stats,
+    List<Expense> expenses,
+    List<ExpenseCategory> categories,
+  ) {
+    final theme = Theme.of(context);
+    return [
+      SliverToBoxAdapter(
+        child: SectionHeader(
+          title: 'Recent activity',
+          actionLabel: stats.recentExpenseIds.isNotEmpty ? 'See all' : null,
+          onActionTap: stats.recentExpenseIds.isNotEmpty
+              ? () => context.go(AppRoutes.expenses)
+              : null,
+        ),
+      ),
+      if (stats.recentExpenseIds.isEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 28,
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: AppIcon(
+                          AppIcons.expenses,
+                          size: 26,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'No transactions yet',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Tap Add to log your first spend',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.secondaryText(context),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        )
+      else
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+            child: Card(
+              child: Column(
+                children: [
+                  for (var i = 0; i < stats.recentExpenseIds.length; i++) ...[
+                    Builder(
+                      builder: (context) {
+                        final id = stats.recentExpenseIds[i];
+                        final expense =
+                            expenses.where((e) => e.id == id).firstOrNull;
+                        if (expense == null) return const SizedBox.shrink();
+                        final category = categoryById(
+                          categories,
+                          expense.categoryId,
+                        );
+                        if (category == null) return const SizedBox.shrink();
+                        return ExpenseTile(
+                          expense: expense,
+                          category: category,
+                          dense: true,
+                          onTap: () => context.push('/expenses/$id'),
+                        );
+                      },
+                    ),
+                    if (i < stats.recentExpenseIds.length - 1)
+                      Divider(
+                        height: 1,
+                        indent: 78,
+                        color: AppColors.border(context),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+    ];
+  }
+
   static String _greeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good morning';
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
+  }
+}
+
+class _SafeToSpendSection extends ConsumerWidget {
+  const _SafeToSpendSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final forecastAsync = ref.watch(forecastProvider);
+    final currency = ref.watch(currencyDisplayProvider);
+
+    return forecastAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (forecast) {
+        if (!_hasSafeToSpend(forecast)) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            14,
+            AppSpacing.page,
+            0,
+          ),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Safe to spend',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _MiniMetric(
+                          label: 'Today',
+                          value: currency.format(forecast.safeToSpendToday),
+                        ),
+                      ),
+                      Expanded(
+                        child: _MiniMetric(
+                          label: 'This week',
+                          value: currency.format(forecast.safeToSpendThisWeek),
+                        ),
+                      ),
+                      Expanded(
+                        child: _MiniMetric(
+                          label: 'Rest of month',
+                          value:
+                              currency.format(forecast.safeToSpendRestOfMonth),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ForecastOutlookSection extends ConsumerWidget {
+  const _ForecastOutlookSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final forecastAsync = ref.watch(forecastProvider);
+    final currency = ref.watch(currencyDisplayProvider);
+    final theme = Theme.of(context);
+
+    return forecastAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (ForecastResult forecast) {
+        if (!_hasOutlook(forecast)) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            14,
+            AppSpacing.page,
+            0,
+          ),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Outlook',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _OutlookRow(
+                    label: 'Current balance',
+                    value: currency.format(forecast.currentBalance),
+                  ),
+                  _OutlookRow(
+                    label: 'Commitments',
+                    value: currency.format(
+                      forecast.upcomingCommitments
+                          .where((c) => c.kind != ForecastCommitmentKind.income)
+                          .fold<double>(0, (s, c) => s + c.amount),
+                    ),
+                  ),
+                  _OutlookRow(
+                    label: 'Projected month-end',
+                    value: currency.format(forecast.projectedMonthEndBalance),
+                    emphasize: true,
+                  ),
+                  if (forecast.assumptions.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      forecast.assumptions,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.secondaryText(context),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+bool _hasSafeToSpend(ForecastResult forecast) {
+  return forecast.safeToSpendToday.abs() >= 0.005 ||
+      forecast.safeToSpendThisWeek.abs() >= 0.005 ||
+      forecast.safeToSpendRestOfMonth.abs() >= 0.005;
+}
+
+bool _hasOutlook(ForecastResult forecast) {
+  return forecast.currentBalance.abs() >= 0.005 ||
+      forecast.monthSpendSoFar.abs() >= 0.005 ||
+      forecast.monthIncomeSoFar.abs() >= 0.005 ||
+      forecast.upcomingCommitments.isNotEmpty ||
+      forecast.projectedMonthEndBalance.abs() >= 0.005;
+}
+
+class _InsightsTeaserSection extends ConsumerWidget {
+  const _InsightsTeaserSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final review = ref.watch(insightsEngineProvider);
+    final insights = review.insights.take(2).toList();
+    if (insights.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(
+          title: 'Insights',
+          actionLabel: 'See all',
+          onActionTap: () => context.go(AppRoutes.reports),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+          child: Card(
+            child: Column(
+              children: [
+                for (var i = 0; i < insights.length; i++) ...[
+                  ListTile(
+                    leading: const AppIconBox(
+                      asset: AppIcons.reports,
+                      color: AppColors.primary,
+                      size: 40,
+                      iconSize: 18,
+                    ),
+                    title: Text(insights[i].title),
+                    subtitle: Text(
+                      insights[i].body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (i < insights.length - 1)
+                    Divider(
+                      height: 1,
+                      indent: 72,
+                      color: AppColors.border(context),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MiniMetric extends StatelessWidget {
+  const _MiniMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.secondaryText(context),
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OutlookRow extends StatelessWidget {
+  const _OutlookRow({
+    required this.label,
+    required this.value,
+    this.emphasize = false,
+  });
+
+  final String label;
+  final String value;
+  final bool emphasize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.secondaryText(context),
+                    fontWeight: emphasize ? FontWeight.w700 : null,
+                  ),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: emphasize ? FontWeight.w800 : FontWeight.w700,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -371,23 +654,6 @@ class _HomeRatingGateState extends ConsumerState<_HomeRatingGate> {
 
   @override
   Widget build(BuildContext context) => widget.child;
-}
-
-class _DashboardCategoryBars extends StatelessWidget {
-  const _DashboardCategoryBars();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
-      child: Card(
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: CategorySpendingBars(padded: false),
-        ),
-      ),
-    );
-  }
 }
 
 class _DashboardTitle extends StatelessWidget {

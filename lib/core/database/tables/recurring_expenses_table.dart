@@ -14,6 +14,10 @@ class RecurringExpenses extends Table {
   TextColumn get frequency => text()();
   DateTimeColumn get nextDueDate => dateTime()();
   TextColumn get paymentMethod => text()();
+  /// expense | income — bills vs recurring pay.
+  TextColumn get entryType => text().withDefault(const Constant('expense'))();
+  /// When true, due items wait in the auto-post confirmation queue.
+  BoolColumn get autoPost => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

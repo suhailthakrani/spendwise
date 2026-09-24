@@ -9,14 +9,16 @@ import 'package:sqlite3/open.dart';
 
 import 'database_key_store.dart';
 import 'database_seed.dart';
-import 'tables/accounts_table.dart';
 import 'tables/app_preferences_table.dart';
 import 'tables/budgets_table.dart';
 import 'tables/categories_table.dart';
+import 'tables/envelopes_table.dart';
 import 'tables/expenses_table.dart';
+import 'tables/money_logs_table.dart';
 import 'tables/recurring_expenses_table.dart';
 import 'tables/saving_contributions_table.dart';
 import 'tables/saving_goals_table.dart';
+import 'tables/transaction_templates_table.dart';
 import 'tables/user_profiles_table.dart';
 import 'tables/user_settings_table.dart';
 
@@ -25,7 +27,6 @@ part 'app_database.g.dart';
 @DriftDatabase(
   tables: [
     Categories,
-    Accounts,
     Expenses,
     Budgets,
     RecurringExpenses,
@@ -34,6 +35,9 @@ part 'app_database.g.dart';
     UserSettings,
     SavingGoals,
     SavingContributions,
+    TransactionTemplates,
+    Envelopes,
+    MoneyLogs,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -43,13 +47,14 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (migrator) async {
           await migrator.createAll();
           await seedDatabase(this);
+          await _createExpensesFts();
         },
         onUpgrade: (migrator, from, to) async {
           // Steps 2 and 3 use raw SQL on purpose: the columns they add were
@@ -118,47 +123,139 @@ class AppDatabase extends _$AppDatabase {
             await _moveSettingsToUsers(migrator);
           }
           if (from < 8) {
-            await _addAccountsAndLedgerTypes(migrator);
+            await _addLedgerTypes();
+          }
+          if (from < 9) {
+            await _addCaptureAnalyticsBudgetV2(migrator);
+          }
+          if (from < 10) {
+            await migrator.createTable(moneyLogs);
           }
         },
       );
 
-  /// Accounts + income/expense types. Existing expenses keep their amounts and
-  /// land on each user's default Cash account — totals must not change.
-  Future<void> _addAccountsAndLedgerTypes(Migrator migrator) async {
-    await migrator.createTable(accounts);
+  /// Capture defaults, templates, tags/attachments, budget periods, envelopes,
+  /// dashboard layout, and FTS for search v2.
+  Future<void> _addCaptureAnalyticsBudgetV2(Migrator migrator) async {
+    await migrator.createTable(transactionTemplates);
+    await migrator.createTable(envelopes);
 
+    await _addColumnIfAbsent(migrator, expenses, expenses.tags);
+    await _addColumnIfAbsent(migrator, expenses, expenses.attachmentPath);
+    await _addColumnIfAbsent(
+      migrator,
+      recurringExpenses,
+      recurringExpenses.entryType,
+    );
+    await _addColumnIfAbsent(
+      migrator,
+      recurringExpenses,
+      recurringExpenses.autoPost,
+    );
+    await _addColumnIfAbsent(migrator, budgets, budgets.periodType);
+    await _addColumnIfAbsent(migrator, budgets, budgets.startDate);
+    await _addColumnIfAbsent(migrator, budgets, budgets.endDate);
+    await _addColumnIfAbsent(migrator, budgets, budgets.rolloverEnabled);
+    await _addColumnIfAbsent(migrator, budgets, budgets.rolloverAmount);
+    await _addColumnIfAbsent(migrator, budgets, budgets.isSpendingLimit);
+
+    await _addColumnIfAbsent(
+      migrator,
+      userSettings,
+      userSettings.defaultCategoryId,
+    );
+    await _addColumnIfAbsent(
+      migrator,
+      userSettings,
+      userSettings.lastUsedCategoryId,
+    );
+    await _addColumnIfAbsent(
+      migrator,
+      userSettings,
+      userSettings.dashboardLayoutJson,
+    );
+    await _addColumnIfAbsent(
+      migrator,
+      userSettings,
+      userSettings.analyticsPeriod,
+    );
+    await _addColumnIfAbsent(
+      migrator,
+      userSettings,
+      userSettings.quickActionsJson,
+    );
+
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_templates_user '
+      'ON transaction_templates (user_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_envelopes_user '
+      'ON envelopes (user_id)',
+    );
+
+    await _createExpensesFts();
+  }
+
+  Future<void> _createExpensesFts() async {
+    await customStatement('''
+CREATE VIRTUAL TABLE IF NOT EXISTS expenses_fts USING fts5(
+  note, tags, content='expenses', content_rowid='rowid'
+)
+''');
+    await customStatement('''
+INSERT INTO expenses_fts(expenses_fts) VALUES('rebuild')
+''');
+  }
+
+  Future<void> _addColumnIfAbsent(
+    Migrator migrator,
+    TableInfo table,
+    GeneratedColumn column,
+  ) async {
+    final existing = await customSelect(
+      'PRAGMA table_info(${table.actualTableName})',
+    ).get();
+    final names = {
+      for (final row in existing) row.read<String>('name'),
+    };
+    if (names.contains(column.name)) return;
+    await migrator.addColumn(table, column);
+  }
+
+  /// Income/expense discriminator + Income category. No wallets — never shipped.
+  Future<void> _addLedgerTypes() async {
     final profiles = await select(userProfiles).get();
     for (final profile in profiles) {
-      await seedAccountsForUser(this, profile.id);
       await seedIncomeCategoryForUser(this, profile.id);
     }
 
-    await migrator.addColumn(expenses, expenses.type);
-    await migrator.addColumn(expenses, expenses.accountId);
-    await migrator.addColumn(expenses, expenses.toAccountId);
-
-    await customStatement('''
-UPDATE expenses
-SET account_id = (
-  SELECT a.id FROM accounts a
-  WHERE a.user_id = expenses.user_id AND a.is_default = 1
-  LIMIT 1
-)
-WHERE account_id IS NULL OR account_id = ''
-''');
+    await _addRawColumnIfAbsent(
+      'expenses',
+      'type',
+      "TEXT NOT NULL DEFAULT 'expense'",
+    );
 
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_expenses_user_type '
       'ON expenses (user_id, type)',
     );
+  }
+
+  Future<void> _addRawColumnIfAbsent(
+    String tableName,
+    String columnName,
+    String typeSql,
+  ) async {
+    final existing = await customSelect(
+      'PRAGMA table_info($tableName)',
+    ).get();
+    final names = {
+      for (final row in existing) row.read<String>('name'),
+    };
+    if (names.contains(columnName)) return;
     await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_expenses_user_account '
-      'ON expenses (user_id, account_id)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_accounts_user '
-      'ON accounts (user_id)',
+      'ALTER TABLE $tableName ADD COLUMN $columnName $typeSql',
     );
   }
 

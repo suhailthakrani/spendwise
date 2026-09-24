@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_icons.dart';
@@ -7,8 +8,9 @@ import '../../core/router/app_router.dart';
 import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/bottom_nav.dart';
+import '../expenses/quick_add_sheet.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.child});
 
   final Widget child;
@@ -65,9 +67,9 @@ class MainShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final index = _selectedIndex(context);
-    final showFab = index == 1 || index == 3; // Spend + Budget only
+    final showFab = index == 0 || index == 1 || index == 3;
 
     return PopScope(
       canPop: false,
@@ -83,6 +85,8 @@ class MainShell extends StatelessWidget {
                   HapticFeedback.mediumImpact();
                   if (index == 3) {
                     context.push(AppRoutes.addBudget);
+                  } else if (index == 0) {
+                    showQuickAddSheet(context, ref);
                   } else {
                     context.push(AppRoutes.addExpense);
                   }

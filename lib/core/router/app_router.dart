@@ -18,6 +18,8 @@ import '../../features/budget/add_edit_budget_screen.dart';
 import '../../features/budget/budget_screen.dart';
 import '../../features/categories/categories_screen.dart';
 import '../../features/categories/category_detail_screen.dart';
+import '../../features/calendar/financial_calendar_screen.dart';
+import '../../features/dashboard/customize_dashboard_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/expenses/add_edit_expense_screen.dart';
 import '../../features/expenses/expense_detail_screen.dart';
@@ -26,6 +28,7 @@ import '../../features/goals/add_edit_goal_screen.dart';
 import '../../features/goals/contribute_goal_screen.dart';
 import '../../features/goals/goal_detail_screen.dart';
 import '../../features/goals/goals_screen.dart';
+import '../../features/money_log/money_log_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/reports/monthly_summary_screen.dart';
 import '../../features/reports/reports_screen.dart';
@@ -56,6 +59,9 @@ abstract final class AppRoutes {
   static const contributeGoal = '/goals/:id/contribute';
   static const search = '/search';
   static const account = '/account';
+  static const moneyLog = '/account/money-log';
+  static const calendar = '/calendar';
+  static const customizeDashboard = '/dashboard/customize';
   static const editProfile = '/account/edit';
   static const export = '/account/export';
   static const backup = '/account/backup';
@@ -172,6 +178,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
+        path: AppRoutes.moneyLog,
+        builder: (context, state) => const MoneyLogScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
       ),
@@ -225,6 +235,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.search,
         builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calendar,
+        builder: (context, state) => const FinancialCalendarScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.customizeDashboard,
+        builder: (context, state) => const CustomizeDashboardScreen(),
       ),
       GoRoute(
         path: AppRoutes.addBudget,

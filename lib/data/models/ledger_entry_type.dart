@@ -1,13 +1,11 @@
 /// What a ledger row represents. Kept small on purpose — only what people record.
 enum LedgerEntryType {
   expense,
-  income,
-  transfer;
+  income;
 
+  /// Maps DB/backup strings. Unknown values and legacy `transfer` → expense.
   static LedgerEntryType fromDb(String value) {
-    for (final type in LedgerEntryType.values) {
-      if (type.name == value) return type;
-    }
+    if (value == 'income') return LedgerEntryType.income;
     return LedgerEntryType.expense;
   }
 }

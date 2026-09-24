@@ -73,11 +73,15 @@ void main() {
     // Schema 8 also seeds an Income category for existing users.
     expect(categories.map((c) => c.name), contains('Income'));
 
-    final accounts =
-        await (db.select(db.accounts)..where((t) => t.userId.equals('user_a')))
-            .get();
-    expect(accounts.single.name, 'Cash');
-    expect(expenses.single.accountId, accounts.single.id);
+    // Ledger types land in schema 8; no wallets table is created.
+    final tables = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'accounts'",
+        )
+        .get();
+    expect(tables, isEmpty);
+
+    expect(expenses.single.type, 'expense');
   });
 
   test('the merged preferences view is unchanged for the active user', () async {

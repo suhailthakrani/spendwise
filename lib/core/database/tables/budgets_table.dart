@@ -17,6 +17,18 @@ class Budgets extends Table {
   /// Calendar month this budget applies to (1–12).
   IntColumn get month => integer()();
 
+  /// weekly | monthly | yearly | custom | event
+  TextColumn get periodType => text().withDefault(const Constant('monthly'))();
+  DateTimeColumn get startDate => dateTime().nullable()();
+  DateTimeColumn get endDate => dateTime().nullable()();
+  BoolColumn get rolloverEnabled =>
+      boolean().withDefault(const Constant(false))();
+  /// Unused amount carried from the previous period (USD).
+  RealColumn get rolloverAmount => real().withDefault(const Constant(0.0))();
+  /// Soft spending limit distinct from a hard budget envelope.
+  BoolColumn get isSpendingLimit =>
+      boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

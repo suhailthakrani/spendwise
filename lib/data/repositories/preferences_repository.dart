@@ -129,6 +129,60 @@ class PreferencesRepository {
     );
   }
 
+  Future<void> setEntryDefaults({
+    String? defaultCategoryId,
+  }) async {
+    final userId = await _activeUserId();
+    if (userId == null) return;
+
+    await _writeSettings(
+      userId,
+      UserSettingsCompanion(
+        defaultCategoryId: Value(defaultCategoryId),
+      ),
+    );
+  }
+
+  Future<void> setLastUsedCategoryId(String? categoryId) async {
+    final userId = await _activeUserId();
+    if (userId == null) return;
+
+    await _writeSettings(
+      userId,
+      UserSettingsCompanion(lastUsedCategoryId: Value(categoryId)),
+    );
+  }
+
+  Future<void> setDashboardLayoutJson(String json) async {
+    final userId = await _activeUserId();
+    if (userId == null) return;
+
+    await _writeSettings(
+      userId,
+      UserSettingsCompanion(dashboardLayoutJson: Value(json)),
+    );
+  }
+
+  Future<void> setAnalyticsPeriod(String period) async {
+    final userId = await _activeUserId();
+    if (userId == null) return;
+
+    await _writeSettings(
+      userId,
+      UserSettingsCompanion(analyticsPeriod: Value(period)),
+    );
+  }
+
+  Future<void> setQuickActionsJson(String json) async {
+    final userId = await _activeUserId();
+    if (userId == null) return;
+
+    await _writeSettings(
+      userId,
+      UserSettingsCompanion(quickActionsJson: Value(json)),
+    );
+  }
+
   JoinedSelectStatement<HasResultSet, dynamic> _query() {
     return _db.select(_db.appPreferences).join([
       leftOuterJoin(

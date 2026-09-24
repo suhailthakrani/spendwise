@@ -4,16 +4,14 @@ import '../models/expense.dart';
 import '../models/insights_period.dart';
 import '../models/ledger_entry_type.dart';
 import '../models/monthly_summary.dart';
-import 'account_repository.dart';
 import 'budget_repository.dart';
 import 'expense_repository.dart';
 
 class ReportRepository {
-  ReportRepository(this._expenses, this._budgets, this._accounts);
+  ReportRepository(this._expenses, this._budgets);
 
   final ExpenseRepository _expenses;
   final BudgetRepository _budgets;
-  final AccountRepository _accounts;
 
   static const _monthLabels = InsightsPeriod.monthNames;
 
@@ -28,7 +26,7 @@ class ReportRepository {
       month: now,
       type: LedgerEntryType.income,
     );
-    final balanceUsd = await _accounts.totalBalance();
+    final balanceUsd = await _expenses.totalBalance();
 
     final monthExpenses = await _expenses.search(
       startDate: monthStart,

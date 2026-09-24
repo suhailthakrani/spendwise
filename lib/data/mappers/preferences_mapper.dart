@@ -34,6 +34,13 @@ abstract final class PreferencesMapper {
       backupDriveFileId: settings?.backupDriveFileId,
       biometricUnlockEnabled: device.biometricUnlockEnabled,
       biometricUserId: device.biometricUserId,
+      defaultCategoryId: settings?.defaultCategoryId,
+      lastUsedCategoryId: settings?.lastUsedCategoryId,
+      dashboardLayoutJson:
+          settings?.dashboardLayoutJson ?? defaults.dashboardLayoutJson,
+      analyticsPeriod: settings?.analyticsPeriod ?? defaults.analyticsPeriod,
+      quickActionsJson:
+          settings?.quickActionsJson ?? defaults.quickActionsJson,
     );
   }
 
@@ -63,6 +70,11 @@ abstract final class PreferencesMapper {
       backupDriveEmail: Value(preferences.backupDriveEmail),
       backupDriveFileId: Value(preferences.backupDriveFileId),
       lastBackupAt: Value(preferences.lastBackupAt),
+      defaultCategoryId: Value(preferences.defaultCategoryId),
+      lastUsedCategoryId: Value(preferences.lastUsedCategoryId),
+      dashboardLayoutJson: Value(preferences.dashboardLayoutJson),
+      analyticsPeriod: Value(preferences.analyticsPeriod),
+      quickActionsJson: Value(preferences.quickActionsJson),
     );
   }
 

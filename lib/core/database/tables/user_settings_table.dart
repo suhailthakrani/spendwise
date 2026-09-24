@@ -25,6 +25,17 @@ class UserSettings extends Table {
   TextColumn get backupDriveFileId => text().nullable()();
   DateTimeColumn get lastBackupAt => dateTime().nullable()();
 
+  /// Entry defaults for quick-add / full form.
+  TextColumn get defaultCategoryId => text().nullable()();
+  TextColumn get lastUsedCategoryId => text().nullable()();
+  /// JSON array of dashboard widget ids in display order.
+  TextColumn get dashboardLayoutJson => text().withDefault(const Constant(''))();
+  /// Default insights period name (e.g. oneYear).
+  TextColumn get analyticsPeriod =>
+      text().withDefault(const Constant('oneYear'))();
+  /// JSON array of quick-action ids.
+  TextColumn get quickActionsJson => text().withDefault(const Constant(''))();
+
   @override
   Set<Column<Object>> get primaryKey => {userId};
 }

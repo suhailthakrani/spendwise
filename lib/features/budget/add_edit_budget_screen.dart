@@ -13,6 +13,7 @@ import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/month_picker.dart';
 import '../../data/models/budget.dart';
+import '../../data/models/budget_period_type.dart';
 import '../../data/models/category.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
@@ -45,6 +46,11 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
   Budget? _existingBudget;
   bool _initialized = false;
   late DateTime _month;
+  BudgetPeriodType _periodType = BudgetPeriodType.monthly;
+  bool _rolloverEnabled = false;
+  bool _isSpendingLimit = false;
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   bool get isEditing => widget.budgetId != null;
 
@@ -84,6 +90,11 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
       _nameController.text = budget.name;
       _limitController.text = currency.formatForInput(budget.limit);
       _month = DateTime(budget.year, budget.month);
+      _periodType = budget.periodType;
+      _rolloverEnabled = budget.rolloverEnabled;
+      _isSpendingLimit = budget.isSpendingLimit;
+      _startDate = budget.startDate;
+      _endDate = budget.endDate;
     } else {
       _nameController.text = 'Monthly Budget';
       _month = DateTime(selectedMonth.year, selectedMonth.month);
@@ -132,6 +143,8 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     final limit = currency.toStorageAmount(limitDisplay);
     final categoryId = _type == BudgetFormType.category ? _categoryId : null;
     final isMonthly = _type == BudgetFormType.monthly;
+    final year = (_startDate ?? _month).year;
+    final month = (_startDate ?? _month).month;
 
     if (isEditing) {
       await repo.update(
@@ -140,8 +153,14 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
         limit: limit,
         categoryId: categoryId,
         isMonthly: isMonthly,
-        year: _month.year,
-        month: _month.month,
+        year: year,
+        month: month,
+        periodType: _periodType,
+        startDate: _startDate,
+        endDate: _endDate,
+        rolloverEnabled: _rolloverEnabled,
+        rolloverAmount: _existingBudget?.rolloverAmount ?? 0,
+        isSpendingLimit: _isSpendingLimit,
       );
     } else {
       await repo.create(
@@ -150,11 +169,16 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
         limit: limit,
         categoryId: categoryId,
         isMonthly: isMonthly,
-        year: _month.year,
-        month: _month.month,
+        year: year,
+        month: month,
+        periodType: _periodType,
+        startDate: _startDate,
+        endDate: _endDate,
+        rolloverEnabled: _rolloverEnabled,
+        isSpendingLimit: _isSpendingLimit,
       );
       ref.read(budgetMonthProvider.notifier).state =
-          DateTime(_month.year, _month.month);
+          DateTime(year, month);
     }
 
     if (context.mounted) {
@@ -306,6 +330,32 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                         ),
                       ],
                       const SizedBox(height: 18),
+                      const _FieldLabel('Period type'),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<BudgetPeriodType>(
+                        value: _periodType,
+                        items: [
+                          for (final period in BudgetPeriodType.values)
+                            DropdownMenuItem(
+                              value: period,
+                              child: Text(period.label),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() {
+                            _periodType = value;
+                            if (value == BudgetPeriodType.weekly ||
+                                value == BudgetPeriodType.custom ||
+                                value == BudgetPeriodType.event) {
+                              _startDate ??= _month;
+                              _endDate ??= _month.add(const Duration(days: 6));
+                            }
+                          });
+                        },
+                        decoration: const InputDecoration(isDense: true),
+                      ),
+                      const SizedBox(height: 12),
                       const _FieldLabel('Month'),
                       const SizedBox(height: 8),
                       Align(
@@ -314,6 +364,78 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                           month: _month,
                           onTap: _pickMonth,
                         ),
+                      ),
+                      if (_periodType == BudgetPeriodType.weekly ||
+                          _periodType == BudgetPeriodType.custom ||
+                          _periodType == BudgetPeriodType.event) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: _startDate ?? _month,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime(2035),
+                                  );
+                                  if (picked != null) {
+                                    setState(() {
+                                      _startDate = picked;
+                                      _month =
+                                          DateTime(picked.year, picked.month);
+                                    });
+                                  }
+                                },
+                                child: Text(
+                                  _startDate == null
+                                      ? 'Start date'
+                                      : 'Start ${_startDate!.day}/${_startDate!.month}',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: _endDate ??
+                                        (_startDate ?? _month)
+                                            .add(const Duration(days: 6)),
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime(2035),
+                                  );
+                                  if (picked != null) {
+                                    setState(() => _endDate = picked);
+                                  }
+                                },
+                                child: Text(
+                                  _endDate == null
+                                      ? 'End date'
+                                      : 'End ${_endDate!.day}/${_endDate!.month}',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Rollover unused'),
+                        value: _rolloverEnabled,
+                        onChanged: (v) =>
+                            setState(() => _rolloverEnabled = v),
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Spending limit'),
+                        subtitle: const Text('Hard cap instead of soft budget'),
+                        value: _isSpendingLimit,
+                        onChanged: (v) =>
+                            setState(() => _isSpendingLimit = v),
                       ),
                       const SizedBox(height: 12),
                       if (!isEditing) ...[

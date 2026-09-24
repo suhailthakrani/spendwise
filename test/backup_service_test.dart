@@ -135,7 +135,7 @@ void main() {
 
     final snapshot = await BackupService(db).createSnapshot(userId: 'user_a');
 
-    expect(snapshot.formatVersion, 3);
+    expect(snapshot.formatVersion, BackupSnapshot.currentFormatVersion);
     expect(snapshot.settings['themeMode'], 'system');
     expect(snapshot.settings['budgetAlertsEnabled'], isFalse);
     expect(snapshot.settings['notificationsEnabled'], isTrue);

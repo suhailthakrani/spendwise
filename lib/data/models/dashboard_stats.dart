@@ -21,7 +21,7 @@ class DashboardStats {
     required this.recentExpenseIds,
   });
 
-  /// Net money across all accounts (what people check first).
+  /// Net of all income minus expenses (what people check first).
   final double totalBalance;
   final double totalIncomeThisMonth;
   final double totalSpentToday;

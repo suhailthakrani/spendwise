@@ -10,6 +10,7 @@ import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/expense_widgets.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/expense_sort.dart';
+import '../../data/services/search_query_parser.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
 import '../../providers/repository_providers.dart';
@@ -27,6 +28,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   String? _selectedCategoryId;
   ExpenseSortBy _sortBy = ExpenseSortBy.dateDesc;
   late Future<List<Expense>> _searchFuture;
+  ParsedSearchQuery? _parsed;
 
   @override
   void initState() {
@@ -42,8 +44,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Future<List<Expense>> _runSearch() {
     final currency = ref.read(currencyDisplayProvider);
-    return ref.read(expenseRepositoryProvider).search(
-          query: _query,
+    final parsed = SearchQueryParser.parse(_query, now: DateTime.now());
+    _parsed = parsed;
+    return ref.read(expenseRepositoryProvider).searchParsed(
+          parsed: parsed,
           categoryId: _selectedCategoryId,
           sortBy: _sortBy,
           toDisplayAmount: currency.toDisplayAmount,
@@ -54,11 +58,27 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     setState(() => _searchFuture = _runSearch());
   }
 
+  List<String> _parsedChipLabels(ParsedSearchQuery parsed) {
+    final chips = <String>[];
+    if (parsed.minAmount != null) chips.add('≥ ${parsed.minAmount}');
+    if (parsed.maxAmount != null) chips.add('≤ ${parsed.maxAmount}');
+    if (parsed.startDate != null || parsed.endDate != null) {
+      chips.add('date range');
+    }
+    for (final tag in parsed.tags) {
+      chips.add('#$tag');
+    }
+    if (parsed.text.isNotEmpty) chips.add('“${parsed.text}”');
+    return chips;
+  }
+
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
     final currencyCode = ref.watch(displayCurrencyCodeProvider);
     final categories = categoriesAsync.valueOrNull ?? [];
+    final parsed = _parsed;
+    final chips = parsed == null ? const <String>[] : _parsedChipLabels(parsed);
 
     return Scaffold(
       appBar: AppBar(
@@ -75,7 +95,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 _refreshSearch();
               },
               decoration: InputDecoration(
-                hintText: 'Search by note...',
+                hintText: 'above 5000 · last 3 months · #food · cash',
                 prefixIcon: const AppIcon(AppIcons.search, size: 20),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
@@ -90,6 +110,25 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ),
             ),
           ),
+          if (chips.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 36,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: chips.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                itemBuilder: (context, index) {
+                  return Chip(
+                    label: Text(chips[index]),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  );
+                },
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           SizedBox(
             height: 44,

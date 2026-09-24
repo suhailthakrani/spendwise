@@ -2,11 +2,11 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/database/app_database.dart';
-import '../../core/database/database_seed.dart';
 import '../mappers/expense_mapper.dart';
 import '../models/expense.dart';
 import '../models/expense_sort.dart';
 import '../models/ledger_entry_type.dart';
+import '../services/search_query_parser.dart';
 
 class ExpenseRepository {
   ExpenseRepository(this._db, this._userId);
@@ -91,28 +91,78 @@ class ExpenseRepository {
     if (query.isNotEmpty) {
       final lower = query.toLowerCase();
       expenses = expenses
-          .where((e) => e.note.toLowerCase().contains(lower))
+          .where(
+            (e) =>
+                e.note.toLowerCase().contains(lower) ||
+                e.tags.any((t) => t.toLowerCase().contains(lower)),
+          )
           .toList();
     }
 
-    switch (sortBy) {
-      case ExpenseSortBy.dateDesc:
-        expenses.sort((a, b) => b.date.compareTo(a.date));
-      case ExpenseSortBy.dateAsc:
-        expenses.sort((a, b) => a.date.compareTo(b.date));
-      case ExpenseSortBy.amountDesc:
-        expenses.sort(
-          (a, b) =>
-              toDisplayAmount(b.amount).compareTo(toDisplayAmount(a.amount)),
-        );
-      case ExpenseSortBy.amountAsc:
-        expenses.sort(
-          (a, b) =>
-              toDisplayAmount(a.amount).compareTo(toDisplayAmount(b.amount)),
-        );
+    return _sorted(expenses, sortBy, toDisplayAmount);
+  }
+
+  /// Filters with structured tokens from [SearchQueryParser].
+  Future<List<Expense>> searchParsed({
+    required ParsedSearchQuery parsed,
+    String? categoryId,
+    LedgerEntryType? type,
+    ExpenseSortBy sortBy = ExpenseSortBy.dateDesc,
+    required double Function(double) toDisplayAmount,
+  }) async {
+    var queryBuilder = _db.select(_db.expenses)
+      ..where((t) => t.userId.equals(_userId));
+
+    if (type != null) {
+      queryBuilder = queryBuilder..where((t) => t.type.equals(type.name));
+    }
+    if (categoryId != null) {
+      queryBuilder = queryBuilder..where((t) => t.categoryId.equals(categoryId));
+    }
+    if (parsed.startDate != null) {
+      queryBuilder = queryBuilder
+        ..where((t) => t.date.isBiggerOrEqualValue(parsed.startDate!));
+    }
+    if (parsed.endDate != null) {
+      queryBuilder = queryBuilder
+        ..where((t) => t.date.isSmallerOrEqualValue(parsed.endDate!));
     }
 
-    return expenses;
+    var expenses =
+        (await queryBuilder.get()).map(ExpenseMapper.fromRow).toList();
+
+    if (parsed.minAmount != null) {
+      expenses = expenses
+          .where((e) => toDisplayAmount(e.amount) >= parsed.minAmount!)
+          .toList();
+    }
+    if (parsed.maxAmount != null) {
+      expenses = expenses
+          .where((e) => toDisplayAmount(e.amount) <= parsed.maxAmount!)
+          .toList();
+    }
+
+    if (parsed.tags.isNotEmpty) {
+      final wanted = parsed.tags.map((t) => t.toLowerCase()).toSet();
+      expenses = expenses
+          .where(
+            (e) => e.tags.any((t) => wanted.contains(t.toLowerCase())),
+          )
+          .toList();
+    }
+
+    if (parsed.text.isNotEmpty) {
+      final lower = parsed.text.toLowerCase();
+      expenses = expenses
+          .where(
+            (e) =>
+                e.note.toLowerCase().contains(lower) ||
+                e.tags.any((t) => t.toLowerCase().contains(lower)),
+          )
+          .toList();
+    }
+
+    return _sorted(expenses, sortBy, toDisplayAmount);
   }
 
   Future<double> sumForMonth({
@@ -122,13 +172,28 @@ class ExpenseRepository {
   }) async {
     final monthStart = DateTime(month.year, month.month, 1);
     final monthEnd = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+    return sumBetween(
+      start: monthStart,
+      end: monthEnd,
+      categoryId: categoryId,
+      type: type,
+    );
+  }
+
+  Future<double> sumBetween({
+    required DateTime start,
+    required DateTime end,
+    String? categoryId,
+    LedgerEntryType type = LedgerEntryType.expense,
+  }) async {
+    final rangeEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
     var query = _db.selectOnly(_db.expenses)
       ..addColumns([_db.expenses.amount.sum()])
       ..where(
         _db.expenses.userId.equals(_userId) &
             _db.expenses.type.equals(type.name) &
-            _db.expenses.date.isBetweenValues(monthStart, monthEnd),
+            _db.expenses.date.isBetweenValues(start, rangeEnd),
       );
 
     if (categoryId != null) {
@@ -146,40 +211,39 @@ class ExpenseRepository {
   }) async {
     final dayStart = DateTime(day.year, day.month, day.day);
     final dayEnd = DateTime(day.year, day.month, day.day, 23, 59, 59);
+    return sumBetween(
+      start: dayStart,
+      end: dayEnd,
+      categoryId: categoryId,
+      type: type,
+    );
+  }
 
-    var query = _db.selectOnly(_db.expenses)
+  /// Net of all income minus all expenses for this user.
+  Future<double> totalBalance() async {
+    final income = await _sumAll(type: LedgerEntryType.income);
+    final expense = await _sumAll(type: LedgerEntryType.expense);
+    return income - expense;
+  }
+
+  Future<double> _sumAll({required LedgerEntryType type}) async {
+    final query = _db.selectOnly(_db.expenses)
       ..addColumns([_db.expenses.amount.sum()])
       ..where(
         _db.expenses.userId.equals(_userId) &
-            _db.expenses.type.equals(type.name) &
-            _db.expenses.date.isBetweenValues(dayStart, dayEnd),
+            _db.expenses.type.equals(type.name),
       );
-
-    if (categoryId != null) {
-      query = query..where(_db.expenses.categoryId.equals(categoryId));
-    }
-
     final row = await query.getSingle();
     return row.read(_db.expenses.amount.sum()) ?? 0;
   }
 
   Future<void> create(Expense expense) async {
-    await seedAccountsForUser(_db, _userId);
-    final accountId = expense.accountId.isEmpty
-        ? defaultCashAccountId(_userId)
-        : expense.accountId;
     await _db.into(_db.expenses).insert(
-          ExpenseMapper.toCompanion(
-            expense.copyWith(accountId: accountId),
-            userId: _userId,
-          ),
+          ExpenseMapper.toCompanion(expense, userId: _userId),
         );
   }
 
   Future<void> update(Expense expense) async {
-    final accountId = expense.accountId.isEmpty
-        ? defaultCashAccountId(_userId)
-        : expense.accountId;
     await (_db.update(_db.expenses)
           ..where((t) => t.id.equals(expense.id) & t.userId.equals(_userId)))
         .write(
@@ -191,8 +255,8 @@ class ExpenseRepository {
         paymentMethod: Value(expense.paymentMethod.name),
         isRecurring: Value(expense.isRecurring),
         type: Value(expense.type.name),
-        accountId: Value(accountId),
-        toAccountId: Value(expense.toAccountId),
+        tags: Value(expense.tagsCsv),
+        attachmentPath: Value(expense.attachmentPath),
       ),
     );
   }
@@ -204,4 +268,28 @@ class ExpenseRepository {
   }
 
   String newId() => _uuid.v4();
+
+  static List<Expense> _sorted(
+    List<Expense> expenses,
+    ExpenseSortBy sortBy,
+    double Function(double) toDisplayAmount,
+  ) {
+    switch (sortBy) {
+      case ExpenseSortBy.dateDesc:
+        expenses.sort((a, b) => b.date.compareTo(a.date));
+      case ExpenseSortBy.dateAsc:
+        expenses.sort((a, b) => a.date.compareTo(b.date));
+      case ExpenseSortBy.amountDesc:
+        expenses.sort(
+          (a, b) =>
+              toDisplayAmount(b.amount).compareTo(toDisplayAmount(a.amount)),
+        );
+      case ExpenseSortBy.amountAsc:
+        expenses.sort(
+          (a, b) =>
+              toDisplayAmount(a.amount).compareTo(toDisplayAmount(b.amount)),
+        );
+    }
+    return expenses;
+  }
 }

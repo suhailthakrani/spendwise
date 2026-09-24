@@ -14,10 +14,10 @@ abstract final class ExpenseMapper {
       note: row.note,
       date: row.date,
       paymentMethod: PaymentMethod.values.byName(row.paymentMethod),
-      accountId: row.accountId,
       type: LedgerEntryType.fromDb(row.type),
-      toAccountId: row.toAccountId,
       isRecurring: row.isRecurring,
+      tags: Expense.parseTags(row.tags),
+      attachmentPath: row.attachmentPath,
     );
   }
 
@@ -35,8 +35,8 @@ abstract final class ExpenseMapper {
       paymentMethod: Value(expense.paymentMethod.name),
       isRecurring: Value(expense.isRecurring),
       type: Value(expense.type.name),
-      accountId: Value(expense.accountId),
-      toAccountId: Value(expense.toAccountId),
+      tags: Value(expense.tagsCsv),
+      attachmentPath: Value(expense.attachmentPath),
     );
   }
 }

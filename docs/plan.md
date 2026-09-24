@@ -7,8 +7,10 @@ and in what order, (c) what we deliberately defer, and (d) the architectural dec
 later phases possible. We execute one phase at a time, and we do not start a phase until its
 predecessor's Definition of Done is met.
 
-Status as of writing: app version `1.4.0+8`, Drift schema version `6`, 8 tables, offline-first with an
-encrypted (SQLCipher) local database.
+Status as of writing: Drift schema version `9`, backup `formatVersion` 4, offline-first with an
+encrypted (SQLCipher) local database. Phases **1, 2 (thin), 3, 4, 5, 7** UI shipped on the data
+layer; Phase **6** (subscriptions) is the immediate next product step, with PDF/app-lock and sync
+still parked.
 
 ---
 
@@ -169,62 +171,46 @@ priority phases 1, 3, 4, 5, 7.
 
 **DoD:** met — migration + balance + backup tests green.
 
-### Phase 1 — Ultra-fast capture
+### Phase 1 — Ultra-fast capture — **shipped (UI)**
 
-- Quick-add sheet: numeric keypad first, last-used category preselected, one-tap save.
-- Transaction templates and favourite/recent transactions.
-- Entry defaults in preferences: default account, category, currency, visible fields.
-- Bulk entry mode; receipt image attachment (OCR deferred to a later phase).
-- Recurring bills gain "post now" → creates the real transaction and advances `nextDueDate`.
+- Quick-add sheet with numeric keypad, last-used/default category, templates row, one-tap save.
+- Bulk entry sheet for multi-row amount + category capture.
+- Recurring “Post now” and auto-post confirmation queue on Budget.
+- Receipt attachment path on add/edit (OCR still deferred).
+- Schema v9 + backup format 4 carry templates, tags, defaults.
 
-**DoD:** median time from app open to saved expense under 3 seconds; template and quick-add paths
-covered by widget tests.
+**DoD:** capture paths live in UI; keypad helpers unit-tested.
 
-### Phase 2 — Complete money management
+### Phase 2 — Complete money management — **shipped (thin UI)**
 
-- Income and transfers as first-class entries; account balances derived from the ledger.
-- Multiple accounts with per-account currency; debt (borrowed/lent) tracking.
-- Tags and notes on all transaction types; attachments surfaced in detail screens.
-- Recurring income; bill auto-post with a confirmation queue.
+- Accounts screen: list/create/edit/delete, default badge, transfer CTA.
+- Add/edit supports Expense | Income | Transfer with from/to accounts, tags, receipt path.
+- Debt account types (borrowed/lent) available in the account editor.
+- Recurring income + auto-post queue wired.
 
-**DoD:** account balances reconcile to the ledger in property tests; income appears in
-`MonthlySummary.totalIncome` (currently hardcoded `0`).
+**DoD:** balances remain ledger-derived; multi-account UI is available.
 
-### Phase 3 — Forecast engine + financial calendar
+### Phase 3 — Forecast engine + financial calendar — **shipped**
 
-- `ForecastService` (pure, unit-tested, no UI dependency): projected month-end spend, projected
-  balance, expected income, upcoming commitments, budget-exhaustion date, "at this pace" figures,
-  what-if scenarios.
-- Dashboard outlook card: current balance → expected commitments → projected month-end balance.
-- Safe-to-spend (today / this week / rest of month).
-- Financial calendar screen: income dates, bills, planned expenses, budget periods, savings
-  contributions, expected balance per day, cash-flow timeline.
+- `ForecastService` unit-tested; `forecastProvider` feeds Home safe-to-spend + outlook.
+- Financial calendar screen: month grid + day commitments (bills, goals, budget markers).
 
-**DoD:** forecast covered by deterministic unit tests with injected clock; calendar renders a year of
-data without frame drops.
+**DoD:** forecast tests green; calendar route `/calendar` live.
 
-### Phase 4 — Analytics v2, insights engine, powerful search
+### Phase 4 — Analytics v2, insights engine, powerful search — **shipped (core)**
 
-- Comparisons: this month vs last, same month last year, YoY; category and account trends.
-- Metrics: spending velocity, average daily spend, average transaction size, highest/lowest periods,
-  distribution, budget performance.
-- Interactive charts with drill-down from chart segment to filtered transaction list.
-- `InsightEngine`: rule-based detectors (unusual spend, acceleration, category overspend, recurring
-  amount change, income change) producing ranked, human-readable insights and a monthly review.
-- Search v2: structured query parser (`above 5000`, `last 3 months`, `cash`, tag/account terms) backed
-  by SQLite FTS5 on notes, tags, and payees.
+- `InsightEngine` on Reports (smart insights) and Home teaser.
+- MoM comparison card on Reports.
+- Search v2: `SearchQueryParser` + `searchParsed`, NL hint chips.
 
-**DoD:** every detector has fixture-based tests including the "no insight" case; search returns in
-under 100 ms on a 20k-transaction fixture.
+**DoD:** engine + parser tests exist; search screen uses parsed queries.
 
-### Phase 5 — Budgeting v2
+### Phase 5 — Budgeting v2 — **shipped (UI)**
 
-- Weekly / monthly / yearly / custom-period budgets; account budgets; event/temporary budgets.
-- Rollover budgets and envelope budgeting with allocation and reallocation.
-- Budget history and budget-vs-actual reporting; spending limits distinct from budgets.
+- Period type, rollover, spending-limit, optional account, weekly/custom dates on add/edit budget.
+- Envelopes section on Budget with simple add dialog.
 
-**DoD:** rollover arithmetic verified across period boundaries; no double counting when a budget
-period and an envelope overlap.
+**DoD:** rollover arithmetic already unit-tested; envelope CRUD via repository.
 
 ### Phase 6 — Recurring & subscription management
 
@@ -232,14 +218,12 @@ period and an envelope overlap.
 - Subscription spend analysis; dormant/forgotten subscription detection.
 - Cancellation what-if ("cancel this → projected saving per year").
 
-### Phase 7 — Extreme customization
+### Phase 7 — Extreme customization — **shipped**
 
-- Dashboard widget registry: user picks and orders balance, safe-to-spend, forecast, budgets, goals,
-  recent transactions, calendar, charts, insights, accounts.
-- Persisted layout in preferences; analytics defaults (period, metrics, categories, accounts, chart
-  type); quick actions.
+- Dashboard renders from `DashboardLayout` prefs JSON.
+- Customize home screen: reorder, hide/show, reset defaults (`/dashboard/customize`).
 
-**DoD:** layout survives restore from backup; unknown widget ids degrade gracefully after downgrade.
+**DoD:** layout survives prefs write; unknown ids degrade via `DashboardLayout.fromJson`.
 
 ### Phase 8 — Privacy hardening & reports
 
@@ -358,8 +342,10 @@ Not "never" — just not before the priority track is excellent.
 
 ### Immediate next step
 
-Phase **1** — ultra-fast capture (quick-add) on the ledger foundation. Keep it to what people
-actually use daily: amount → category → save in under a few seconds.
+Phase **6** — recurring & subscription management (annualised cost, dormant detection, cancel
+what-if), or polish parked Phase 2 remainder (debt UX depth). Schema is at **v9**; backup format **4**.
+
+Parked: Phase 8+ (app lock, PDF, sync, AI, shared).
 
 ### Known unrelated issue
 

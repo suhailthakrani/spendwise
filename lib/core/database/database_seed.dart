@@ -39,25 +39,6 @@ Future<void> seedCategoriesForUser(AppDatabase db, String userId) async {
   });
 }
 
-/// Default Cash account — every user needs somewhere money lives.
-/// Safe to call repeatedly.
-Future<void> seedAccountsForUser(AppDatabase db, String userId) async {
-  final existing = await (db.select(db.accounts)
-        ..where((t) => t.userId.equals(userId)))
-      .get();
-  if (existing.isNotEmpty) return;
-
-  await db.into(db.accounts).insert(
-        AccountsCompanion.insert(
-          id: defaultCashAccountId(userId),
-          userId: userId,
-          name: 'Cash',
-          type: 'cash',
-          isDefault: const Value(true),
-        ),
-      );
-}
-
 /// Income needs a category people can pick without inventing one.
 Future<void> seedIncomeCategoryForUser(AppDatabase db, String userId) async {
   await db.into(db.categories).insert(
@@ -71,8 +52,6 @@ Future<void> seedIncomeCategoryForUser(AppDatabase db, String userId) async {
         mode: InsertMode.insertOrIgnore,
       );
 }
-
-String defaultCashAccountId(String userId) => '${userId}__acc_cash';
 
 String incomeCategoryId(String userId) => '${userId}__cat_income';
 

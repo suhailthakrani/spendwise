@@ -5,6 +5,8 @@ import 'package:drift/drift.dart';
 import '../../core/database/app_database.dart';
 import '../mappers/budget_mapper.dart';
 import '../models/budget.dart';
+import '../models/budget_period_type.dart';
+import '../models/ledger_entry_type.dart';
 import 'expense_repository.dart';
 
 class BudgetRepository {
@@ -86,6 +88,12 @@ class BudgetRepository {
     required int month,
     String? categoryId,
     bool isMonthly = true,
+    BudgetPeriodType periodType = BudgetPeriodType.monthly,
+    DateTime? startDate,
+    DateTime? endDate,
+    bool rolloverEnabled = false,
+    double rolloverAmount = 0,
+    bool isSpendingLimit = false,
   }) async {
     await _db.into(_db.budgets).insert(
           BudgetMapper.toCompanion(
@@ -97,6 +105,12 @@ class BudgetRepository {
             month: month,
             categoryId: categoryId,
             isMonthly: isMonthly,
+            periodType: periodType,
+            startDate: startDate,
+            endDate: endDate,
+            rolloverEnabled: rolloverEnabled,
+            rolloverAmount: rolloverAmount,
+            isSpendingLimit: isSpendingLimit,
           ),
         );
   }
@@ -109,6 +123,12 @@ class BudgetRepository {
     required int month,
     String? categoryId,
     bool isMonthly = true,
+    BudgetPeriodType periodType = BudgetPeriodType.monthly,
+    DateTime? startDate,
+    DateTime? endDate,
+    bool rolloverEnabled = false,
+    double rolloverAmount = 0,
+    bool isSpendingLimit = false,
   }) async {
     await (_db.update(_db.budgets)
           ..where((t) => t.id.equals(id) & t.userId.equals(_userId)))
@@ -120,6 +140,12 @@ class BudgetRepository {
         isMonthly: Value(isMonthly),
         year: Value(year),
         month: Value(month),
+        periodType: Value(periodType.name),
+        startDate: Value(startDate),
+        endDate: Value(endDate),
+        rolloverEnabled: Value(rolloverEnabled),
+        rolloverAmount: Value(rolloverAmount),
+        isSpendingLimit: Value(isSpendingLimit),
       ),
     );
   }
@@ -137,7 +163,8 @@ class BudgetRepository {
       budgets.add(BudgetMapper.fromRow(row, spent: spent));
     }
     budgets.sort((a, b) {
-      final byPeriod = DateTime(b.year, b.month).compareTo(DateTime(a.year, a.month));
+      final byPeriod =
+          DateTime(b.year, b.month).compareTo(DateTime(a.year, a.month));
       if (byPeriod != 0) return byPeriod;
       if (a.categoryId == null) return -1;
       if (b.categoryId == null) return 1;
@@ -147,9 +174,36 @@ class BudgetRepository {
   }
 
   Future<double> _spentForBudget(BudgetRow row) {
-    return _expenses.sumForMonth(
-      categoryId: row.categoryId,
-      month: DateTime(row.year, row.month),
-    );
+    final periodType = BudgetPeriodType.fromDb(row.periodType);
+    final categoryId = row.categoryId;
+
+    switch (periodType) {
+      case BudgetPeriodType.weekly:
+      case BudgetPeriodType.custom:
+      case BudgetPeriodType.event:
+        final start = row.startDate ?? DateTime(row.year, row.month, 1);
+        final end = row.endDate ??
+            DateTime(row.year, row.month + 1, 0, 23, 59, 59);
+        return _expenses.sumBetween(
+          start: start,
+          end: end,
+          categoryId: categoryId,
+          type: LedgerEntryType.expense,
+        );
+      case BudgetPeriodType.yearly:
+        final yearStart = DateTime(row.year, 1, 1);
+        final yearEnd = DateTime(row.year, 12, 31, 23, 59, 59);
+        return _expenses.sumBetween(
+          start: yearStart,
+          end: yearEnd,
+          categoryId: categoryId,
+          type: LedgerEntryType.expense,
+        );
+      case BudgetPeriodType.monthly:
+        return _expenses.sumForMonth(
+          categoryId: categoryId,
+          month: DateTime(row.year, row.month),
+        );
+    }
   }
 }

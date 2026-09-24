@@ -127,6 +127,12 @@ class CurrencyDisplay {
       isMonthly: budget.isMonthly,
       year: budget.year,
       month: budget.month,
+      periodType: budget.periodType,
+      startDate: budget.startDate,
+      endDate: budget.endDate,
+      rolloverEnabled: budget.rolloverEnabled,
+      rolloverAmount: toDisplayAmount(budget.rolloverAmount),
+      isSpendingLimit: budget.isSpendingLimit,
     );
   }
 }

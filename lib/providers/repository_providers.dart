@@ -1,12 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/repositories/account_repository.dart';
 import '../data/repositories/budget_repository.dart';
 import '../data/repositories/category_repository.dart';
+import '../data/repositories/envelope_repository.dart';
 import '../data/repositories/expense_repository.dart';
+import '../data/repositories/money_log_repository.dart';
 import '../data/repositories/recurring_expense_repository.dart';
 import '../data/repositories/report_repository.dart';
 import '../data/repositories/saving_goal_repository.dart';
+import '../data/repositories/template_repository.dart';
 import '../data/repositories/user_profile_repository.dart';
 import '../data/services/backup_service.dart';
 import '../data/services/biometric_auth_service.dart';
@@ -30,10 +32,6 @@ final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) {
   return ExpenseRepository(ref.watch(databaseProvider), _requireUserId(ref));
 });
 
-final accountRepositoryProvider = Provider<AccountRepository>((ref) {
-  return AccountRepository(ref.watch(databaseProvider), _requireUserId(ref));
-});
-
 final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
   return CategoryRepository(ref.watch(databaseProvider), _requireUserId(ref));
 });
@@ -55,6 +53,18 @@ final recurringExpenseRepositoryProvider =
   );
 });
 
+final envelopeRepositoryProvider = Provider<EnvelopeRepository>((ref) {
+  return EnvelopeRepository(ref.watch(databaseProvider), _requireUserId(ref));
+});
+
+final moneyLogRepositoryProvider = Provider<MoneyLogRepository>((ref) {
+  return MoneyLogRepository(ref.watch(databaseProvider), _requireUserId(ref));
+});
+
+final templateRepositoryProvider = Provider<TemplateRepository>((ref) {
+  return TemplateRepository(ref.watch(databaseProvider), _requireUserId(ref));
+});
+
 final userProfileRepositoryProvider = Provider<UserProfileRepository>((ref) {
   return UserProfileRepository(ref.watch(databaseProvider));
 });
@@ -63,7 +73,6 @@ final reportRepositoryProvider = Provider<ReportRepository>((ref) {
   return ReportRepository(
     ref.watch(expenseRepositoryProvider),
     ref.watch(budgetRepositoryProvider),
-    ref.watch(accountRepositoryProvider),
   );
 });
 

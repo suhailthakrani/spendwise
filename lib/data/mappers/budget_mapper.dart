@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../core/database/app_database.dart';
 import '../models/budget.dart';
+import '../models/budget_period_type.dart';
 
 abstract final class BudgetMapper {
   static Budget fromRow(BudgetRow row, {required double spent}) {
@@ -14,6 +15,12 @@ abstract final class BudgetMapper {
       isMonthly: row.isMonthly,
       year: row.year,
       month: row.month,
+      periodType: BudgetPeriodType.fromDb(row.periodType),
+      startDate: row.startDate,
+      endDate: row.endDate,
+      rolloverEnabled: row.rolloverEnabled,
+      rolloverAmount: row.rolloverAmount,
+      isSpendingLimit: row.isSpendingLimit,
     );
   }
 
@@ -26,6 +33,12 @@ abstract final class BudgetMapper {
     required int month,
     String? categoryId,
     bool isMonthly = true,
+    BudgetPeriodType periodType = BudgetPeriodType.monthly,
+    DateTime? startDate,
+    DateTime? endDate,
+    bool rolloverEnabled = false,
+    double rolloverAmount = 0,
+    bool isSpendingLimit = false,
   }) {
     return BudgetsCompanion(
       id: Value(id),
@@ -36,6 +49,12 @@ abstract final class BudgetMapper {
       isMonthly: Value(isMonthly),
       year: Value(year),
       month: Value(month),
+      periodType: Value(periodType.name),
+      startDate: Value(startDate),
+      endDate: Value(endDate),
+      rolloverEnabled: Value(rolloverEnabled),
+      rolloverAmount: Value(rolloverAmount),
+      isSpendingLimit: Value(isSpendingLimit),
     );
   }
 }

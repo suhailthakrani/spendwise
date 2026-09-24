@@ -9,10 +9,10 @@ class Expense {
     required this.note,
     required this.date,
     required this.paymentMethod,
-    required this.accountId,
     this.type = LedgerEntryType.expense,
-    this.toAccountId,
     this.isRecurring = false,
+    this.tags = const [],
+    this.attachmentPath,
   });
 
   final String id;
@@ -22,13 +22,26 @@ class Expense {
   final String note;
   final DateTime date;
   final PaymentMethod paymentMethod;
-  final String accountId;
   final LedgerEntryType type;
-  final String? toAccountId;
   final bool isRecurring;
+  final List<String> tags;
+  final String? attachmentPath;
 
   bool get isExpense => type == LedgerEntryType.expense;
   bool get isIncome => type == LedgerEntryType.income;
+
+  /// Comma-separated form used in the DB column.
+  String get tagsCsv => tags.join(',');
+
+  /// Parses a DB tags column into a trimmed, non-empty list.
+  static List<String> parseTags(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return const [];
+    return raw
+        .split(',')
+        .map((t) => t.trim())
+        .where((t) => t.isNotEmpty)
+        .toList(growable: false);
+  }
 
   Expense copyWith({
     String? id,
@@ -37,11 +50,11 @@ class Expense {
     String? note,
     DateTime? date,
     PaymentMethod? paymentMethod,
-    String? accountId,
     LedgerEntryType? type,
-    String? toAccountId,
-    bool clearToAccountId = false,
     bool? isRecurring,
+    List<String>? tags,
+    String? attachmentPath,
+    bool clearAttachmentPath = false,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -50,11 +63,12 @@ class Expense {
       note: note ?? this.note,
       date: date ?? this.date,
       paymentMethod: paymentMethod ?? this.paymentMethod,
-      accountId: accountId ?? this.accountId,
       type: type ?? this.type,
-      toAccountId:
-          clearToAccountId ? null : (toAccountId ?? this.toAccountId),
       isRecurring: isRecurring ?? this.isRecurring,
+      tags: tags ?? this.tags,
+      attachmentPath: clearAttachmentPath
+          ? null
+          : (attachmentPath ?? this.attachmentPath),
     );
   }
 }

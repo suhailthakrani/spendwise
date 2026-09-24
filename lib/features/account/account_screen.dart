@@ -120,9 +120,32 @@ class AccountScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const _SectionTitle(title: 'Data'),
+              const _SectionTitle(title: 'Records'),
               SurfaceGroup(
                 children: [
+                  SettingsTile(
+                    iconAsset: AppIcons.wallet,
+                    title: 'Money log',
+                    subtitle: 'Spending that stays out of your budget',
+                    onTap: () => context.push(AppRoutes.moneyLog),
+                  ),
+                  SettingsTile(
+                    iconAsset: AppIcons.calendar,
+                    title: 'Calendar',
+                    subtitle: 'Bills, income, and goal due dates',
+                    onTap: () => context.push(AppRoutes.calendar),
+                  ),
+                ],
+              ),
+              const _SectionTitle(title: 'Setup'),
+              SurfaceGroup(
+                children: [
+                  SettingsTile(
+                    iconAsset: AppIcons.settings,
+                    title: 'Customize home',
+                    subtitle: 'Reorder and hide dashboard widgets',
+                    onTap: () => context.push(AppRoutes.customizeDashboard),
+                  ),
                   SettingsTile(
                     iconAsset: AppIcons.savings,
                     title: 'Saving goals',
@@ -134,12 +157,6 @@ class AccountScreen extends ConsumerWidget {
                     title: 'Categories',
                     subtitle: 'Manage spending categories',
                     onTap: () => context.push(AppRoutes.categories),
-                  ),
-                  SettingsTile(
-                    iconAsset: AppIcons.repeat,
-                    title: 'Recurring expenses',
-                    subtitle: 'View on Budget tab',
-                    onTap: () => context.go(AppRoutes.budget),
                   ),
                 ],
               ),
@@ -170,16 +187,21 @@ class AccountScreen extends ConsumerWidget {
                     onTap: () => context.push(AppRoutes.settings),
                   ),
                   SettingsTile(
-                    iconAsset: AppIcons.info,
-                    title: 'FAQs',
-                    subtitle: 'Common questions',
-                    onTap: () => context.push(AppRoutes.faq),
-                  ),
-                  SettingsTile(
                     iconAsset: AppIcons.receipt,
                     title: 'Privacy',
                     subtitle: 'How your data stays on this device',
                     onTap: () => context.push(AppRoutes.privacy),
+                  ),
+                ],
+              ),
+              const _SectionTitle(title: 'Help'),
+              SurfaceGroup(
+                children: [
+                  SettingsTile(
+                    iconAsset: AppIcons.info,
+                    title: 'FAQs',
+                    subtitle: 'Common questions',
+                    onTap: () => context.push(AppRoutes.faq),
                   ),
                   SettingsTile(
                     iconAsset: AppIcons.heart,

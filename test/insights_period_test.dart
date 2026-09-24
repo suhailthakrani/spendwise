@@ -17,7 +17,6 @@ void main() {
       note: '',
       date: date,
       paymentMethod: PaymentMethod.cash,
-      accountId: 'cash',
     );
   }
 

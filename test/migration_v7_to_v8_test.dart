@@ -8,11 +8,10 @@ import 'package:spendwise/core/database/database_seed.dart';
 import 'package:spendwise/data/models/expense.dart';
 import 'package:spendwise/data/models/ledger_entry_type.dart';
 import 'package:spendwise/data/models/payment_method.dart';
-import 'package:spendwise/data/repositories/account_repository.dart';
 import 'package:spendwise/data/repositories/expense_repository.dart';
 import 'package:sqlite3/sqlite3.dart';
 
-/// Upgrading schema 7 → 8 must keep every expense amount and attach Cash.
+/// Upgrading schema 7 → latest must keep every expense amount and type.
 void main() {
   late Directory tempDir;
   late String dbPath;
@@ -26,18 +25,18 @@ void main() {
     await tempDir.delete(recursive: true);
   });
 
-  test('existing expenses keep amounts and land on default Cash', () async {
+  test('existing expenses keep amounts and expense type', () async {
     _writeSchema7(dbPath);
 
     final db = AppDatabase(NativeDatabase(File(dbPath)));
     addTearDown(db.close);
 
-    final accounts = await (db.select(db.accounts)
-          ..where((t) => t.userId.equals('user_a')))
+    final tables = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'accounts'",
+        )
         .get();
-    expect(accounts, hasLength(1));
-    expect(accounts.single.name, 'Cash');
-    expect(accounts.single.isDefault, isTrue);
+    expect(tables, isEmpty);
 
     final expenses =
         await (db.select(db.expenses)..where((t) => t.userId.equals('user_a')))
@@ -46,7 +45,6 @@ void main() {
     expect(expenses.single.amount, 12.5);
     expect(expenses.single.note, 'Lunch');
     expect(expenses.single.type, 'expense');
-    expect(expenses.single.accountId, accounts.single.id);
 
     final incomeCat = await (db.select(db.categories)
           ..where((t) => t.id.equals(incomeCategoryId('user_a'))))
@@ -66,12 +64,8 @@ void main() {
           ),
         );
     await seedCategoriesForUser(db, 'user_a');
-    await seedAccountsForUser(db, 'user_a');
 
-    final accounts = AccountRepository(db, 'user_a');
     final ledger = ExpenseRepository(db, 'user_a');
-    final cash = await accounts.getDefault();
-    expect(cash, isNotNull);
 
     final groceryId = (await (db.select(db.categories)
               ..where((t) => t.userId.equals('user_a')))
@@ -87,7 +81,6 @@ void main() {
         note: 'Salary',
         date: DateTime.now(),
         paymentMethod: PaymentMethod.cash,
-        accountId: cash!.id,
         type: LedgerEntryType.income,
       ),
     );
@@ -99,12 +92,11 @@ void main() {
         note: 'Food',
         date: DateTime.now(),
         paymentMethod: PaymentMethod.cash,
-        accountId: cash.id,
         type: LedgerEntryType.expense,
       ),
     );
 
-    expect(await accounts.totalBalance(), 70);
+    expect(await ledger.totalBalance(), 70);
     expect(await ledger.sumForMonth(month: DateTime.now()), 30);
     expect(
       await ledger.sumForMonth(

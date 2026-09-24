@@ -11,10 +11,12 @@ class BackupSnapshot {
     required this.savingContributions,
     this.driveEmail,
     this.settings = const {},
-    this.accounts = const [],
+    this.templates = const [],
+    this.envelopes = const [],
+    this.moneyLogs = const [],
   });
 
-  static const currentFormatVersion = 3;
+  static const currentFormatVersion = 6;
   static const formatName = 'spendwise-backup';
 
   final int formatVersion;
@@ -25,14 +27,21 @@ class BackupSnapshot {
   /// Account settings (theme, notification choices). Empty for version 1 files.
   final Map<String, Object?> settings;
 
-  /// Wallets. Empty for version ≤2 files — restore seeds a default Cash account.
-  final List<Map<String, Object?>> accounts;
   final List<Map<String, Object?>> categories;
   final List<Map<String, Object?>> expenses;
   final List<Map<String, Object?>> budgets;
   final List<Map<String, Object?>> recurringExpenses;
   final List<Map<String, Object?>> savingGoals;
   final List<Map<String, Object?>> savingContributions;
+
+  /// Transaction templates. Empty for version ≤3 files.
+  final List<Map<String, Object?>> templates;
+
+  /// Envelope allocations. Empty for version ≤3 files.
+  final List<Map<String, Object?>> envelopes;
+
+  /// Spending kept out of the budget. Empty for version ≤5 files.
+  final List<Map<String, Object?>> moneyLogs;
 
   String get profileId => profile['id'] as String? ?? '';
   String get profileEmail =>
@@ -47,13 +56,15 @@ class BackupSnapshot {
       'driveEmail': driveEmail,
       'profile': profile,
       'settings': settings,
-      'accounts': accounts,
       'categories': categories,
       'expenses': expenses,
       'budgets': budgets,
       'recurringExpenses': recurringExpenses,
       'savingGoals': savingGoals,
       'savingContributions': savingContributions,
+      'templates': templates,
+      'envelopes': envelopes,
+      'moneyLogs': moneyLogs,
     };
   }
 
@@ -80,19 +91,22 @@ class BackupSnapshot {
       return value.map(objectMap).toList();
     }
 
+    // Legacy `accounts` key (format ≤4) is intentionally ignored.
     return BackupSnapshot(
       formatVersion: version,
       exportedAt: DateTime.tryParse('${json['exportedAt']}') ?? DateTime.now(),
       driveEmail: json['driveEmail'] as String?,
       profile: objectMap(json['profile']),
       settings: objectMap(json['settings']),
-      accounts: objectList(json['accounts']),
       categories: objectList(json['categories']),
       expenses: objectList(json['expenses']),
       budgets: objectList(json['budgets']),
       recurringExpenses: objectList(json['recurringExpenses']),
       savingGoals: objectList(json['savingGoals']),
       savingContributions: objectList(json['savingContributions']),
+      templates: objectList(json['templates']),
+      envelopes: objectList(json['envelopes']),
+      moneyLogs: objectList(json['moneyLogs']),
     );
   }
 }
