@@ -7,6 +7,7 @@ import '../../core/database/database_seed.dart';
 import '../../core/utils/password_hasher.dart';
 import '../models/backup_snapshot.dart';
 import '../models/goal_status.dart';
+import '../models/money_log.dart';
 import '../models/payment_method.dart';
 import '../models/recurring_expense.dart';
 
@@ -216,6 +217,7 @@ class BackupService {
             'amount': row.amount,
             'message': row.message,
             'date': row.date.toIso8601String(),
+            'direction': row.direction,
           },
       ],
     );
@@ -715,6 +717,10 @@ class BackupService {
                 amount: _asDouble(row['amount']) ?? 0,
                 message: row['message'] as String? ?? '',
                 date: _asDate(row['date']) ?? DateTime.now(),
+                direction: Value(
+                  MoneyLogDirection.fromStorage(row['direction'] as String?)
+                      .storageValue,
+                ),
               ),
           ],
         );

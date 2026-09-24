@@ -46,7 +46,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   late String _categoryId;
   late PaymentMethod _paymentMethod;
   late DateTime _date;
-  late LedgerEntryType _type;
+  var _type = LedgerEntryType.expense;
   bool _isRecurring = false;
   bool _initialized = false;
   String? _attachmentPath;
@@ -58,7 +58,6 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     super.initState();
     _paymentMethod = PaymentMethod.cash;
     _date = DateTime.now();
-    _type = LedgerEntryType.expense;
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
   }
 
@@ -87,8 +86,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       _categoryId = expense.categoryId;
       _paymentMethod = expense.paymentMethod;
       _date = expense.date;
-      _isRecurring = expense.isRecurring;
       _type = expense.type;
+      _isRecurring = expense.isRecurring;
       _attachmentPath = expense.attachmentPath;
       _amountController.text = currency.formatForInput(expense.amount);
       _noteController.text = expense.note;
@@ -151,14 +150,12 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     }
 
     final repo = ref.read(expenseRepositoryProvider);
-    final isIncome = _type == LedgerEntryType.income;
-    final noteFallback = isIncome ? 'Income' : 'Expense';
     final expense = Expense(
       id: widget.expenseId ?? repo.newId(),
       amount: currency.toStorageAmount(amountDisplay),
       categoryId: _categoryId,
       note: _noteController.text.trim().isEmpty
-          ? noteFallback
+          ? 'Expense'
           : _noteController.text.trim(),
       date: _date,
       paymentMethod: _paymentMethod,
@@ -180,13 +177,10 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     if (!context.mounted) return;
     HapticFeedback.lightImpact();
     context.pop();
+    final label = _type == LedgerEntryType.income ? 'Income' : 'Expense';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          isEditing
-              ? (isIncome ? 'Income updated' : 'Expense updated')
-              : (isIncome ? 'Income saved' : 'Expense saved'),
-        ),
+        content: Text(isEditing ? '$label updated' : 'Expense saved'),
       ),
     );
   }
@@ -221,18 +215,9 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     // Offer searchable sheet once the strip is likely to need scrolling.
     final hasMore = categories.length > 6;
 
-    String title;
-    if (isEditing) {
-      title = switch (_type) {
-        LedgerEntryType.income => 'Edit income',
-        LedgerEntryType.expense => 'Edit expense',
-      };
-    } else {
-      title = switch (_type) {
-        LedgerEntryType.income => 'New income',
-        LedgerEntryType.expense => 'New expense',
-      };
-    }
+    final title = isEditing
+        ? (_type == LedgerEntryType.income ? 'Edit income' : 'Edit expense')
+        : 'New expense';
 
     return Scaffold(
       appBar: AppBar(
@@ -253,103 +238,49 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (!isEditing) ...[
-                      SegmentedButton<LedgerEntryType>(
-                        segments: const [
-                          ButtonSegment(
-                            value: LedgerEntryType.expense,
-                            label: Text('Expense'),
-                          ),
-                          ButtonSegment(
-                            value: LedgerEntryType.income,
-                            label: Text('Income'),
-                          ),
-                        ],
-                        selected: {_type},
-                        onSelectionChanged: (next) {
-                          final type = next.first;
-                          setState(() {
-                            _type = type;
-                            if (type == LedgerEntryType.income) {
-                              final income = categories
-                                  .where(
-                                    (c) =>
-                                        c.name.toLowerCase() == 'income',
-                                  )
-                                  .firstOrNull;
-                              if (income != null) _categoryId = income.id;
-                            }
-                          });
-                        },
+                    Text(
+                      currencyCode,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight,
                       ),
-                      const SizedBox(height: 16),
-                    ],
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 28,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    AppTextFormField(
+                      controller: _amountController,
+                      focusNode: _amountFocus,
+                      onChanged: (_) => setState(() {}),
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: currency.allowsDecimalInput,
                       ),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkCard : Colors.white,
-                        borderRadius: BorderRadius.circular(AppRadii.xl),
-                        border: Border.all(color: AppColors.border(context)),
+                      inputFormatters: [
+                        AmountInputFormatter(
+                          decimalDigits: currency.decimalDigits,
+                        ),
+                      ],
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 42,
+                        height: 1.08,
+                        letterSpacing: 0,
                       ),
-                      child: Column(
-                        children: [
-                          Text(
-                            currencyCode,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: AppColors.secondaryText(context),
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          AppTextFormField(
-                            controller: _amountController,
-                            focusNode: _amountFocus,
-                            onChanged: (_) => setState(() {}),
-                            textAlign: TextAlign.center,
-                            keyboardType: TextInputType.numberWithOptions(
-                              decimal: currency.allowsDecimalInput,
-                            ),
-                            inputFormatters: [
-                              AmountInputFormatter(
-                                decimalDigits: currency.decimalDigits,
-                              ),
-                            ],
-                            style: theme.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 48,
-                              height: 1.05,
-                              letterSpacing: 0,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                            decoration: InputDecoration(
-                              hintText: currency.amountInputHint,
-                              hintStyle: theme.textTheme.displaySmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 48,
-                                height: 1.05,
-                                letterSpacing: 0,
-                                color: AppColors.tertiaryText(context),
-                              ),
-                              prefixText: '${currency.symbol} ',
-                              prefixStyle:
-                                  theme.textTheme.displaySmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 36,
-                                color: AppColors.primary,
-                              ),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              filled: false,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                        ],
+                      decoration: InputDecoration(
+                        hintText: currency.amountInputHint,
+                        prefixText: '${currency.symbol} ',
+                        prefixStyle: theme.textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 38,
+                          color: AppColors.primary,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),

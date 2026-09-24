@@ -47,7 +47,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -130,6 +130,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 10) {
             await migrator.createTable(moneyLogs);
+          }
+          if (from < 11) {
+            await _addColumnIfAbsent(migrator, moneyLogs, moneyLogs.direction);
           }
         },
       );

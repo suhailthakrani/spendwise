@@ -10,6 +10,7 @@ abstract final class MoneyLogMapper {
       amount: row.amount,
       message: row.message,
       date: row.date,
+      direction: MoneyLogDirection.fromStorage(row.direction),
     );
   }
 
@@ -23,6 +24,7 @@ abstract final class MoneyLogMapper {
       amount: Value(log.amount),
       message: Value(log.message),
       date: Value(log.date),
+      direction: Value(log.direction.storageValue),
     );
   }
 }

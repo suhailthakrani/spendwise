@@ -5896,8 +5896,17 @@ class $MoneyLogsTable extends MoneyLogs
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
       'date', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _directionMeta =
+      const VerificationMeta('direction');
   @override
-  List<GeneratedColumn> get $columns => [id, userId, amount, message, date];
+  late final GeneratedColumn<String> direction = GeneratedColumn<String>(
+      'direction', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('out'));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, userId, amount, message, date, direction];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5937,6 +5946,10 @@ class $MoneyLogsTable extends MoneyLogs
     } else if (isInserting) {
       context.missing(_dateMeta);
     }
+    if (data.containsKey('direction')) {
+      context.handle(_directionMeta,
+          direction.isAcceptableOrUnknown(data['direction']!, _directionMeta));
+    }
     return context;
   }
 
@@ -5956,6 +5969,8 @@ class $MoneyLogsTable extends MoneyLogs
           .read(DriftSqlType.string, data['${effectivePrefix}message'])!,
       date: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      direction: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}direction'])!,
     );
   }
 
@@ -5971,12 +5986,16 @@ class MoneyLogRow extends DataClass implements Insertable<MoneyLogRow> {
   final double amount;
   final String message;
   final DateTime date;
+
+  /// `out` (default) or `in`.
+  final String direction;
   const MoneyLogRow(
       {required this.id,
       required this.userId,
       required this.amount,
       required this.message,
-      required this.date});
+      required this.date,
+      required this.direction});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5985,6 +6004,7 @@ class MoneyLogRow extends DataClass implements Insertable<MoneyLogRow> {
     map['amount'] = Variable<double>(amount);
     map['message'] = Variable<String>(message);
     map['date'] = Variable<DateTime>(date);
+    map['direction'] = Variable<String>(direction);
     return map;
   }
 
@@ -5995,6 +6015,7 @@ class MoneyLogRow extends DataClass implements Insertable<MoneyLogRow> {
       amount: Value(amount),
       message: Value(message),
       date: Value(date),
+      direction: Value(direction),
     );
   }
 
@@ -6007,6 +6028,7 @@ class MoneyLogRow extends DataClass implements Insertable<MoneyLogRow> {
       amount: serializer.fromJson<double>(json['amount']),
       message: serializer.fromJson<String>(json['message']),
       date: serializer.fromJson<DateTime>(json['date']),
+      direction: serializer.fromJson<String>(json['direction']),
     );
   }
   @override
@@ -6018,6 +6040,7 @@ class MoneyLogRow extends DataClass implements Insertable<MoneyLogRow> {
       'amount': serializer.toJson<double>(amount),
       'message': serializer.toJson<String>(message),
       'date': serializer.toJson<DateTime>(date),
+      'direction': serializer.toJson<String>(direction),
     };
   }
 
@@ -6026,13 +6049,15 @@ class MoneyLogRow extends DataClass implements Insertable<MoneyLogRow> {
           String? userId,
           double? amount,
           String? message,
-          DateTime? date}) =>
+          DateTime? date,
+          String? direction}) =>
       MoneyLogRow(
         id: id ?? this.id,
         userId: userId ?? this.userId,
         amount: amount ?? this.amount,
         message: message ?? this.message,
         date: date ?? this.date,
+        direction: direction ?? this.direction,
       );
   MoneyLogRow copyWithCompanion(MoneyLogsCompanion data) {
     return MoneyLogRow(
@@ -6041,6 +6066,7 @@ class MoneyLogRow extends DataClass implements Insertable<MoneyLogRow> {
       amount: data.amount.present ? data.amount.value : this.amount,
       message: data.message.present ? data.message.value : this.message,
       date: data.date.present ? data.date.value : this.date,
+      direction: data.direction.present ? data.direction.value : this.direction,
     );
   }
 
@@ -6051,13 +6077,14 @@ class MoneyLogRow extends DataClass implements Insertable<MoneyLogRow> {
           ..write('userId: $userId, ')
           ..write('amount: $amount, ')
           ..write('message: $message, ')
-          ..write('date: $date')
+          ..write('date: $date, ')
+          ..write('direction: $direction')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, userId, amount, message, date);
+  int get hashCode => Object.hash(id, userId, amount, message, date, direction);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -6066,7 +6093,8 @@ class MoneyLogRow extends DataClass implements Insertable<MoneyLogRow> {
           other.userId == this.userId &&
           other.amount == this.amount &&
           other.message == this.message &&
-          other.date == this.date);
+          other.date == this.date &&
+          other.direction == this.direction);
 }
 
 class MoneyLogsCompanion extends UpdateCompanion<MoneyLogRow> {
@@ -6075,6 +6103,7 @@ class MoneyLogsCompanion extends UpdateCompanion<MoneyLogRow> {
   final Value<double> amount;
   final Value<String> message;
   final Value<DateTime> date;
+  final Value<String> direction;
   final Value<int> rowid;
   const MoneyLogsCompanion({
     this.id = const Value.absent(),
@@ -6082,6 +6111,7 @@ class MoneyLogsCompanion extends UpdateCompanion<MoneyLogRow> {
     this.amount = const Value.absent(),
     this.message = const Value.absent(),
     this.date = const Value.absent(),
+    this.direction = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MoneyLogsCompanion.insert({
@@ -6090,6 +6120,7 @@ class MoneyLogsCompanion extends UpdateCompanion<MoneyLogRow> {
     required double amount,
     required String message,
     required DateTime date,
+    this.direction = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         userId = Value(userId),
@@ -6102,6 +6133,7 @@ class MoneyLogsCompanion extends UpdateCompanion<MoneyLogRow> {
     Expression<double>? amount,
     Expression<String>? message,
     Expression<DateTime>? date,
+    Expression<String>? direction,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -6110,6 +6142,7 @@ class MoneyLogsCompanion extends UpdateCompanion<MoneyLogRow> {
       if (amount != null) 'amount': amount,
       if (message != null) 'message': message,
       if (date != null) 'date': date,
+      if (direction != null) 'direction': direction,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6120,6 +6153,7 @@ class MoneyLogsCompanion extends UpdateCompanion<MoneyLogRow> {
       Value<double>? amount,
       Value<String>? message,
       Value<DateTime>? date,
+      Value<String>? direction,
       Value<int>? rowid}) {
     return MoneyLogsCompanion(
       id: id ?? this.id,
@@ -6127,6 +6161,7 @@ class MoneyLogsCompanion extends UpdateCompanion<MoneyLogRow> {
       amount: amount ?? this.amount,
       message: message ?? this.message,
       date: date ?? this.date,
+      direction: direction ?? this.direction,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6149,6 +6184,9 @@ class MoneyLogsCompanion extends UpdateCompanion<MoneyLogRow> {
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
     }
+    if (direction.present) {
+      map['direction'] = Variable<String>(direction.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6163,6 +6201,7 @@ class MoneyLogsCompanion extends UpdateCompanion<MoneyLogRow> {
           ..write('amount: $amount, ')
           ..write('message: $message, ')
           ..write('date: $date, ')
+          ..write('direction: $direction, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -10704,6 +10743,7 @@ typedef $$MoneyLogsTableCreateCompanionBuilder = MoneyLogsCompanion Function({
   required double amount,
   required String message,
   required DateTime date,
+  Value<String> direction,
   Value<int> rowid,
 });
 typedef $$MoneyLogsTableUpdateCompanionBuilder = MoneyLogsCompanion Function({
@@ -10712,6 +10752,7 @@ typedef $$MoneyLogsTableUpdateCompanionBuilder = MoneyLogsCompanion Function({
   Value<double> amount,
   Value<String> message,
   Value<DateTime> date,
+  Value<String> direction,
   Value<int> rowid,
 });
 
@@ -10756,6 +10797,9 @@ class $$MoneyLogsTableFilterComposer
   ColumnFilters<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get direction => $composableBuilder(
+      column: $table.direction, builder: (column) => ColumnFilters(column));
+
   $$UserProfilesTableFilterComposer get userId {
     final $$UserProfilesTableFilterComposer composer = $composerBuilder(
         composer: this,
@@ -10798,6 +10842,9 @@ class $$MoneyLogsTableOrderingComposer
   ColumnOrderings<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get direction => $composableBuilder(
+      column: $table.direction, builder: (column) => ColumnOrderings(column));
+
   $$UserProfilesTableOrderingComposer get userId {
     final $$UserProfilesTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -10839,6 +10886,9 @@ class $$MoneyLogsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => column);
 
   $$UserProfilesTableAnnotationComposer get userId {
     final $$UserProfilesTableAnnotationComposer composer = $composerBuilder(
@@ -10889,6 +10939,7 @@ class $$MoneyLogsTableTableManager extends RootTableManager<
             Value<double> amount = const Value.absent(),
             Value<String> message = const Value.absent(),
             Value<DateTime> date = const Value.absent(),
+            Value<String> direction = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MoneyLogsCompanion(
@@ -10897,6 +10948,7 @@ class $$MoneyLogsTableTableManager extends RootTableManager<
             amount: amount,
             message: message,
             date: date,
+            direction: direction,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -10905,6 +10957,7 @@ class $$MoneyLogsTableTableManager extends RootTableManager<
             required double amount,
             required String message,
             required DateTime date,
+            Value<String> direction = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MoneyLogsCompanion.insert(
@@ -10913,6 +10966,7 @@ class $$MoneyLogsTableTableManager extends RootTableManager<
             amount: amount,
             message: message,
             date: date,
+            direction: direction,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

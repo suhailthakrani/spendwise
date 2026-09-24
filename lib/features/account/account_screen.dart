@@ -126,7 +126,7 @@ class AccountScreen extends ConsumerWidget {
                   SettingsTile(
                     iconAsset: AppIcons.wallet,
                     title: 'Money log',
-                    subtitle: 'Spending that stays out of your budget',
+                    subtitle: 'Money in and out, kept out of your budget',
                     onTap: () => context.push(AppRoutes.moneyLog),
                   ),
                   SettingsTile(

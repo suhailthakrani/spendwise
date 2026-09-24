@@ -29,6 +29,15 @@ void main() {
     );
     await repo.create(
       MoneyLog(
+        id: 'log_in',
+        amount: 25,
+        message: 'Refund',
+        date: now,
+        direction: MoneyLogDirection.incoming,
+      ),
+    );
+    await repo.create(
+      MoneyLog(
         id: 'log_old',
         amount: 10,
         message: 'Last month',
@@ -38,16 +47,25 @@ void main() {
 
     final logs = await repo.watchAll().first;
     final month = MoneyLog.inMonth(logs, now);
-    expect(month, hasLength(1));
-    expect(month.single.message, 'Family medical');
-    expect(MoneyLog.total(month), 40);
+    expect(month, hasLength(2));
+    expect(month.map((l) => l.message), contains('Family medical'));
+    expect(MoneyLog.totalOut(month), 40);
+    expect(MoneyLog.totalIn(month), 25);
+    expect(
+      month.singleWhere((l) => l.id == 'log_in').direction,
+      MoneyLogDirection.incoming,
+    );
     expect(await db.select(db.expenses).get(), isEmpty);
 
     final snapshot = await BackupService(db).createSnapshot(userId: 'user_a');
-    expect(snapshot.moneyLogs, hasLength(2));
+    expect(snapshot.moneyLogs, hasLength(3));
+    expect(
+      snapshot.moneyLogs.singleWhere((row) => row['id'] == 'log_in')['direction'],
+      'in',
+    );
 
     await repo.delete('log_1');
-    expect(await repo.watchAll().first, hasLength(1));
+    expect(await repo.watchAll().first, hasLength(2));
 
     await BackupService(db).restoreIntoUser(
       snapshot: snapshot,
@@ -55,5 +73,9 @@ void main() {
     );
     final restored = await repo.watchAll().first;
     expect(restored.map((l) => l.message), contains('Family medical'));
+    expect(
+      restored.singleWhere((l) => l.id == 'log_in').direction,
+      MoneyLogDirection.incoming,
+    );
   });
 }

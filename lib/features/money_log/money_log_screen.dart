@@ -28,7 +28,8 @@ class MoneyLogScreen extends ConsumerWidget {
       data: (logs) => MoneyLog.inMonth(logs, now),
       orElse: () => const <MoneyLog>[],
     );
-    final outside = MoneyLog.total(monthLogs);
+    final moneyOut = MoneyLog.totalOut(monthLogs);
+    final moneyIn = MoneyLog.totalIn(monthLogs);
     final fromBudget = expenses
         .where((e) => e.date.year == now.year && e.date.month == now.month)
         .fold(0.0, (sum, e) => sum + e.amount);
@@ -54,9 +55,10 @@ class MoneyLogScreen extends ConsumerWidget {
             children: [
               _SummaryCard(
                 monthLabel: DateFormatter.monthYear(now),
-                outsideLabel: currency.format(outside),
+                outLabel: currency.format(moneyOut),
+                inLabel: currency.format(moneyIn),
                 fromBudgetLabel: currency.format(fromBudget),
-                totalLabel: currency.format(outside + fromBudget),
+                totalLabel: currency.format(moneyOut + fromBudget),
               ),
               const SizedBox(height: 20),
               Text(
@@ -70,7 +72,7 @@ class MoneyLogScreen extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 28),
                   child: Text(
-                    'Nothing outside your budget yet. Use + to log an amount and a short note.',
+                    'Nothing logged yet. Use + to record money in or out. This stays out of your budget.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.secondaryText(context),
                         ),
@@ -80,7 +82,9 @@ class MoneyLogScreen extends ConsumerWidget {
                 ...monthLogs.map(
                   (log) => _LogTile(
                     log: log,
-                    amountLabel: currency.format(log.amount),
+                    amountLabel: log.direction.isIncoming
+                        ? '+${currency.format(log.amount)}'
+                        : currency.format(log.amount),
                   ),
                 ),
             ],
@@ -94,13 +98,15 @@ class MoneyLogScreen extends ConsumerWidget {
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({
     required this.monthLabel,
-    required this.outsideLabel,
+    required this.outLabel,
+    required this.inLabel,
     required this.fromBudgetLabel,
     required this.totalLabel,
   });
 
   final String monthLabel;
-  final String outsideLabel;
+  final String outLabel;
+  final String inLabel;
   final String fromBudgetLabel;
   final String totalLabel;
 
@@ -119,33 +125,72 @@ class _SummaryCard extends StatelessWidget {
               monthLabel,
               style: theme.textTheme.labelMedium?.copyWith(color: muted),
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Outside your budget',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              outsideLabel,
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.6,
-                color: AppColors.error,
-              ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: _AmountBlock(
+                    label: 'Out',
+                    value: outLabel,
+                    color: AppColors.error,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _AmountBlock(
+                    label: 'In',
+                    value: inLabel,
+                    color: AppColors.success,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             const Divider(height: 1),
             const SizedBox(height: 12),
             _Line(label: 'From budget', value: fromBudgetLabel),
-            const SizedBox(height: 6),
-            _Line(label: 'Outside budget', value: outsideLabel),
             const SizedBox(height: 8),
             _Line(label: 'Total spent', value: totalLabel, emphasize: true),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AmountBlock extends StatelessWidget {
+  const _AmountBlock({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: AppColors.secondaryText(context),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -218,12 +263,16 @@ class _LogTile extends ConsumerWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        subtitle: Text(DateFormatter.relative(log.date)),
+        subtitle: Text(
+          '${log.direction.isIncoming ? 'In' : 'Out'} · ${DateFormatter.relative(log.date)}',
+        ),
         trailing: Text(
           amountLabel,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.error,
+            color: log.direction.isIncoming
+                ? AppColors.success
+                : AppColors.error,
           ),
         ),
       ),
@@ -251,6 +300,7 @@ class _MoneyLogSheet extends ConsumerStatefulWidget {
 class _MoneyLogSheetState extends ConsumerState<_MoneyLogSheet> {
   final _amount = TextEditingController();
   final _message = TextEditingController();
+  var _direction = MoneyLogDirection.out;
   var _saving = false;
 
   @override
@@ -283,6 +333,7 @@ class _MoneyLogSheetState extends ConsumerState<_MoneyLogSheet> {
           amount: currency.toStorageAmount(display),
           message: message,
           date: DateTime.now(),
+          direction: _direction,
         ),
       );
       if (mounted) Navigator.pop(context);
@@ -321,6 +372,23 @@ class _MoneyLogSheetState extends ConsumerState<_MoneyLogSheet> {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.secondaryText(context),
                 ),
+          ),
+          const SizedBox(height: 16),
+          SegmentedButton<MoneyLogDirection>(
+            segments: const [
+              ButtonSegment(
+                value: MoneyLogDirection.out,
+                label: Text('Out'),
+              ),
+              ButtonSegment(
+                value: MoneyLogDirection.incoming,
+                label: Text('In'),
+              ),
+            ],
+            selected: {_direction},
+            onSelectionChanged: (next) {
+              setState(() => _direction = next.first);
+            },
           ),
           const SizedBox(height: 16),
           AppTextField(

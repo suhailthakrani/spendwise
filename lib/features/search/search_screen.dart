@@ -96,7 +96,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               },
               decoration: InputDecoration(
                 hintText: 'above 5000 · last 3 months · #food · cash',
-                prefixIcon: const AppIcon(AppIcons.search, size: 20),
+                prefixIcon: const AppIcon(AppIcons.search, size: 12),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
                         icon: const AppIcon(AppIcons.clear, size: 20),

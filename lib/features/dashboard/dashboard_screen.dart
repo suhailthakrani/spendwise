@@ -66,6 +66,15 @@ class DashboardScreen extends ConsumerWidget {
                     backgroundColor: theme.scaffoldBackgroundColor,
                     toolbarHeight: 76,
                     title: _DashboardTitle(greeting: _greeting()),
+                    actions: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: SoftIconButton(
+                          asset: AppIcons.search,
+                          onPressed: () => context.push(AppRoutes.search),
+                        ),
+                      ),
+                    ],
                   ),
                   for (final widgetId in layout.widgets)
                     ..._sliversFor(
@@ -127,7 +136,7 @@ class DashboardScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.page,
-                14,
+                AppSpacing.page,
                 AppSpacing.page,
                 0,
               ),
