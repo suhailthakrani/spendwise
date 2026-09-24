@@ -49,6 +49,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   var _type = LedgerEntryType.expense;
   bool _isRecurring = false;
   bool _initialized = false;
+  bool _saving = false;
   String? _attachmentPath;
 
   bool get isEditing => widget.expenseId != null;
@@ -140,6 +141,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   }
 
   Future<void> _save(BuildContext context) async {
+    if (_saving) return;
     final currency = ref.read(currencyDisplayProvider);
     final amountDisplay = currency.parseInput(_amountController.text);
     if (amountDisplay == null || amountDisplay <= 0) {
@@ -149,6 +151,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       return;
     }
 
+    setState(() => _saving = true);
     final repo = ref.read(expenseRepositoryProvider);
     final expense = Expense(
       id: widget.expenseId ?? repo.newId(),
@@ -165,23 +168,44 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       attachmentPath: _attachmentPath,
     );
 
-    if (isEditing) {
-      await repo.update(expense);
-    } else {
-      await repo.create(expense);
+    try {
+      if (isEditing) {
+        await repo.update(expense);
+      } else {
+        await repo.create(expense);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _saving = false);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save')),
+      );
+      return;
     }
 
     if (!context.mounted) return;
     HapticFeedback.lightImpact();
     final label = _type == LedgerEntryType.income ? 'Income' : 'Expense';
-    // Pop before prefs write — that refresh races with go_router pop.
-    ScaffoldMessenger.of(context).showSnackBar(
+    final messenger = ScaffoldMessenger.of(context);
+    final categoryId = _categoryId;
+    final prefsRepo = ref.read(preferencesRepositoryProvider);
+
+    // Leave before the prefs write. That update refreshes go_router and can
+    // cancel an in-flight pop, so this screen stays open after a successful save.
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.expenses);
+    }
+    messenger.showSnackBar(
       SnackBar(
         content: Text(isEditing ? '$label updated' : 'Expense saved'),
       ),
     );
-    context.pop();
-    ref.read(preferencesRepositoryProvider).setLastUsedCategoryId(_categoryId);
+    Future<void>.delayed(const Duration(milliseconds: 300), () {
+      prefsRepo.setLastUsedCategoryId(categoryId);
+    });
   }
 
   Future<void> _pickDate() async {
@@ -251,6 +275,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                       controller: _amountController,
                       focusNode: _amountFocus,
                       onChanged: (_) => setState(() {}),
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _save(context),
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.numberWithOptions(
                         decimal: currency.allowsDecimalInput,
@@ -413,8 +439,12 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
               child: Column(
                 children: [
                   FilledButton(
-                    onPressed: () => _save(context),
-                    child: Text(isEditing ? 'Update' : 'Save'),
+                    onPressed: _saving ? null : () => _save(context),
+                    child: Text(
+                      _saving
+                          ? 'Saving…'
+                          : (isEditing ? 'Update' : 'Save'),
+                    ),
                   ),
                   if (isEditing) ...[
                     const SizedBox(height: 8),
