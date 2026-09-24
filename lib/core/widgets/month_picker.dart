@@ -168,6 +168,52 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
   }
 }
 
+/// Prev / chip / next row used on Budget and Add Budget.
+class MonthNavigator extends StatelessWidget {
+  const MonthNavigator({
+    super.key,
+    required this.month,
+    required this.onPrevious,
+    required this.onNext,
+    required this.onPick,
+  });
+
+  final DateTime month;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final VoidCallback onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          tooltip: 'Previous month',
+          onPressed: onPrevious,
+          icon: const RotatedBox(
+            quarterTurns: 2,
+            child: AppIcon(AppIcons.chevronRight, size: 20),
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: MonthSelectorChip(
+              month: month,
+              dense: true,
+              onTap: onPick,
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: 'Next month',
+          onPressed: onNext,
+          icon: const AppIcon(AppIcons.chevronRight, size: 20),
+        ),
+      ],
+    );
+  }
+}
+
 /// Compact tappable month chip used on budget forms / headers.
 class MonthSelectorChip extends StatelessWidget {
   const MonthSelectorChip({

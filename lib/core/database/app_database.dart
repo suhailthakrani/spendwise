@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:drift/drift.dart';
@@ -69,48 +70,64 @@ class AppDatabase extends _$AppDatabase {
               'budget_alerts_enabled',
               'goal_reminders_enabled',
             ]) {
-              await customStatement(
-                'ALTER TABLE app_preferences ADD COLUMN $column '
+              await _addRawColumnIfAbsent(
+                'app_preferences',
+                column,
                 'INTEGER NOT NULL DEFAULT 1',
               );
             }
-            await customStatement(
-              'ALTER TABLE app_preferences ADD COLUMN product_updates_enabled '
+            await _addRawColumnIfAbsent(
+              'app_preferences',
+              'product_updates_enabled',
               'INTEGER NOT NULL DEFAULT 0',
             );
           }
           if (from < 3) {
-            await customStatement(
-              'ALTER TABLE app_preferences ADD COLUMN backup_drive_email TEXT',
+            await _addRawColumnIfAbsent(
+              'app_preferences',
+              'backup_drive_email',
+              'TEXT',
             );
-            await customStatement(
-              'ALTER TABLE app_preferences ADD COLUMN last_backup_at INTEGER',
+            await _addRawColumnIfAbsent(
+              'app_preferences',
+              'last_backup_at',
+              'INTEGER',
             );
-            await customStatement(
-              'ALTER TABLE app_preferences ADD COLUMN backup_drive_file_id TEXT',
+            await _addRawColumnIfAbsent(
+              'app_preferences',
+              'backup_drive_file_id',
+              'TEXT',
             );
-            await migrator.addColumn(
+            await _addColumnIfAbsent(
+              migrator,
               appPreferences,
               appPreferences.biometricUnlockEnabled,
             );
-            await migrator.addColumn(
+            await _addColumnIfAbsent(
+              migrator,
               appPreferences,
               appPreferences.biometricUserId,
             );
           }
           if (from < 4) {
-            await migrator.addColumn(userProfiles, userProfiles.googleId);
+            await _addColumnIfAbsent(
+              migrator,
+              userProfiles,
+              userProfiles.googleId,
+            );
           }
           if (from < 5) {
             final now = DateTime.now();
             // Existing budgets become the current month's budgets.
-            await customStatement(
-              'ALTER TABLE budgets ADD COLUMN year INTEGER NOT NULL '
-              'DEFAULT ${now.year}',
+            await _addRawColumnIfAbsent(
+              'budgets',
+              'year',
+              'INTEGER NOT NULL DEFAULT ${now.year}',
             );
-            await customStatement(
-              'ALTER TABLE budgets ADD COLUMN month INTEGER NOT NULL '
-              'DEFAULT ${now.month}',
+            await _addRawColumnIfAbsent(
+              'budgets',
+              'month',
+              'INTEGER NOT NULL DEFAULT ${now.month}',
             );
           }
           if (from < 6) {
@@ -129,7 +146,7 @@ class AppDatabase extends _$AppDatabase {
             await _addCaptureAnalyticsBudgetV2(migrator);
           }
           if (from < 10) {
-            await migrator.createTable(moneyLogs);
+            await _createTableIfAbsent(migrator, moneyLogs);
           }
           if (from < 11) {
             await _addColumnIfAbsent(migrator, moneyLogs, moneyLogs.direction);
@@ -140,8 +157,8 @@ class AppDatabase extends _$AppDatabase {
   /// Capture defaults, templates, tags/attachments, budget periods, envelopes,
   /// dashboard layout, and FTS for search v2.
   Future<void> _addCaptureAnalyticsBudgetV2(Migrator migrator) async {
-    await migrator.createTable(transactionTemplates);
-    await migrator.createTable(envelopes);
+    await _createTableIfAbsent(migrator, transactionTemplates);
+    await _createTableIfAbsent(migrator, envelopes);
 
     await _addColumnIfAbsent(migrator, expenses, expenses.tags);
     await _addColumnIfAbsent(migrator, expenses, expenses.attachmentPath);
@@ -200,15 +217,47 @@ class AppDatabase extends _$AppDatabase {
     await _createExpensesFts();
   }
 
+  /// Best-effort FTS index. Must never block schema upgrades — search can fall
+  /// back to LIKE queries when the virtual table is missing.
   Future<void> _createExpensesFts() async {
-    await customStatement('''
+    try {
+      await customStatement('''
 CREATE VIRTUAL TABLE IF NOT EXISTS expenses_fts USING fts5(
   note, tags, content='expenses', content_rowid='rowid'
 )
 ''');
-    await customStatement('''
+      await customStatement('''
 INSERT INTO expenses_fts(expenses_fts) VALUES('rebuild')
 ''');
+    } catch (error, stackTrace) {
+      developer.log(
+        'expenses_fts setup skipped',
+        name: 'AppDatabase',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  Future<void> _createTableIfAbsent(
+    Migrator migrator,
+    TableInfo table,
+  ) async {
+    final existing = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type = 'table' "
+      "AND name = '${table.actualTableName}'",
+    ).get();
+    if (existing.isNotEmpty) return;
+    await migrator.createTable(table);
+  }
+
+  Future<Set<String>> _columnNames(String tableName) async {
+    final existing = await customSelect(
+      'PRAGMA table_info($tableName)',
+    ).get();
+    return {
+      for (final row in existing) row.read<String>('name'),
+    };
   }
 
   Future<void> _addColumnIfAbsent(
@@ -216,12 +265,7 @@ INSERT INTO expenses_fts(expenses_fts) VALUES('rebuild')
     TableInfo table,
     GeneratedColumn column,
   ) async {
-    final existing = await customSelect(
-      'PRAGMA table_info(${table.actualTableName})',
-    ).get();
-    final names = {
-      for (final row in existing) row.read<String>('name'),
-    };
+    final names = await _columnNames(table.actualTableName);
     if (names.contains(column.name)) return;
     await migrator.addColumn(table, column);
   }
@@ -250,12 +294,7 @@ INSERT INTO expenses_fts(expenses_fts) VALUES('rebuild')
     String columnName,
     String typeSql,
   ) async {
-    final existing = await customSelect(
-      'PRAGMA table_info($tableName)',
-    ).get();
-    final names = {
-      for (final row in existing) row.read<String>('name'),
-    };
+    final names = await _columnNames(tableName);
     if (names.contains(columnName)) return;
     await customStatement(
       'ALTER TABLE $tableName ADD COLUMN $columnName $typeSql',
@@ -268,24 +307,33 @@ INSERT INTO expenses_fts(expenses_fts) VALUES('rebuild')
   ///
   /// The signed-in account keeps exactly what it had; any other local profile
   /// starts from defaults.
+  ///
+  /// Idempotent: a partial upgrade that created `user_settings` but failed
+  /// before bumping `user_version` can safely retry on the next launch.
   Future<void> _moveSettingsToUsers(Migrator migrator) async {
-    await migrator.createTable(userSettings);
+    await _createTableIfAbsent(migrator, userSettings);
 
-    // Carry the current settings over to whoever is signed in. The profile
-    // check keeps a stale session id from failing the foreign key.
-    await customStatement(
-      'INSERT OR REPLACE INTO user_settings '
-      '(user_id, theme_mode, notifications_enabled, bill_reminders_enabled, '
-      'budget_alerts_enabled, goal_reminders_enabled, product_updates_enabled, '
-      'backup_drive_email, backup_drive_file_id, last_backup_at) '
-      'SELECT p.active_user_id, p.theme_mode, p.notifications_enabled, '
-      'p.bill_reminders_enabled, p.budget_alerts_enabled, '
-      'p.goal_reminders_enabled, p.product_updates_enabled, '
-      'p.backup_drive_email, p.backup_drive_file_id, p.last_backup_at '
-      'FROM app_preferences p '
-      "WHERE p.active_user_id IS NOT NULL AND p.active_user_id <> '' "
-      'AND p.active_user_id IN (SELECT id FROM user_profiles)',
-    );
+    final preferenceColumns = await _columnNames('app_preferences');
+    final hasLegacySettings =
+        preferenceColumns.contains('notifications_enabled');
+
+    if (hasLegacySettings) {
+      // Carry the current settings over to whoever is signed in. The profile
+      // check keeps a stale session id from failing the foreign key.
+      await customStatement(
+        'INSERT OR REPLACE INTO user_settings '
+        '(user_id, theme_mode, notifications_enabled, bill_reminders_enabled, '
+        'budget_alerts_enabled, goal_reminders_enabled, product_updates_enabled, '
+        'backup_drive_email, backup_drive_file_id, last_backup_at) '
+        'SELECT p.active_user_id, p.theme_mode, p.notifications_enabled, '
+        'p.bill_reminders_enabled, p.budget_alerts_enabled, '
+        'p.goal_reminders_enabled, p.product_updates_enabled, '
+        'p.backup_drive_email, p.backup_drive_file_id, p.last_backup_at '
+        'FROM app_preferences p '
+        "WHERE p.active_user_id IS NOT NULL AND p.active_user_id <> '' "
+        'AND p.active_user_id IN (SELECT id FROM user_profiles)',
+      );
+    }
 
     // Every other profile gets defaults, inheriting only the device theme so
     // the app does not visibly change appearance on first sign-in.
@@ -297,7 +345,9 @@ INSERT INTO expenses_fts(expenses_fts) VALUES('rebuild')
     );
 
     // Drops the columns that moved to user_settings, copying the rest.
-    await migrator.alterTable(TableMigration(appPreferences));
+    if (hasLegacySettings) {
+      await migrator.alterTable(TableMigration(appPreferences));
+    }
 
     await _createUserScopedIndexes();
   }

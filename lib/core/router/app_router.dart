@@ -96,8 +96,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Splash owns its own exit navigation after boot + min display time.
       if (onSplash) return null;
 
-      if (prefsAsync.isLoading || !prefsAsync.hasValue) {
-        return AppRoutes.splash;
+      // Never bounce public entry routes back to splash when prefs are still
+      // loading or failed — that traps upgrades (schema migrate / SQLCipher
+      // open errors) in an infinite splash loop.
+      if (!prefsAsync.hasValue) {
+        if (onOnboarding || onAuth) return null;
+        return prefsAsync.hasError
+            ? AppRoutes.onboarding
+            : AppRoutes.splash;
       }
 
       final prefs = prefsAsync.requireValue;

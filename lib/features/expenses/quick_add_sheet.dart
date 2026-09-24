@@ -119,16 +119,16 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
           type: LedgerEntryType.expense,
         ),
       );
-      await ref
-          .read(preferencesRepositoryProvider)
-          .setLastUsedCategoryId(_categoryId!);
 
       if (!mounted) return;
       HapticFeedback.mediumImpact();
-      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Expense saved')),
       );
+      Navigator.of(context).pop();
+      ref
+          .read(preferencesRepositoryProvider)
+          .setLastUsedCategoryId(_categoryId!);
     } finally {
       if (mounted) setState(() => _saving = false);
     }

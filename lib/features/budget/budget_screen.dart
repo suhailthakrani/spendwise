@@ -122,31 +122,11 @@ class BudgetScreen extends ConsumerWidget {
                   AppSpacing.page,
                   0,
                 ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      tooltip: 'Previous month',
-                      onPressed: () => shiftMonth(-1),
-                      icon: const RotatedBox(
-                        quarterTurns: 2,
-                        child: AppIcon(AppIcons.chevronRight, size: 20),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: MonthSelectorChip(
-                          month: selectedMonth,
-                          dense: true,
-                          onTap: pickMonth,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Next month',
-                      onPressed: () => shiftMonth(1),
-                      icon: const AppIcon(AppIcons.chevronRight, size: 20),
-                    ),
-                  ],
+                child: MonthNavigator(
+                  month: selectedMonth,
+                  onPrevious: () => shiftMonth(-1),
+                  onNext: () => shiftMonth(1),
+                  onPick: pickMonth,
                 ),
               ),
               if (monthBudgets.isEmpty)

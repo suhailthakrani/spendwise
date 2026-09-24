@@ -170,19 +170,18 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     } else {
       await repo.create(expense);
     }
-    await ref
-        .read(preferencesRepositoryProvider)
-        .setLastUsedCategoryId(_categoryId);
 
     if (!context.mounted) return;
     HapticFeedback.lightImpact();
-    context.pop();
     final label = _type == LedgerEntryType.income ? 'Income' : 'Expense';
+    // Pop before prefs write — that refresh races with go_router pop.
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(isEditing ? '$label updated' : 'Expense saved'),
       ),
     );
+    context.pop();
+    ref.read(preferencesRepositoryProvider).setLastUsedCategoryId(_categoryId);
   }
 
   Future<void> _pickDate() async {
