@@ -11,6 +11,17 @@ abstract final class DateFormatter {
   static String monthYear(DateTime date) => _monthYear.format(date);
   static String time(DateTime date) => _time.format(date);
 
+  /// Ordinal day label, e.g. `1st`, `2nd`, `3rd`, `11th`.
+  static String dayOrdinal(int day) {
+    if (day >= 11 && day <= 13) return '${day}th';
+    return switch (day % 10) {
+      1 => '${day}st',
+      2 => '${day}nd',
+      3 => '${day}rd',
+      _ => '${day}th',
+    };
+  }
+
   static String relative(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

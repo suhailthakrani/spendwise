@@ -137,9 +137,8 @@ final forecastProvider = FutureProvider<ForecastResult>((ref) async {
       .where(
         (b) =>
             b.periodType == BudgetPeriodType.monthly &&
-            b.year == now.year &&
-            b.month == now.month &&
-            b.categoryId == null,
+            b.categoryId == null &&
+            b.isActiveOn(now),
       )
       .map((b) => b.effectiveLimit)
       .fold<double?>(null, (best, limit) => best ?? limit);
@@ -180,9 +179,7 @@ final insightsEngineProvider = Provider<MonthlyReview>((ref) {
 
   final categoryBudgets = <String, double>{
     for (final budget in budgets)
-      if (budget.categoryId != null &&
-          budget.year == now.year &&
-          budget.month == now.month)
+      if (budget.categoryId != null && budget.isActiveOn(now))
         budget.categoryId!: budget.effectiveLimit,
   };
   final categoryNames = <String, String>{

@@ -211,7 +211,7 @@ class ReminderScheduler {
   ) {
     if (budget.categoryId != null) return const [];
     if (budget.limit <= 0) return const [];
-    if (budget.year != now.year || budget.month != now.month) {
+    if (!budget.isActiveOn(now)) {
       return const [];
     }
 

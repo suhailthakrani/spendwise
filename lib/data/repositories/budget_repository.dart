@@ -200,6 +200,16 @@ class BudgetRepository {
           type: LedgerEntryType.expense,
         );
       case BudgetPeriodType.monthly:
+        if (row.startDate != null || row.endDate != null) {
+          final start = row.startDate ?? DateTime(row.year, row.month, 1);
+          final end = row.endDate ?? DateTime(row.year, row.month + 1, 0);
+          return _expenses.sumBetween(
+            start: start,
+            end: end,
+            categoryId: categoryId,
+            type: LedgerEntryType.expense,
+          );
+        }
         return _expenses.sumForMonth(
           categoryId: categoryId,
           month: DateTime(row.year, row.month),

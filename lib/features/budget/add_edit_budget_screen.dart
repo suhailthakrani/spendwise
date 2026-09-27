@@ -8,6 +8,7 @@ import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/category_lookup.dart';
+import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -46,6 +47,8 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
   Budget? _existingBudget;
   bool _initialized = false;
   late DateTime _month;
+  /// Day of month the budget period starts (1–31). Defaults to the 1st.
+  int _startDay = 1;
   bool _rolloverEnabled = false;
   bool _isSpendingLimit = false;
 
@@ -87,11 +90,13 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
       _nameController.text = budget.name;
       _limitController.text = currency.formatForInput(budget.limit);
       _month = DateTime(budget.year, budget.month);
+      _startDay = budget.startDay;
       _rolloverEnabled = budget.rolloverEnabled;
       _isSpendingLimit = budget.isSpendingLimit;
     } else {
       _nameController.text = 'Monthly Budget';
       _month = DateTime(selectedMonth.year, selectedMonth.month);
+      _startDay = 1;
     }
 
     setState(() => _initialized = true);
@@ -107,14 +112,42 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
       initialMonth: _month,
     );
     if (picked != null) {
-      setState(() => _month = DateTime(picked.year, picked.month));
+      setState(() {
+        _month = DateTime(picked.year, picked.month);
+        _clampStartDay();
+      });
     }
   }
 
   void _shiftMonth(int delta) {
     setState(() {
       _month = DateTime(_month.year, _month.month + delta);
+      _clampStartDay();
     });
+  }
+
+  void _clampStartDay() {
+    final lastDay = DateTime(_month.year, _month.month + 1, 0).day;
+    if (_startDay > lastDay) _startDay = lastDay;
+  }
+
+  Future<void> _pickStartDay() async {
+    final lastDay = DateTime(_month.year, _month.month + 1, 0).day;
+    final initial = DateTime(
+      _month.year,
+      _month.month,
+      _startDay.clamp(1, lastDay),
+    );
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(_month.year, _month.month, 1),
+      lastDate: DateTime(_month.year, _month.month, lastDay),
+      helpText: 'Budget start date',
+    );
+    if (picked != null) {
+      setState(() => _startDay = picked.day);
+    }
   }
 
   @override
@@ -145,6 +178,16 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     final isMonthly = _type == BudgetFormType.monthly;
     final year = _month.year;
     final month = _month.month;
+    final startDate = Budget.resolvePeriodStart(
+      year: year,
+      month: month,
+      startDay: _startDay,
+    );
+    final endDate = Budget.resolvePeriodEnd(
+      year: year,
+      month: month,
+      startDay: _startDay,
+    );
 
     if (isEditing) {
       await repo.update(
@@ -156,8 +199,8 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
         year: year,
         month: month,
         periodType: BudgetPeriodType.monthly,
-        startDate: null,
-        endDate: null,
+        startDate: startDate,
+        endDate: endDate,
         rolloverEnabled: _rolloverEnabled,
         rolloverAmount: _existingBudget?.rolloverAmount ?? 0,
         isSpendingLimit: _isSpendingLimit,
@@ -172,8 +215,8 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
         year: year,
         month: month,
         periodType: BudgetPeriodType.monthly,
-        startDate: null,
-        endDate: null,
+        startDate: startDate,
+        endDate: endDate,
         rolloverEnabled: _rolloverEnabled,
         isSpendingLimit: _isSpendingLimit,
       );
@@ -333,6 +376,29 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                         onPrevious: () => _shiftMonth(-1),
                         onNext: () => _shiftMonth(1),
                         onPick: _pickMonth,
+                      ),
+                      const SizedBox(height: 8),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        onTap: _pickStartDay,
+                        leading: const AppIcon(
+                          AppIcons.calendar,
+                          size: 22,
+                          color: AppColors.primary,
+                        ),
+                        title: const Text('Starts on'),
+                        subtitle: Text(
+                          _startDay == 1
+                              ? '1st of the month through month end (default)'
+                              : '${DateFormatter.dayOrdinal(_startDay)} → day before next ${DateFormatter.dayOrdinal(_startDay)}',
+                        ),
+                        trailing: Text(
+                          DateFormatter.dayOrdinal(_startDay),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
                       if (!isEditing) ...[
                         const SizedBox(height: 12),

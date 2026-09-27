@@ -37,6 +37,65 @@ class Budget {
 
   DateTime get period => DateTime(year, month);
 
+  /// Day of month the budget period starts. Defaults to the 1st.
+  int get startDay => startDate?.day ?? 1;
+
+  /// Inclusive start of the tracked period.
+  DateTime get periodStart =>
+      startDate ??
+      resolvePeriodStart(
+        year: year,
+        month: month,
+        startDay: startDay,
+      );
+
+  /// Inclusive end of the tracked period (day before the next cycle starts).
+  ///
+  /// Example: start day 15 in September → Sep 15 … Oct 14.
+  DateTime get periodEnd =>
+      endDate ??
+      resolvePeriodEnd(
+        year: year,
+        month: month,
+        startDay: startDay,
+      );
+
+  /// Whether [date] falls inside this budget's period window.
+  bool isActiveOn(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    final start = DateTime(periodStart.year, periodStart.month, periodStart.day);
+    final end = DateTime(periodEnd.year, periodEnd.month, periodEnd.day);
+    return !day.isBefore(start) && !day.isAfter(end);
+  }
+
+  /// Clamps [startDay] into a valid calendar day for [year]/[month].
+  static DateTime resolvePeriodStart({
+    required int year,
+    required int month,
+    int startDay = 1,
+  }) {
+    final lastDay = DateTime(year, month + 1, 0).day;
+    final day = startDay.clamp(1, lastDay);
+    return DateTime(year, month, day);
+  }
+
+  /// Day before the next cycle's start (so periods never overlap).
+  ///
+  /// Start day 1 → last day of [month].
+  /// Start day 15 in Sep → Oct 14.
+  static DateTime resolvePeriodEnd({
+    required int year,
+    required int month,
+    int startDay = 1,
+  }) {
+    final nextStart = resolvePeriodStart(
+      year: year,
+      month: month + 1,
+      startDay: startDay,
+    );
+    return nextStart.subtract(const Duration(days: 1));
+  }
+
   double get effectiveLimit => BudgetRollover.effectiveLimit(
         limit: limit,
         rolloverAmount: rolloverAmount,

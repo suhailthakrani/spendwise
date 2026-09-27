@@ -61,10 +61,7 @@ class ReportRepository {
     final budgets = await _budgets.watchAll().first;
     final monthly = budgets
         .where(
-          (b) =>
-              b.categoryId == null &&
-              b.year == now.year &&
-              b.month == now.month,
+          (b) => b.categoryId == null && b.isActiveOn(now),
         )
         .firstOrNull;
     final monthlyBudgetUsd = monthly?.limit ?? 0.0;

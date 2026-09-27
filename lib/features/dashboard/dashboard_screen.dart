@@ -22,6 +22,7 @@ import '../../data/models/forecast.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
 import '../../providers/repository_providers.dart';
+import 'home_customize_tip.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -76,6 +77,7 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  const SliverToBoxAdapter(child: HomeCustomizeTip()),
                   for (final widgetId in layout.widgets)
                     ..._sliversFor(
                       context: context,
