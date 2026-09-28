@@ -64,14 +64,27 @@ class ReportRepository {
           (b) => b.categoryId == null && b.isActiveOn(now),
         )
         .firstOrNull;
-    final monthlyBudgetUsd = monthly?.limit ?? 0.0;
+
+    final budgetPeriodStart = monthly?.periodStart;
+    final budgetPeriodEnd = monthly?.periodEnd;
+    final budgetSpentUsd = monthly == null
+        ? monthTotalUsd
+        : await _expenses.sumBetween(
+            start: budgetPeriodStart!,
+            end: budgetPeriodEnd!,
+            type: LedgerEntryType.expense,
+          );
+    final monthlyBudgetUsd = monthly?.effectiveLimit ?? 0.0;
 
     return DashboardStats(
       totalBalance: currency.toDisplayAmount(balanceUsd),
       totalIncomeThisMonth: currency.toDisplayAmount(monthIncomeUsd),
       totalSpentToday: currency.toDisplayAmount(todayTotalUsd),
       totalSpentThisMonth: totalMonthDisplay,
+      budgetSpent: currency.toDisplayAmount(budgetSpentUsd),
       monthlyBudget: currency.toDisplayAmount(monthlyBudgetUsd),
+      budgetPeriodStart: budgetPeriodStart,
+      budgetPeriodEnd: budgetPeriodEnd,
       categorySpending: categorySpending,
       recentExpenseIds: recent.take(5).map((e) => e.id).toList(),
     );

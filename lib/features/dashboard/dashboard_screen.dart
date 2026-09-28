@@ -150,7 +150,7 @@ class DashboardScreen extends ConsumerWidget {
                       )
                     : '—',
                 subtitle: stats.monthlyBudget > 0
-                    ? '${(stats.budgetProgress * 100).toStringAsFixed(0)}% used'
+                    ? _budgetLeftSubtitle(stats)
                     : 'Set a budget',
                 iconAsset: AppIcons.wallet,
                 iconColor: AppColors.accent,
@@ -353,6 +353,14 @@ class DashboardScreen extends ConsumerWidget {
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
   }
+
+  static String _budgetLeftSubtitle(DashboardStats stats) {
+    final used =
+        '${(stats.budgetProgress * 100).toStringAsFixed(0)}% used';
+    final end = stats.budgetPeriodEnd;
+    if (end == null) return used;
+    return '$used · until ${DateFormatter.dayMonth(end)}';
+  }
 }
 
 class _SafeToSpendSection extends ConsumerWidget {
@@ -404,7 +412,9 @@ class _SafeToSpendSection extends ConsumerWidget {
                       ),
                       Expanded(
                         child: _MiniMetric(
-                          label: 'Rest of month',
+                          label: forecast.isCalendarMonth
+                              ? 'Rest of month'
+                              : 'Rest of period',
                           value:
                               currency.format(forecast.safeToSpendRestOfMonth),
                         ),
@@ -716,7 +726,7 @@ class _SpendingHeroCard extends StatelessWidget {
     final hasBudget = stats.monthlyBudget > 0;
     final progress = hasBudget ? stats.budgetProgress : 0.0;
     final isOverBudget =
-        hasBudget && stats.totalSpentThisMonth > stats.monthlyBudget;
+        hasBudget && stats.budgetSpent > stats.monthlyBudget;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -879,8 +889,10 @@ class _SpendingHeroCard extends StatelessWidget {
                     const SizedBox(height: 10),
                     Text(
                       isOverBudget
-                          ? 'Over by ${currency.formatInUserCurrency(stats.totalSpentThisMonth - stats.monthlyBudget)}'
-                          : 'of ${currency.formatInUserCurrency(stats.monthlyBudget)} monthly budget',
+                          ? 'Over by ${currency.formatInUserCurrency(stats.budgetSpent - stats.monthlyBudget)}'
+                          : stats.hasBudgetPeriod
+                              ? 'of ${currency.formatInUserCurrency(stats.monthlyBudget)} · until ${DateFormatter.dayMonth(stats.budgetPeriodEnd!)}'
+                              : 'of ${currency.formatInUserCurrency(stats.monthlyBudget)} monthly budget',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.78),
                         fontWeight: FontWeight.w500,

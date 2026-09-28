@@ -127,21 +127,40 @@ final forecastProvider = FutureProvider<ForecastResult>((ref) async {
 
   final now = DateTime.now();
   final currentBalance = await expenses.totalBalance();
-  final monthSpendSoFar = await expenses.sumForMonth(month: now);
-  final monthIncomeSoFar = await expenses.sumForMonth(
-    month: now,
-    type: LedgerEntryType.income,
-  );
 
-  final monthlyBudgetLimit = budgets
+  final activeMonthly = budgets
       .where(
         (b) =>
             b.periodType == BudgetPeriodType.monthly &&
             b.categoryId == null &&
             b.isActiveOn(now),
       )
-      .map((b) => b.effectiveLimit)
-      .fold<double?>(null, (best, limit) => best ?? limit);
+      .firstOrNull;
+
+  final periodStart = activeMonthly?.periodStart;
+  final periodEnd = activeMonthly?.periodEnd;
+  final monthlyBudgetLimit = activeMonthly?.effectiveLimit;
+
+  final double monthSpendSoFar;
+  final double monthIncomeSoFar;
+  if (periodStart != null && periodEnd != null) {
+    monthSpendSoFar = await expenses.sumBetween(
+      start: periodStart,
+      end: periodEnd,
+      type: LedgerEntryType.expense,
+    );
+    monthIncomeSoFar = await expenses.sumBetween(
+      start: periodStart,
+      end: periodEnd,
+      type: LedgerEntryType.income,
+    );
+  } else {
+    monthSpendSoFar = await expenses.sumForMonth(month: now);
+    monthIncomeSoFar = await expenses.sumForMonth(
+      month: now,
+      type: LedgerEntryType.income,
+    );
+  }
 
   final recurringInputs = [
     for (final bill in recurring)
@@ -157,7 +176,8 @@ final forecastProvider = FutureProvider<ForecastResult>((ref) async {
   for (final goal in goals) {
     final remaining = GoalPaceCalculator.remainingToStayOnPace(goal, now);
     if (remaining <= 0) continue;
-    final due = goal.deadline ?? DateTime(now.year, now.month + 1, 0);
+    final due = goal.deadline ??
+        (periodEnd ?? DateTime(now.year, now.month + 1, 0));
     goalInputs.add((title: goal.name, amount: remaining, due: due));
   }
 
@@ -168,6 +188,8 @@ final forecastProvider = FutureProvider<ForecastResult>((ref) async {
     monthlyBudgetLimit: monthlyBudgetLimit,
     recurring: recurringInputs,
     goalContributions: goalInputs,
+    periodStart: periodStart,
+    periodEnd: periodEnd,
   );
 });
 

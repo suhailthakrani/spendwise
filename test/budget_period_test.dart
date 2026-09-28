@@ -87,4 +87,38 @@ void main() {
       expect(budget.isActiveOn(DateTime(2026, 9, 14)), isFalse);
     });
   });
+
+  group('DateFormatter budget cycle labels', () {
+    test('periodRange formats short bounds', () {
+      expect(
+        DateFormatter.periodRange(
+          DateTime(2026, 9, 15),
+          DateTime(2026, 10, 14),
+        ),
+        '15 Sep → 14 Oct',
+      );
+    });
+
+    test('budgetCycleLabel includes days left when in range', () {
+      expect(
+        DateFormatter.budgetCycleLabel(
+          DateTime(2026, 9, 15),
+          DateTime(2026, 10, 14),
+          asOf: DateTime(2026, 10, 2),
+        ),
+        '15 Sep → 14 Oct · 12 days left',
+      );
+    });
+
+    test('budgetCycleLabel omits days left outside range', () {
+      expect(
+        DateFormatter.budgetCycleLabel(
+          DateTime(2026, 9, 15),
+          DateTime(2026, 10, 14),
+          asOf: DateTime(2026, 9, 1),
+        ),
+        '15 Sep → 14 Oct',
+      );
+    });
+  });
 }

@@ -134,9 +134,9 @@ class BudgetScreen extends ConsumerWidget {
                   padding: const EdgeInsets.only(top: 32),
                   child: EmptyState(
                     iconAsset: AppIcons.budget,
-                    title: 'No budgets for ${DateFormatter.monthYear(selectedMonth)}',
+                    title: 'No budgets for this period',
                     subtitle:
-                        'Create a budget for this month to track your spending.',
+                        'Create a budget for this period to track your spending.',
                     actionLabel: 'Add budget',
                     onAction: () => context.push(AppRoutes.addBudget),
                   ),
@@ -225,15 +225,38 @@ class BudgetScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
-                                    child: Text(
-                                      'Monthly budget',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: monthlyBudget.isOverBudget
-                                            ? null
-                                            : Colors.white,
-                                      ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Monthly budget',
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: monthlyBudget.isOverBudget
+                                                ? null
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          DateFormatter.budgetCycleLabel(
+                                            monthlyBudget.periodStart,
+                                            monthlyBudget.periodEnd,
+                                          ),
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                            color: monthlyBudget.isOverBudget
+                                                ? AppColors.secondaryText(
+                                                    context,
+                                                  )
+                                                : Colors.white
+                                                    .withValues(alpha: 0.78),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   AppIcon(
@@ -246,12 +269,11 @@ class BudgetScreen extends ConsumerWidget {
                                 ],
                               ),
                               const SizedBox(height: 20),
-                        
                               Text(
                                 currency.formatInUserCurrency(
                                   monthlyBudget.isOverBudget
                                       ? monthlyBudget.spent -
-                                          monthlyBudget.limit
+                                          monthlyBudget.effectiveLimit
                                       : monthlyBudget.remaining
                                           .clamp(0, double.infinity),
                                 ),
@@ -265,7 +287,7 @@ class BudgetScreen extends ConsumerWidget {
                                     FontFeature.tabularFigures(),
                                   ],
                                 ),
-                              ),                              
+                              ),
                               const SizedBox(height: 18),
                               ClipRRect(
                                 borderRadius:
@@ -283,7 +305,7 @@ class BudgetScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                '${currency.formatInUserCurrency(monthlyBudget.spent)} spent of ${currency.formatInUserCurrency(monthlyBudget.limit)}',
+                                '${currency.formatInUserCurrency(monthlyBudget.spent)} spent of ${currency.formatInUserCurrency(monthlyBudget.effectiveLimit)}',
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: monthlyBudget.isOverBudget
                                       ? AppColors.secondaryText(context)
@@ -387,7 +409,7 @@ class BudgetScreen extends ConsumerWidget {
                                       child: BudgetProgressBar(
                                         label: b.name,
                                         spent: b.spent,
-                                        limit: b.limit,
+                                        limit: b.effectiveLimit,
                                         color: cat?.color,
                                       ),
                                     ),

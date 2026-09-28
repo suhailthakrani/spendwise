@@ -273,7 +273,12 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     final spent = _existingBudget != null
         ? currency.toDisplayAmount(_existingBudget!.spent)
         : 0.0;
-    final progress = limit > 0 ? (spent / limit).clamp(0.0, 1.0) : 0.0;
+    final rolloverDisplay = _existingBudget != null
+        ? currency.toDisplayAmount(_existingBudget!.rolloverAmount)
+        : 0.0;
+    final effectiveLimit = limit + rolloverDisplay;
+    final progress =
+        effectiveLimit > 0 ? (spent / effectiveLimit).clamp(0.0, 1.0) : 0.0;
 
     final category =
         _categoryId != null ? categoryById(categories, _categoryId!) : null;
@@ -346,14 +351,16 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                               const EdgeInsets.symmetric(vertical: 10),
                         ),
                       ),
-                      if (isEditing && limit > 0) ...[
+                      if (isEditing && effectiveLimit > 0) ...[
                         const SizedBox(height: 10),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: progress,
                             minHeight: 4,
-                            color: spent > limit ? AppColors.error : accent,
+                            color: spent > effectiveLimit
+                                ? AppColors.error
+                                : accent,
                             backgroundColor: isDark
                                 ? AppColors.darkSurface
                                 : AppColors.lightBackground,
@@ -361,7 +368,9 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '${currency.formatInUserCurrency(spent)} of ${currency.formatInUserCurrency(limit)} used',
+                          rolloverDisplay > 0
+                              ? '${currency.formatInUserCurrency(spent)} of ${currency.formatInUserCurrency(effectiveLimit)} used (incl. ${currency.formatInUserCurrency(rolloverDisplay)} rollover)'
+                              : '${currency.formatInUserCurrency(spent)} of ${currency.formatInUserCurrency(effectiveLimit)} used',
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: isDark
                                 ? AppColors.textSecondaryDark

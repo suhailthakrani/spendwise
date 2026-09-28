@@ -29,6 +29,8 @@ class ForecastResult {
     required this.paceDailySpend,
     required this.assumptions,
     this.budgetExhaustionDate,
+    this.periodStart,
+    this.periodEnd,
   });
 
   final double currentBalance;
@@ -44,6 +46,19 @@ class ForecastResult {
   final double safeToSpendRestOfMonth;
   final double paceDailySpend;
   final String assumptions;
+  final DateTime? periodStart;
+  final DateTime? periodEnd;
+
+  /// True when the projection window is a normal 1st→month-end calendar month.
+  bool get isCalendarMonth {
+    final start = periodStart;
+    final end = periodEnd;
+    if (start == null || end == null) return true;
+    return start.day == 1 &&
+        end.month == start.month &&
+        end.year == start.year &&
+        end.day == DateTime(start.year, start.month + 1, 0).day;
+  }
 }
 
 /// Helper inputs for a what-if adjustment expressed as percentages.
@@ -83,6 +98,8 @@ class WhatIfScenario {
           .clamp(0.0, double.infinity),
       paceDailySpend: base.paceDailySpend,
       assumptions: '${base.assumptions}; what-if: $name',
+      periodStart: base.periodStart,
+      periodEnd: base.periodEnd,
     );
   }
 }

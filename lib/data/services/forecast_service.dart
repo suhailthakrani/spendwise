@@ -1,6 +1,6 @@
 import '../models/forecast.dart';
 
-/// Cash-flow projection for the current calendar month.
+/// Cash-flow projection for the active budget period (or calendar month).
 ///
 /// Pure Dart — inject [clock] for deterministic tests.
 class ForecastService {
@@ -19,29 +19,37 @@ class ForecastService {
     required List<({String title, double amount, DateTime due})>
         goalContributions,
     DateTime? asOf,
+    DateTime? periodStart,
+    DateTime? periodEnd,
   }) {
     final now = asOf ?? _clock();
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-    final daysElapsed = now.day.clamp(1, daysInMonth);
-    final daysLeft = (daysInMonth - daysElapsed).clamp(0, daysInMonth);
+    final asOfDay = DateTime(now.year, now.month, now.day);
+
+    final start = periodStart != null
+        ? DateTime(periodStart.year, periodStart.month, periodStart.day)
+        : DateTime(now.year, now.month, 1);
+    final end = periodEnd != null
+        ? DateTime(periodEnd.year, periodEnd.month, periodEnd.day)
+        : DateTime(now.year, now.month + 1, 0);
+    final usingCustomPeriod = periodStart != null || periodEnd != null;
+
+    final periodLengthDays = end.difference(start).inDays + 1;
+    var daysElapsed = asOfDay.difference(start).inDays + 1;
+    if (daysElapsed < 1) daysElapsed = 1;
+    if (daysElapsed > periodLengthDays) daysElapsed = periodLengthDays;
+    final daysLeft = end.difference(asOfDay).inDays.clamp(0, periodLengthDays);
 
     final paceDailySpend =
         daysElapsed > 0 ? monthSpendSoFar / daysElapsed : 0.0;
-    var projectedMonthEndSpend = paceDailySpend * daysInMonth;
+    var projectedMonthEndSpend = paceDailySpend * periodLengthDays;
     // Never project below what has already been spent.
     if (projectedMonthEndSpend < monthSpendSoFar) {
       projectedMonthEndSpend = monthSpendSoFar;
     }
 
-    final monthStart = DateTime(now.year, now.month, 1);
-    final monthEnd = DateTime(now.year, now.month, daysInMonth, 23, 59, 59);
-    final asOfDay = DateTime(now.year, now.month, now.day);
-
-    bool dueLaterThisMonth(DateTime due) {
+    bool dueLaterInPeriod(DateTime due) {
       final d = DateTime(due.year, due.month, due.day);
-      return !d.isBefore(monthStart) &&
-          !d.isAfter(monthEnd) &&
-          d.isAfter(asOfDay);
+      return !d.isBefore(start) && !d.isAfter(end) && d.isAfter(asOfDay);
     }
 
     final commitments = <ForecastCommitment>[];
@@ -49,7 +57,7 @@ class ForecastService {
     var upcomingExpenseCommitments = 0.0;
 
     for (final item in recurring) {
-      if (!dueLaterThisMonth(item.due)) continue;
+      if (!dueLaterInPeriod(item.due)) continue;
       if (item.isIncome) {
         expectedIncomeRemaining += item.amount;
         commitments.add(
@@ -74,7 +82,7 @@ class ForecastService {
     }
 
     for (final goal in goalContributions) {
-      if (!dueLaterThisMonth(goal.due)) continue;
+      if (!dueLaterInPeriod(goal.due)) continue;
       upcomingExpenseCommitments += goal.amount;
       commitments.add(
         ForecastCommitment(
@@ -123,15 +131,17 @@ class ForecastService {
         monthSpendSoFar < monthlyBudgetLimit) {
       final remainingBudget = monthlyBudgetLimit - monthSpendSoFar;
       final daysUntilExhaustion = remainingBudget / paceDailySpend;
-      final exhaustionDay = now.day + daysUntilExhaustion.floor();
-      if (exhaustionDay <= daysInMonth) {
-        budgetExhaustionDate = DateTime(
-          now.year,
-          now.month,
-          exhaustionDay.clamp(1, daysInMonth),
-        );
+      final exhaustion = asOfDay.add(
+        Duration(days: daysUntilExhaustion.floor()),
+      );
+      final exhaustionDay =
+          DateTime(exhaustion.year, exhaustion.month, exhaustion.day);
+      if (!exhaustionDay.isAfter(end)) {
+        budgetExhaustionDate = exhaustionDay;
       }
     }
+
+    final windowLabel = usingCustomPeriod ? 'this period' : 'this month';
 
     return ForecastResult(
       currentBalance: currentBalance,
@@ -146,7 +156,9 @@ class ForecastService {
       safeToSpendThisWeek: safeToSpendThisWeek,
       safeToSpendRestOfMonth: safeToSpendRestOfMonth,
       paceDailySpend: paceDailySpend,
-      assumptions: 'based on $daysElapsed days of this month',
+      assumptions: 'based on $daysElapsed days of $windowLabel',
+      periodStart: start,
+      periodEnd: end,
     );
   }
 
@@ -184,6 +196,8 @@ class ForecastService {
       safeToSpendRestOfMonth: rest,
       paceDailySpend: base.paceDailySpend,
       assumptions: base.assumptions,
+      periodStart: base.periodStart,
+      periodEnd: base.periodEnd,
     );
   }
 }

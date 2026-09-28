@@ -149,4 +149,26 @@ void main() {
     expect(result.paceDailySpend, 1); // 15 / 15
     expect(result.assumptions, contains('15 days'));
   });
+
+  test('custom budget period drives pace and safe-to-spend', () {
+    // Period: 15 Sep → 14 Oct (30 days). asOf = 25 Sep → 11 days elapsed, 19 left.
+    final result = service.project(
+      currentBalance: 100000,
+      monthSpendSoFar: 11000, // 1000/day over 11 days
+      monthIncomeSoFar: 0,
+      monthlyBudgetLimit: 40000,
+      recurring: const [],
+      goalContributions: const [],
+      asOf: DateTime(2026, 9, 25),
+      periodStart: DateTime(2026, 9, 15),
+      periodEnd: DateTime(2026, 10, 14),
+    );
+
+    expect(result.paceDailySpend, 1000);
+    expect(result.projectedMonthEndSpend, 30000);
+    expect(result.assumptions, 'based on 11 days of this period');
+    expect(result.safeToSpendRestOfMonth, 29000); // 40000 - 11000
+    expect(result.safeToSpendToday, closeTo(29000 / 19, 0.01));
+    expect(result.isCalendarMonth, isFalse);
+  });
 }

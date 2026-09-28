@@ -10,6 +10,7 @@ abstract final class DateFormatter {
   static String medium(DateTime date) => _medium.format(date);
   static String monthYear(DateTime date) => _monthYear.format(date);
   static String time(DateTime date) => _time.format(date);
+  static String dayMonth(DateTime date) => DateFormat('d MMM').format(date);
 
   /// Ordinal day label, e.g. `1st`, `2nd`, `3rd`, `11th`.
   static String dayOrdinal(int day) {
@@ -32,5 +33,38 @@ abstract final class DateFormatter {
     if (diff == 1) return 'Yesterday';
     if (diff < 7) return DateFormat('EEEE').format(date);
     return short(date);
+  }
+
+  /// Short range label, e.g. `15 Sep → 14 Oct`.
+  static String periodRange(DateTime start, DateTime end) {
+    return '${dayMonth(start)} → ${dayMonth(end)}';
+  }
+
+  /// Whole days from [asOf] (default: today) until [end], not counting today.
+  ///
+  /// Returns `0` when [end] is today or in the past.
+  static int daysLeftInPeriod(DateTime end, {DateTime? asOf}) {
+    final now = asOf ?? DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final endDay = DateTime(end.year, end.month, end.day);
+    return endDay.difference(today).inDays.clamp(0, 366);
+  }
+
+  /// e.g. `15 Sep → 14 Oct · 12 days left` when [asOf] falls in range.
+  static String budgetCycleLabel(
+    DateTime start,
+    DateTime end, {
+    DateTime? asOf,
+  }) {
+    final range = periodRange(start, end);
+    final now = asOf ?? DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startDay = DateTime(start.year, start.month, start.day);
+    final endDay = DateTime(end.year, end.month, end.day);
+    if (today.isBefore(startDay) || today.isAfter(endDay)) return range;
+    final left = daysLeftInPeriod(end, asOf: today);
+    if (left == 0) return '$range · last day';
+    if (left == 1) return '$range · 1 day left';
+    return '$range · $left days left';
   }
 }
