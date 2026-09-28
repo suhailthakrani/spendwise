@@ -43,7 +43,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
 
   late BudgetFormType _type;
   String? _categoryId;
-  double _alertThreshold = 0.8;
+  double _alertThreshold = 0.9;
   Budget? _existingBudget;
   bool _initialized = false;
   late DateTime _month;
@@ -129,6 +129,16 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
   void _clampStartDay() {
     final lastDay = DateTime(_month.year, _month.month + 1, 0).day;
     if (_startDay > lastDay) _startDay = lastDay;
+  }
+
+  String get _startDayLabel => DateFormatter.dayOrdinal(_startDay);
+
+  String get _startCycleHint {
+    if (_startDay == 1) {
+      return 'Covers the 1st through the end of the month';
+    }
+    final day = _startDayLabel;
+    return 'Covers the $day through the day before the next $day';
   }
 
   Future<void> _pickStartDay() async {
@@ -386,27 +396,16 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                         onNext: () => _shiftMonth(1),
                         onPick: _pickMonth,
                       ),
-                      const SizedBox(height: 8),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
+                      const SizedBox(height: 12),
+                      _StartDayButton(
+                        dayLabel: _startDayLabel,
                         onTap: _pickStartDay,
-                        leading: const AppIcon(
-                          AppIcons.calendar,
-                          size: 22,
-                          color: AppColors.primary,
-                        ),
-                        title: const Text('Starts on'),
-                        subtitle: Text(
-                          _startDay == 1
-                              ? '1st of the month through month end (default)'
-                              : '${DateFormatter.dayOrdinal(_startDay)} → day before next ${DateFormatter.dayOrdinal(_startDay)}',
-                        ),
-                        trailing: Text(
-                          DateFormatter.dayOrdinal(_startDay),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _startCycleHint,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.secondaryText(context),
                         ),
                       ),
                       if (!isEditing) ...[
@@ -574,6 +573,81 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     context.go(AppRoutes.budget);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Budget deleted')),
+    );
+  }
+}
+
+class _StartDayButton extends StatelessWidget {
+  const _StartDayButton({
+    required this.dayLabel,
+    required this.onTap,
+  });
+
+  final String dayLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final radius =
+        BorderRadius.circular(_AddEditBudgetScreenState._kFieldRadius);
+
+    return Material(
+      color: theme.inputDecorationTheme.fillColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: BorderSide(color: AppColors.border(context)),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+          child: Row(
+            children: [
+              const AppIcon(
+                AppIcons.calendar,
+                size: 20,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Budget start date',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.secondaryText(context),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      dayLabel,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                'Change',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 2),
+              const AppIcon(
+                AppIcons.chevronRight,
+                size: 18,
+                color: AppColors.primary,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

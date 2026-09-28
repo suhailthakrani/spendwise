@@ -14,6 +14,8 @@ class ReminderScheduler {
 
   static const _morningHour = 9;
   static const _eveningHour = 19;
+  /// Usage level that triggers the "nearly used" budget reminder.
+  static const budgetAlertProgress = 0.9;
   static const _debounce = Duration(milliseconds: 600);
   static const _maxPaceGoals = 3;
 
@@ -218,7 +220,9 @@ class ReminderScheduler {
     final previous = _lastBudgetProgress[budget.id];
     _lastBudgetProgress[budget.id] = budget.progress;
 
-    final crossed80 = previous != null && previous < 0.8 && budget.progress >= 0.8;
+    final crossedAlert = previous != null &&
+        previous < budgetAlertProgress &&
+        budget.progress >= budgetAlertProgress;
     final crossed100 =
         previous != null && previous < 1.0 && budget.progress >= 1.0;
     final monthKey = '${now.year}_${now.month}';
@@ -234,7 +238,7 @@ class ReminderScheduler {
           immediate: true,
         ),
       );
-    } else if (crossed80) {
+    } else if (crossedAlert) {
       final percent = (budget.progress * 100).round();
       plans.add(
         _ReminderPlan(
@@ -245,7 +249,7 @@ class ReminderScheduler {
           immediate: true,
         ),
       );
-    } else if (budget.progress >= 0.8) {
+    } else if (budget.progress >= budgetAlertProgress) {
       var when = DateTime(now.year, now.month, now.day, _morningHour);
       if (!when.isAfter(now)) {
         when = when.add(const Duration(days: 1));
