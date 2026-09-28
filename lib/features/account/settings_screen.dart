@@ -112,6 +112,28 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+              const _SectionTitle(title: 'Locale'),
+              SurfaceGroup(
+                children: [
+                  SettingsTile(
+                    iconAsset: AppIcons.globe,
+                    title: 'Country',
+                    subtitle: region.name,
+                    onTap: () => _pickCountry(
+                      context,
+                      ref,
+                      regionCode,
+                      currencyCodeValue,
+                    ),
+                  ),
+                  SettingsTile(
+                    iconAsset: AppIcons.currency,
+                    title: 'Currency',
+                    subtitle: '${currency.name} (${currency.code})',
+                    onTap: () => _pickCurrency(context, ref, currencyCodeValue),
+                  ),
+                ],
+              ),
               const _SectionTitle(title: 'Notifications'),
               SurfaceGroup(
                 children: [
@@ -176,28 +198,6 @@ class SettingsScreen extends ConsumerWidget {
                       ref,
                       productUpdatesEnabled: value,
                     ),
-                  ),
-                ],
-              ),
-              const _SectionTitle(title: 'Locale'),
-              SurfaceGroup(
-                children: [
-                  SettingsTile(
-                    iconAsset: AppIcons.globe,
-                    title: 'Country',
-                    subtitle: region.name,
-                    onTap: () => _pickCountry(
-                      context,
-                      ref,
-                      regionCode,
-                      currencyCodeValue,
-                    ),
-                  ),
-                  SettingsTile(
-                    iconAsset: AppIcons.currency,
-                    title: 'Currency',
-                    subtitle: '${currency.name} (${currency.code})',
-                    onTap: () => _pickCurrency(context, ref, currencyCodeValue),
                   ),
                 ],
               ),

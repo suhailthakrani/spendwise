@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/utils/avatar_storage.dart';
 import '../data/models/app_currency.dart';
 import '../data/models/app_region.dart';
+import '../data/models/google_identity.dart';
 import '../data/models/user_profile.dart';
 import '../data/repositories/user_profile_repository.dart';
 import '../data/services/app_crashlytics.dart';
@@ -140,12 +141,17 @@ class AuthController {
 
   /// Signs in or creates a local profile from a Google account.
   /// Returns null when the user cancels the Google picker.
+  ///
+  /// Pass [identity] when the account was already chosen, so the picker
+  /// is not opened a second time.
   Future<UserProfile?> continueWithGoogle({
+    GoogleIdentity? identity,
     String? regionCode,
     String? currencyCode,
   }) async {
-    final identity = await _ref.read(googleAuthServiceProvider).pickAccount();
-    if (identity == null) return null;
+    final resolved =
+        identity ?? await _ref.read(googleAuthServiceProvider).pickAccount();
+    if (resolved == null) return null;
 
     final region = AppRegion.fromDeviceLocale(
       regionCode ?? PlatformDispatcher.instance.locale.countryCode,
@@ -156,7 +162,7 @@ class AuthController {
 
     final profile =
         await _ref.read(userProfileRepositoryProvider).signInOrSignUpWithGoogle(
-              identity: identity,
+              identity: resolved,
               regionCode: region.code,
               currencyCode: currency.code,
             );

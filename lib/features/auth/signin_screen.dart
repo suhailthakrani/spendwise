@@ -11,6 +11,7 @@ import '../../core/widgets/continue_with_google_button.dart';
 import '../../data/repositories/user_profile_repository.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/preferences_providers.dart';
+import 'google_locale_sheet.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -89,8 +90,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     });
 
     try {
-      final profile =
-          await ref.read(authControllerProvider).continueWithGoogle();
+      final profile = await signInWithGoogleAskingLocale(context, ref);
       if (profile == null) return;
       if (mounted) context.go(AppRoutes.dashboard);
     } on AuthException catch (e) {
