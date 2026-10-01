@@ -789,7 +789,9 @@ class _SpendingHeroCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Balance · ${DateFormatter.monthYear(DateTime.now())}',
+                              stats.hasBudgetPeriod
+                                  ? 'Balance · ${DateFormatter.periodRange(stats.budgetPeriodStart!, stats.budgetPeriodEnd!)}'
+                                  : 'Balance · ${DateFormatter.monthYear(DateTime.now())}',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: Colors.white.withValues(alpha: 0.78),
                                 fontWeight: FontWeight.w500,
@@ -890,7 +892,9 @@ class _SpendingHeroCard extends StatelessWidget {
                     Text(
                       isOverBudget
                           ? 'Over by ${currency.formatInUserCurrency(stats.budgetSpent - stats.monthlyBudget)}'
-                          : 'of ${currency.formatInUserCurrency(stats.monthlyBudget)} this month',
+                          : stats.hasBudgetPeriod
+                              ? 'of ${currency.formatInUserCurrency(stats.monthlyBudget)} · ${DateFormatter.budgetCycleLabel(stats.budgetPeriodStart!, stats.budgetPeriodEnd!)}'
+                              : 'of ${currency.formatInUserCurrency(stats.monthlyBudget)} this period',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.78),
                         fontWeight: FontWeight.w500,

@@ -96,9 +96,16 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     } else {
       _nameController.text = 'Monthly Budget';
       _month = DateTime(selectedMonth.year, selectedMonth.month);
-      _startDay = 1;
+      // Keep the user's cycle (salary day, etc.) — any day they last chose.
+      final prior = (await ref.read(budgetsProvider.future))
+          .where((b) => b.categoryId == null)
+          .toList();
+      if (!mounted) return;
+      _startDay = prior.isNotEmpty ? prior.first.startDay : 1;
+      _clampStartDay();
     }
 
+    if (!mounted) return;
     setState(() => _initialized = true);
 
     if (!isEditing) {

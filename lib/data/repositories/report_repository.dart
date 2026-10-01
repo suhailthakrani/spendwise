@@ -18,41 +18,57 @@ class ReportRepository {
   Future<DashboardStats> dashboardStats(CurrencyDisplay currency) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final monthStart = DateTime(now.year, now.month, 1);
+
+    final budgets = await _budgets.watchAll().first;
+    // Active overall budget. Period follows that budget's start day (any day
+    // of month, e.g. 1→end or 15→14) — not a fixed calendar month.
+    final monthly = budgets
+        .where(
+          (b) => b.categoryId == null && b.isActiveOn(now),
+        )
+        .firstOrNull;
+
+    final periodStart = monthly?.periodStart ?? DateTime(now.year, now.month, 1);
+    final periodEnd = monthly?.periodEnd ?? DateTime(now.year, now.month + 1, 0);
 
     final todayTotalUsd = await _expenses.sumForDay(today);
-    final monthTotalUsd = await _expenses.sumForMonth(month: now);
-    final monthIncomeUsd = await _expenses.sumForMonth(
-      month: now,
+    final periodSpendUsd = await _expenses.sumBetween(
+      start: periodStart,
+      end: periodEnd,
+      type: LedgerEntryType.expense,
+    );
+    final periodIncomeUsd = await _expenses.sumBetween(
+      start: periodStart,
+      end: periodEnd,
       type: LedgerEntryType.income,
     );
 
-    // Home "Balance" is this month's net — not all-time income−expense.
-    // All-time made every past spend show up as a permanent negative drag.
-    // Money log stays out of this on purpose — it is independent of budget/ledger.
-    final balanceUsd = monthIncomeUsd - monthTotalUsd;
+    // Period net only — not all-time. Money log stays out (independent).
+    final balanceUsd = periodIncomeUsd - periodSpendUsd;
 
-    final monthExpenses = await _expenses.search(
-      startDate: monthStart,
+    final periodExpenses = await _expenses.search(
+      startDate: periodStart,
+      endDate: periodEnd,
       type: LedgerEntryType.expense,
       toDisplayAmount: currency.toDisplayAmount,
     );
 
     final categoryTotals = <String, double>{};
-    for (final expense in monthExpenses) {
+    for (final expense in periodExpenses) {
       final converted = currency.toDisplayAmount(expense.amount);
       categoryTotals[expense.categoryId] =
           (categoryTotals[expense.categoryId] ?? 0) + converted;
     }
 
-    final totalMonthDisplay = currency.toDisplayAmount(monthTotalUsd);
+    final periodSpendDisplay = currency.toDisplayAmount(periodSpendUsd);
     final categorySpending = categoryTotals.entries
         .map(
           (e) => CategorySpending(
             categoryId: e.key,
             amount: e.value,
-            percentage:
-                totalMonthDisplay > 0 ? (e.value / totalMonthDisplay) * 100 : 0,
+            percentage: periodSpendDisplay > 0
+                ? (e.value / periodSpendDisplay) * 100
+                : 0,
           ),
         )
         .toList()
@@ -62,30 +78,17 @@ class ReportRepository {
       toDisplayAmount: currency.toDisplayAmount,
     );
 
-    final budgets = await _budgets.watchAll().first;
-    // Home card is always the calendar month — not a custom cycle that can
-    // spill into the previous month via start-day windows.
-    final monthly = budgets
-        .where(
-          (b) =>
-              b.categoryId == null &&
-              b.year == now.year &&
-              b.month == now.month,
-        )
-        .firstOrNull;
-
-    final monthEnd = DateTime(now.year, now.month + 1, 0);
     final monthlyBudgetUsd = monthly?.effectiveLimit ?? 0.0;
 
     return DashboardStats(
       totalBalance: currency.toDisplayAmount(balanceUsd),
-      totalIncomeThisMonth: currency.toDisplayAmount(monthIncomeUsd),
+      totalIncomeThisMonth: currency.toDisplayAmount(periodIncomeUsd),
       totalSpentToday: currency.toDisplayAmount(todayTotalUsd),
-      totalSpentThisMonth: totalMonthDisplay,
-      budgetSpent: totalMonthDisplay,
+      totalSpentThisMonth: periodSpendDisplay,
+      budgetSpent: periodSpendDisplay,
       monthlyBudget: currency.toDisplayAmount(monthlyBudgetUsd),
-      budgetPeriodStart: DateTime(now.year, now.month, 1),
-      budgetPeriodEnd: monthEnd,
+      budgetPeriodStart: periodStart,
+      budgetPeriodEnd: periodEnd,
       categorySpending: categorySpending,
       recentExpenseIds: recent.take(5).map((e) => e.id).toList(),
     );
