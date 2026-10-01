@@ -26,7 +26,11 @@ class ReportRepository {
       month: now,
       type: LedgerEntryType.income,
     );
-    final balanceUsd = await _expenses.totalBalance();
+
+    // Home "Balance" is this month's net — not all-time income−expense.
+    // All-time made every past spend show up as a permanent negative drag.
+    // Money log stays out of this on purpose — it is independent of budget/ledger.
+    final balanceUsd = monthIncomeUsd - monthTotalUsd;
 
     final monthExpenses = await _expenses.search(
       startDate: monthStart,
@@ -59,21 +63,18 @@ class ReportRepository {
     );
 
     final budgets = await _budgets.watchAll().first;
+    // Home card is always the calendar month — not a custom cycle that can
+    // spill into the previous month via start-day windows.
     final monthly = budgets
         .where(
-          (b) => b.categoryId == null && b.isActiveOn(now),
+          (b) =>
+              b.categoryId == null &&
+              b.year == now.year &&
+              b.month == now.month,
         )
         .firstOrNull;
 
-    final budgetPeriodStart = monthly?.periodStart;
-    final budgetPeriodEnd = monthly?.periodEnd;
-    final budgetSpentUsd = monthly == null
-        ? monthTotalUsd
-        : await _expenses.sumBetween(
-            start: budgetPeriodStart!,
-            end: budgetPeriodEnd!,
-            type: LedgerEntryType.expense,
-          );
+    final monthEnd = DateTime(now.year, now.month + 1, 0);
     final monthlyBudgetUsd = monthly?.effectiveLimit ?? 0.0;
 
     return DashboardStats(
@@ -81,10 +82,10 @@ class ReportRepository {
       totalIncomeThisMonth: currency.toDisplayAmount(monthIncomeUsd),
       totalSpentToday: currency.toDisplayAmount(todayTotalUsd),
       totalSpentThisMonth: totalMonthDisplay,
-      budgetSpent: currency.toDisplayAmount(budgetSpentUsd),
+      budgetSpent: totalMonthDisplay,
       monthlyBudget: currency.toDisplayAmount(monthlyBudgetUsd),
-      budgetPeriodStart: budgetPeriodStart,
-      budgetPeriodEnd: budgetPeriodEnd,
+      budgetPeriodStart: DateTime(now.year, now.month, 1),
+      budgetPeriodEnd: monthEnd,
       categorySpending: categorySpending,
       recentExpenseIds: recent.take(5).map((e) => e.id).toList(),
     );

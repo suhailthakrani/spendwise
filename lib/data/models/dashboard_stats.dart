@@ -24,18 +24,20 @@ class DashboardStats {
     this.budgetPeriodEnd,
   });
 
-  /// Net of all income minus expenses (what people check first).
+  /// This month’s net: income − expenses (display currency).
+  /// Past months are excluded so old spend does not drag the hero negative.
+  /// Money log is intentionally excluded — it is independent of the ledger.
   final double totalBalance;
   final double totalIncomeThisMonth;
   final double totalSpentToday;
 
-  /// Calendar-month expense total (dashboard “Spent” chip).
+  /// Calendar-month expense total (dashboard “Spent” / Remaining spend).
   final double totalSpentThisMonth;
 
-  /// Spend inside the active monthly budget window (may cross months).
+  /// Spend counted toward the home-card Remaining chip (current calendar month).
   final double budgetSpent;
 
-  /// Effective monthly budget limit (includes rollover), display currency.
+  /// Effective monthly budget limit for the current calendar month.
   final double monthlyBudget;
   final DateTime? budgetPeriodStart;
   final DateTime? budgetPeriodEnd;

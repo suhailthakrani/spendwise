@@ -132,7 +132,6 @@ final forecastProvider = FutureProvider<ForecastResult>((ref) async {
   final budgets = ref.watch(budgetsProvider).valueOrNull ?? [];
 
   final now = DateTime.now();
-  final currentBalance = await expenses.totalBalance();
 
   final activeMonthly = budgets
       .where(
@@ -167,6 +166,10 @@ final forecastProvider = FutureProvider<ForecastResult>((ref) async {
       type: LedgerEntryType.income,
     );
   }
+
+  // Period net only — all-time income−expense dragged Balance by every past spend.
+  // Money log stays out; it is independent of budget/ledger.
+  final currentBalance = monthIncomeSoFar - monthSpendSoFar;
 
   final recurringInputs = [
     for (final bill in recurring)
