@@ -69,6 +69,12 @@ final budgetMonthProvider = StateProvider<DateTime>((ref) {
   return DateTime(now.year, now.month);
 });
 
+/// Selected calendar month on Money log (day ignored). Defaults to now.
+final moneyLogMonthProvider = StateProvider<DateTime>((ref) {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month);
+});
+
 final recurringExpensesProvider = StreamProvider<List<RecurringExpense>>((ref) {
   return ref.watch(recurringExpenseRepositoryProvider).watchAll();
 });

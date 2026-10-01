@@ -9,6 +9,7 @@ import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/app_confirm_dialog.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/month_picker.dart';
 import '../../data/models/money_log.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
@@ -22,23 +23,52 @@ class MoneyLogScreen extends ConsumerWidget {
     final logsAsync = ref.watch(moneyLogsProvider);
     final expenses = ref.watch(expensesProvider).valueOrNull ?? [];
     final currency = ref.watch(currencyDisplayProvider);
+    final selectedMonth = ref.watch(moneyLogMonthProvider);
     final now = DateTime.now();
+    final isCurrentMonth =
+        selectedMonth.year == now.year && selectedMonth.month == now.month;
 
     final monthLogs = logsAsync.maybeWhen(
-      data: (logs) => MoneyLog.inMonth(logs, now),
+      data: (logs) => MoneyLog.inMonth(logs, selectedMonth),
       orElse: () => const <MoneyLog>[],
     );
     final moneyOut = MoneyLog.totalOut(monthLogs);
     final moneyIn = MoneyLog.totalIn(monthLogs);
     final fromBudget = expenses
-        .where((e) => e.date.year == now.year && e.date.month == now.month)
+        .where(
+          (e) =>
+              e.date.year == selectedMonth.year &&
+              e.date.month == selectedMonth.month,
+        )
         .fold(0.0, (sum, e) => sum + e.amount);
+
+    Future<void> pickMonth() async {
+      final picked = await showMonthPicker(
+        context: context,
+        initialMonth: selectedMonth,
+        lastMonth: DateTime(now.year, now.month),
+      );
+      if (picked != null) {
+        ref.read(moneyLogMonthProvider.notifier).state =
+            DateTime(picked.year, picked.month);
+      }
+    }
+
+    void shiftMonth(int delta) {
+      final next = DateTime(selectedMonth.year, selectedMonth.month + delta);
+      final latest = DateTime(now.year, now.month);
+      if (next.isAfter(latest)) return;
+      ref.read(moneyLogMonthProvider.notifier).state = next;
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Money log')),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Add log',
-        onPressed: () => showMoneyLogSheet(context),
+        onPressed: () => showMoneyLogSheet(
+          context,
+          initialDate: _defaultLogDate(selectedMonth),
+        ),
         child: const AppIcon(AppIcons.add, size: 24, color: Colors.white),
       ),
       body: logsAsync.when(
@@ -48,13 +78,21 @@ class MoneyLogScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.page,
-              12,
+              4,
               AppSpacing.page,
               100,
             ),
             children: [
+              MonthNavigator(
+                month: selectedMonth,
+                onPrevious: () => shiftMonth(-1),
+                onNext: () => shiftMonth(1),
+                onPick: pickMonth,
+                canGoNext: !isCurrentMonth,
+              ),
+              const SizedBox(height: 8),
               _SummaryCard(
-                monthLabel: DateFormatter.monthYear(now),
+                monthLabel: DateFormatter.monthYear(selectedMonth),
                 outLabel: currency.format(moneyOut),
                 inLabel: currency.format(moneyIn),
                 fromBudgetLabel: currency.format(fromBudget),
@@ -62,7 +100,9 @@ class MoneyLogScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'This month',
+                isCurrentMonth
+                    ? 'This month'
+                    : DateFormatter.monthYear(selectedMonth),
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -72,7 +112,9 @@ class MoneyLogScreen extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 28),
                   child: Text(
-                    'Nothing logged yet. Use + to record money in or out. This stays out of your budget.',
+                    isCurrentMonth
+                        ? 'Nothing logged yet. Use + to record money in or out. This stays out of your budget.'
+                        : 'No logs for ${DateFormatter.monthYear(selectedMonth)}. Use + to add one for this month.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.secondaryText(context),
                         ),
@@ -93,6 +135,16 @@ class MoneyLogScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+DateTime _defaultLogDate(DateTime selectedMonth) {
+  final now = DateTime.now();
+  if (selectedMonth.year == now.year && selectedMonth.month == now.month) {
+    return now;
+  }
+  final lastDay = DateTime(selectedMonth.year, selectedMonth.month + 1, 0).day;
+  final day = now.day.clamp(1, lastDay);
+  return DateTime(selectedMonth.year, selectedMonth.month, day);
 }
 
 class _SummaryCard extends StatelessWidget {
@@ -280,18 +332,23 @@ class _LogTile extends ConsumerWidget {
   }
 }
 
-Future<void> showMoneyLogSheet(BuildContext context) {
+Future<void> showMoneyLogSheet(
+  BuildContext context, {
+  DateTime? initialDate,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
-    builder: (_) => const _MoneyLogSheet(),
+    builder: (_) => _MoneyLogSheet(initialDate: initialDate),
   );
 }
 
 class _MoneyLogSheet extends ConsumerStatefulWidget {
-  const _MoneyLogSheet();
+  const _MoneyLogSheet({this.initialDate});
+
+  final DateTime? initialDate;
 
   @override
   ConsumerState<_MoneyLogSheet> createState() => _MoneyLogSheetState();
@@ -301,13 +358,33 @@ class _MoneyLogSheetState extends ConsumerState<_MoneyLogSheet> {
   final _amount = TextEditingController();
   final _message = TextEditingController();
   var _direction = MoneyLogDirection.out;
+  late DateTime _date;
   var _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _date = widget.initialDate ?? DateTime.now();
+  }
 
   @override
   void dispose() {
     _amount.dispose();
     _message.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date.isAfter(now) ? now : _date,
+      firstDate: DateTime(2020),
+      lastDate: now,
+    );
+    if (picked != null) {
+      setState(() => _date = picked);
+    }
   }
 
   Future<void> _save() async {
@@ -332,10 +409,13 @@ class _MoneyLogSheetState extends ConsumerState<_MoneyLogSheet> {
           id: repo.newId(),
           amount: currency.toStorageAmount(display),
           message: message,
-          date: DateTime.now(),
+          date: _date,
           direction: _direction,
         ),
       );
+      // Jump the list to the month that was just logged.
+      ref.read(moneyLogMonthProvider.notifier).state =
+          DateTime(_date.year, _date.month);
       if (mounted) Navigator.pop(context);
     } catch (error) {
       if (mounted) {
@@ -415,7 +495,16 @@ class _MoneyLogSheetState extends ConsumerState<_MoneyLogSheet> {
               hintText: 'Emergency, family, urgent work…',
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const AppIcon(AppIcons.calendar, color: AppColors.primary),
+            title: const Text('Date'),
+            subtitle: Text(DateFormatter.short(_date)),
+            trailing: const AppIcon(AppIcons.chevronRight, size: 18),
+            onTap: _pickDate,
+          ),
+          const SizedBox(height: 8),
           FilledButton(
             onPressed: _saving ? null : _save,
             child: Text(_saving ? 'Saving…' : 'Add'),

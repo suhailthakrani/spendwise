@@ -176,12 +176,16 @@ class MonthNavigator extends StatelessWidget {
     required this.onPrevious,
     required this.onNext,
     required this.onPick,
+    this.canGoPrevious = true,
+    this.canGoNext = true,
   });
 
   final DateTime month;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
   final VoidCallback onPick;
+  final bool canGoPrevious;
+  final bool canGoNext;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +193,7 @@ class MonthNavigator extends StatelessWidget {
       children: [
         IconButton(
           tooltip: 'Previous month',
-          onPressed: onPrevious,
+          onPressed: canGoPrevious ? onPrevious : null,
           icon: const RotatedBox(
             quarterTurns: 2,
             child: AppIcon(AppIcons.chevronRight, size: 20),
@@ -206,7 +210,7 @@ class MonthNavigator extends StatelessWidget {
         ),
         IconButton(
           tooltip: 'Next month',
-          onPressed: onNext,
+          onPressed: canGoNext ? onNext : null,
           icon: const AppIcon(AppIcons.chevronRight, size: 20),
         ),
       ],
