@@ -270,13 +270,8 @@ INSERT INTO expenses_fts(expenses_fts) VALUES('rebuild')
     await migrator.addColumn(table, column);
   }
 
-  /// Income/expense discriminator + Income category. No wallets — never shipped.
+  /// Ledger type column for expenses. Income category seeding was removed.
   Future<void> _addLedgerTypes() async {
-    final profiles = await select(userProfiles).get();
-    for (final profile in profiles) {
-      await seedIncomeCategoryForUser(this, profile.id);
-    }
-
     await _addRawColumnIfAbsent(
       'expenses',
       'type',

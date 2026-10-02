@@ -26,7 +26,6 @@ Future<void> seedCategoriesForUser(AppDatabase db, String userId) async {
         ..where((t) => t.userId.equals(userId)))
       .get();
   if (existing.isNotEmpty) {
-    await seedIncomeCategoryForUser(db, userId);
     return;
   }
 
@@ -38,22 +37,6 @@ Future<void> seedCategoriesForUser(AppDatabase db, String userId) async {
     );
   });
 }
-
-/// Income needs a category people can pick without inventing one.
-Future<void> seedIncomeCategoryForUser(AppDatabase db, String userId) async {
-  await db.into(db.categories).insert(
-        CategoriesCompanion.insert(
-          id: incomeCategoryId(userId),
-          userId: Value(userId),
-          name: 'Income',
-          iconName: 'savings',
-          colorValue: const Color(0xFF059669).toARGB32(),
-        ),
-        mode: InsertMode.insertOrIgnore,
-      );
-}
-
-String incomeCategoryId(String userId) => '${userId}__cat_income';
 
 final _defaultPreferences = AppPreferencesCompanion.insert(
   id: Value(preferencesId),
@@ -146,13 +129,6 @@ List<CategoriesCompanion> defaultCategoriesForUser(String userId) {
       id: id('cat_investment'),
       userId: Value(userId),
       name: 'Investment',
-      iconName: 'savings',
-      colorValue: const Color(0xFF059669).toARGB32(),
-    ),
-    CategoriesCompanion.insert(
-      id: id('cat_income'),
-      userId: Value(userId),
-      name: 'Income',
       iconName: 'savings',
       colorValue: const Color(0xFF059669).toARGB32(),
     ),

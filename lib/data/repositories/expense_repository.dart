@@ -219,12 +219,9 @@ class ExpenseRepository {
     );
   }
 
-  /// Net of all income minus all expenses for this user (all time).
-  /// Prefer period-scoped balance on the home card — see [ReportRepository].
-  Future<double> totalBalance() async {
-    final income = await _sumAll(type: LedgerEntryType.income);
-    final expense = await _sumAll(type: LedgerEntryType.expense);
-    return income - expense;
+  /// Total expenses for this user (all time). Prefer period spend on home.
+  Future<double> totalSpent() async {
+    return _sumAll(type: LedgerEntryType.expense);
   }
 
   Future<double> _sumAll({required LedgerEntryType type}) async {

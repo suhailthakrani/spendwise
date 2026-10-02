@@ -187,7 +187,7 @@ class DashboardScreen extends ConsumerWidget {
                     iconSize: 20,
                   ),
                   title: const Text('Financial calendar'),
-                  subtitle: const Text('Bills, income, and goal due dates'),
+                  subtitle: const Text('Bills and goal due dates'),
                   trailing: const AppIcon(AppIcons.chevronRight, size: 18),
                   onTap: () => context.push(AppRoutes.calendar),
                 ),
@@ -466,7 +466,7 @@ class _ForecastOutlookSection extends ConsumerWidget {
                   ),
                   const SizedBox(height: 10),
                   _OutlookRow(
-                    label: 'Current balance',
+                    label: 'Budget left',
                     value: currency.format(forecast.currentBalance),
                   ),
                   _OutlookRow(
@@ -510,7 +510,6 @@ bool _hasSafeToSpend(ForecastResult forecast) {
 bool _hasOutlook(ForecastResult forecast) {
   return forecast.currentBalance.abs() >= 0.005 ||
       forecast.monthSpendSoFar.abs() >= 0.005 ||
-      forecast.monthIncomeSoFar.abs() >= 0.005 ||
       forecast.upcomingCommitments.isNotEmpty ||
       forecast.projectedMonthEndBalance.abs() >= 0.005;
 }
@@ -789,9 +788,13 @@ class _SpendingHeroCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              stats.hasBudgetPeriod
-                                  ? 'Balance · ${DateFormatter.periodRange(stats.budgetPeriodStart!, stats.budgetPeriodEnd!)}'
-                                  : 'Balance · ${DateFormatter.monthYear(DateTime.now())}',
+                              hasBudget
+                                  ? (stats.hasBudgetPeriod
+                                      ? 'Remaining · ${DateFormatter.periodRange(stats.budgetPeriodStart!, stats.budgetPeriodEnd!)}'
+                                      : 'Remaining · ${DateFormatter.monthYear(DateTime.now())}')
+                                  : (stats.hasBudgetPeriod
+                                      ? 'Spent · ${DateFormatter.periodRange(stats.budgetPeriodStart!, stats.budgetPeriodEnd!)}'
+                                      : 'Spent · ${DateFormatter.monthYear(DateTime.now())}'),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: Colors.white.withValues(alpha: 0.78),
                                 fontWeight: FontWeight.w500,
@@ -803,7 +806,7 @@ class _SpendingHeroCard extends StatelessWidget {
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 currency.formatInUserCurrency(
-                                  stats.totalBalance,
+                                  stats.heroAmount,
                                 ),
                                 maxLines: 1,
                                 style: theme.textTheme.headlineMedium?.copyWith(
@@ -843,34 +846,10 @@ class _SpendingHeroCard extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: _GlassStatChip(
-                          label: 'Income',
-                          value: currency.formatInUserCurrency(
-                            stats.totalIncomeThisMonth,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _GlassStatChip(
                           label: 'Today',
                           value: currency.formatInUserCurrency(
                             stats.totalSpentToday,
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _GlassStatChip(
-                          label: hasBudget ? 'Remaining' : 'Budget',
-                          value: hasBudget
-                              ? currency.formatInUserCurrency(
-                                  stats.budgetRemaining,
-                                )
-                              : 'Not set',
                         ),
                       ),
                     ],

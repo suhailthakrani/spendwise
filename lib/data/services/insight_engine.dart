@@ -44,7 +44,6 @@ class InsightEngine {
       if (_recurringAmountChange(transactions, now, categoryNames)
           case final insight?)
         insight,
-      if (_incomeChange(transactions, now) case final insight?) insight,
     ];
 
     insights.sort((a, b) => b.severity.compareTo(a.severity));
@@ -194,33 +193,8 @@ class InsightEngine {
     );
   }
 
-  Insight? _incomeChange(
-    List<({DateTime date, double amount, String categoryId, String type})> txns,
-    DateTime now,
-  ) {
-    final thisIncome = _incomeTotal(txns, now.year, now.month);
-    final prev = DateTime(now.year, now.month - 1, 1);
-    final lastIncome = _incomeTotal(txns, prev.year, prev.month);
-    if (lastIncome <= 0) return null;
-    final ratio = (thisIncome - lastIncome).abs() / lastIncome;
-    if (ratio <= 0.25) return null;
-
-    final direction = thisIncome > lastIncome ? 'up' : 'down';
-    return Insight(
-      id: 'income_change',
-      title: 'Income shifted',
-      body:
-          'Income is ${(ratio * 100).toStringAsFixed(0)}% $direction vs last month.',
-      severity: (ratio - 0.25).clamp(0.0, 1.0) * 0.5 + 0.4,
-      kind: 'income_change',
-    );
-  }
-
   static bool _isExpense(String type) =>
       type == 'expense' || type.toLowerCase() == 'expense';
-
-  static bool _isIncome(String type) =>
-      type == 'income' || type.toLowerCase() == 'income';
 
   static double _expenseTotal(
     List<({DateTime date, double amount, String categoryId, String type})> txns,
@@ -230,19 +204,6 @@ class InsightEngine {
     var sum = 0.0;
     for (final t in txns) {
       if (!_isExpense(t.type)) continue;
-      if (t.date.year == year && t.date.month == month) sum += t.amount;
-    }
-    return sum;
-  }
-
-  static double _incomeTotal(
-    List<({DateTime date, double amount, String categoryId, String type})> txns,
-    int year,
-    int month,
-  ) {
-    var sum = 0.0;
-    for (final t in txns) {
-      if (!_isIncome(t.type)) continue;
       if (t.date.year == year && t.date.month == month) sum += t.amount;
     }
     return sum;

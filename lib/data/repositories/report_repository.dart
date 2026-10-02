@@ -37,14 +37,6 @@ class ReportRepository {
       end: periodEnd,
       type: LedgerEntryType.expense,
     );
-    final periodIncomeUsd = await _expenses.sumBetween(
-      start: periodStart,
-      end: periodEnd,
-      type: LedgerEntryType.income,
-    );
-
-    // Period net only — not all-time. Money log stays out (independent).
-    final balanceUsd = periodIncomeUsd - periodSpendUsd;
 
     final periodExpenses = await _expenses.search(
       startDate: periodStart,
@@ -81,8 +73,6 @@ class ReportRepository {
     final monthlyBudgetUsd = monthly?.effectiveLimit ?? 0.0;
 
     return DashboardStats(
-      totalBalance: currency.toDisplayAmount(balanceUsd),
-      totalIncomeThisMonth: currency.toDisplayAmount(periodIncomeUsd),
       totalSpentToday: currency.toDisplayAmount(todayTotalUsd),
       totalSpentThisMonth: periodSpendDisplay,
       budgetSpent: periodSpendDisplay,
@@ -109,10 +99,6 @@ class ReportRepository {
   }) async {
     final reference = DateTime(year, month, 1);
     final totalExpensesUsd = await _expenses.sumForMonth(month: reference);
-    final totalIncomeUsd = await _expenses.sumForMonth(
-      month: reference,
-      type: LedgerEntryType.income,
-    );
 
     final monthStart = DateTime(year, month, 1);
     final monthEnd = DateTime(year, month + 1, 0, 23, 59, 59);
@@ -133,7 +119,6 @@ class ReportRepository {
     return MonthlySummary(
       month: month,
       year: year,
-      totalIncome: currency.toDisplayAmount(totalIncomeUsd),
       totalExpenses: currency.toDisplayAmount(totalExpensesUsd),
       categoryBreakdown: breakdown,
     );

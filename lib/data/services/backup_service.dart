@@ -536,8 +536,6 @@ class BackupService {
       });
     }
 
-    await seedIncomeCategoryForUser(_db, userId);
-
     if (snapshot.expenses.isNotEmpty) {
       await _db.batch((batch) {
         batch.insertAll(

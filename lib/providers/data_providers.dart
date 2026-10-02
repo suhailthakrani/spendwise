@@ -32,9 +32,9 @@ final expensesProvider = StreamProvider<List<Expense>>((ref) {
   return ref.watch(expenseRepositoryProvider).watchExpenses();
 });
 
-/// Full ledger (expenses + income) for recent activity / search.
+/// Full ledger for recent activity / search (expenses only in product).
 final ledgerProvider = StreamProvider<List<Expense>>((ref) {
-  return ref.watch(expenseRepositoryProvider).watchAll();
+  return ref.watch(expenseRepositoryProvider).watchExpenses();
 });
 
 /// Categories ordered by how often they've been used in expenses (most first).
@@ -44,12 +44,18 @@ final categoriesByUsageProvider = Provider<List<ExpenseCategory>>((ref) {
   final expenses = ref.watch(expensesProvider).valueOrNull ?? [];
   if (categories.isEmpty) return const [];
 
+  // Hide legacy "Income" seed category — SpendWise is expense-only.
+  final usable = categories
+      .where((c) => c.name.toLowerCase() != 'income')
+      .toList();
+  if (usable.isEmpty) return const [];
+
   final counts = <String, int>{};
   for (final expense in expenses) {
     counts[expense.categoryId] = (counts[expense.categoryId] ?? 0) + 1;
   }
 
-  final ranked = [...categories]..sort((a, b) {
+  final ranked = [...usable]..sort((a, b) {
       final countCompare = (counts[b.id] ?? 0).compareTo(counts[a.id] ?? 0);
       if (countCompare != 0) return countCompare;
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
@@ -147,38 +153,30 @@ final forecastProvider = FutureProvider<ForecastResult>((ref) async {
   final monthlyBudgetLimit = activeMonthly?.effectiveLimit;
 
   final double monthSpendSoFar;
-  final double monthIncomeSoFar;
   if (periodStart != null && periodEnd != null) {
     monthSpendSoFar = await expenses.sumBetween(
       start: periodStart,
       end: periodEnd,
       type: LedgerEntryType.expense,
     );
-    monthIncomeSoFar = await expenses.sumBetween(
-      start: periodStart,
-      end: periodEnd,
-      type: LedgerEntryType.income,
-    );
   } else {
     monthSpendSoFar = await expenses.sumForMonth(month: now);
-    monthIncomeSoFar = await expenses.sumForMonth(
-      month: now,
-      type: LedgerEntryType.income,
-    );
   }
 
-  // Period net only — all-time income−expense dragged Balance by every past spend.
-  // Money log stays out; it is independent of budget/ledger.
-  final currentBalance = monthIncomeSoFar - monthSpendSoFar;
+  // Budget left drives Outlook — SpendWise is spend/budget, not income−spend.
+  final currentBalance = monthlyBudgetLimit != null
+      ? monthlyBudgetLimit - monthSpendSoFar
+      : 0.0;
 
   final recurringInputs = [
     for (final bill in recurring)
-      (
-        title: bill.title,
-        amount: bill.amount,
-        due: bill.nextDueDate,
-        isIncome: bill.entryType == LedgerEntryType.income,
-      ),
+      if (bill.entryType != LedgerEntryType.income)
+        (
+          title: bill.title,
+          amount: bill.amount,
+          due: bill.nextDueDate,
+          isIncome: false,
+        ),
   ];
 
   final goalInputs = <({String title, double amount, DateTime due})>[];
@@ -193,7 +191,7 @@ final forecastProvider = FutureProvider<ForecastResult>((ref) async {
   return ForecastService().project(
     currentBalance: currentBalance,
     monthSpendSoFar: monthSpendSoFar,
-    monthIncomeSoFar: monthIncomeSoFar,
+    monthIncomeSoFar: 0,
     monthlyBudgetLimit: monthlyBudgetLimit,
     recurring: recurringInputs,
     goalContributions: goalInputs,

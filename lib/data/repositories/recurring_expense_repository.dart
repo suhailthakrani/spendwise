@@ -73,9 +73,7 @@ class RecurringExpenseRepository {
     required String Function() newExpenseId,
   }) async {
     final now = DateTime.now();
-    final entryType = bill.entryType == LedgerEntryType.income
-        ? LedgerEntryType.income
-        : LedgerEntryType.expense;
+    final entryType = LedgerEntryType.expense;
 
     final expense = Expense(
       id: newExpenseId(),

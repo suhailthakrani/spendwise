@@ -132,7 +132,7 @@ class AccountScreen extends ConsumerWidget {
                   SettingsTile(
                     iconAsset: AppIcons.calendar,
                     title: 'Calendar',
-                    subtitle: 'Bills, income, and goal due dates',
+                    subtitle: 'Bills and goal due dates',
                     onTap: () => context.push(AppRoutes.calendar),
                   ),
                 ],

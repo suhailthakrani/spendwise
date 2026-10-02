@@ -45,14 +45,9 @@ void main() {
     expect(expenses.single.amount, 12.5);
     expect(expenses.single.note, 'Lunch');
     expect(expenses.single.type, 'expense');
-
-    final incomeCat = await (db.select(db.categories)
-          ..where((t) => t.id.equals(incomeCategoryId('user_a'))))
-        .getSingleOrNull();
-    expect(incomeCat, isNotNull);
   });
 
-  test('income raises balance; expense lowers it', () async {
+  test('expenses sum for period; income entries ignored by spend totals', () async {
     final db = AppDatabase.memory();
     addTearDown(db.close);
 
@@ -75,17 +70,6 @@ void main() {
 
     await ledger.create(
       Expense(
-        id: 'inc_1',
-        amount: 100,
-        categoryId: incomeCategoryId('user_a'),
-        note: 'Salary',
-        date: DateTime.now(),
-        paymentMethod: PaymentMethod.cash,
-        type: LedgerEntryType.income,
-      ),
-    );
-    await ledger.create(
-      Expense(
         id: 'exp_1',
         amount: 30,
         categoryId: groceryId,
@@ -95,16 +79,25 @@ void main() {
         type: LedgerEntryType.expense,
       ),
     );
-
-    expect(await ledger.totalBalance(), 70);
-    expect(await ledger.sumForMonth(month: DateTime.now()), 30);
-    expect(
-      await ledger.sumForMonth(
-        month: DateTime.now(),
-        type: LedgerEntryType.income,
+    await ledger.create(
+      Expense(
+        id: 'exp_2',
+        amount: 20,
+        categoryId: groceryId,
+        note: 'Snacks',
+        date: DateTime.now(),
+        paymentMethod: PaymentMethod.cash,
+        type: LedgerEntryType.expense,
       ),
-      100,
     );
+
+    expect(await ledger.totalSpent(), 50);
+    expect(await ledger.sumForMonth(month: DateTime.now()), 50);
+
+    final categories = await (db.select(db.categories)
+          ..where((t) => t.userId.equals('user_a')))
+        .get();
+    expect(categories.every((c) => c.name.toLowerCase() != 'income'), isTrue);
   });
 }
 

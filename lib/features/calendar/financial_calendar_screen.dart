@@ -62,7 +62,7 @@ class _FinancialCalendarScreenState
           ),
           title: bill.title,
           amount: bill.amount,
-          kind: bill.entryType.name == 'income' ? 'Income' : 'Bill',
+          kind: 'Bill',
         ),
       );
     }
@@ -122,7 +122,7 @@ class _FinancialCalendarScreenState
               amount: c.amount,
               kind: switch (c.kind) {
                 ForecastCommitmentKind.bill => 'Bill',
-                ForecastCommitmentKind.income => 'Income',
+                ForecastCommitmentKind.income => 'Bill',
                 ForecastCommitmentKind.goal => 'Goal',
               },
             ),

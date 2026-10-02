@@ -46,7 +46,6 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   late String _categoryId;
   late PaymentMethod _paymentMethod;
   late DateTime _date;
-  var _type = LedgerEntryType.expense;
   bool _isRecurring = false;
   bool _initialized = false;
   bool _saving = false;
@@ -87,7 +86,6 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       _categoryId = expense.categoryId;
       _paymentMethod = expense.paymentMethod;
       _date = expense.date;
-      _type = expense.type;
       _isRecurring = expense.isRecurring;
       _attachmentPath = expense.attachmentPath;
       _amountController.text = currency.formatForInput(expense.amount);
@@ -162,7 +160,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
           : _noteController.text.trim(),
       date: _date,
       paymentMethod: _paymentMethod,
-      type: _type,
+      type: LedgerEntryType.expense,
       isRecurring: _isRecurring,
       tags: Expense.parseTags(_tagsController.text),
       attachmentPath: _attachmentPath,
@@ -185,7 +183,6 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
     if (!context.mounted) return;
     HapticFeedback.lightImpact();
-    final label = _type == LedgerEntryType.income ? 'Income' : 'Expense';
     final messenger = ScaffoldMessenger.of(context);
     final categoryId = _categoryId;
     final prefsRepo = ref.read(preferencesRepositoryProvider);
@@ -200,7 +197,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     }
     messenger.showSnackBar(
       SnackBar(
-        content: Text(isEditing ? '$label updated' : 'Expense saved'),
+        content: Text(isEditing ? 'Expense updated' : 'Expense saved'),
       ),
     );
     Future<void>.delayed(const Duration(milliseconds: 300), () {
@@ -238,9 +235,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     // Offer searchable sheet once the strip is likely to need scrolling.
     final hasMore = categories.length > 6;
 
-    final title = isEditing
-        ? (_type == LedgerEntryType.income ? 'Edit income' : 'Edit expense')
-        : 'New expense';
+    final title = isEditing ? 'Edit expense' : 'New expense';
 
     return Scaffold(
       appBar: AppBar(

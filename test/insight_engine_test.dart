@@ -124,7 +124,7 @@ void main() {
     );
   });
 
-  test('incomeChange when income moves >25%', () {
+  test('does not emit income insights', () {
     final txns = [
       txn(
         date: DateTime(2026, 9, 1),
@@ -147,7 +147,7 @@ void main() {
       categoryNames: const {},
     );
 
-    expect(review.insights.any((i) => i.kind == 'income_change'), isTrue);
+    expect(review.insights.any((i) => i.kind == 'income_change'), isFalse);
   });
 
   test('insights are ranked by severity descending', () {

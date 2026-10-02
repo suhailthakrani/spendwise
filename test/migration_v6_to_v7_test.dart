@@ -70,8 +70,7 @@ void main() {
         await (db.select(db.categories)..where((t) => t.userId.equals('user_a')))
             .get();
     expect(categories.map((c) => c.name), contains('Food'));
-    // Schema 8 also seeds an Income category for existing users.
-    expect(categories.map((c) => c.name), contains('Income'));
+    expect(categories.map((c) => c.name), isNot(contains('Income')));
 
     // Ledger types land in schema 8; no wallets table is created.
     final tables = await db

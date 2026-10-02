@@ -12,8 +12,6 @@ class CategorySpending {
 
 class DashboardStats {
   const DashboardStats({
-    required this.totalBalance,
-    required this.totalIncomeThisMonth,
     required this.totalSpentToday,
     required this.totalSpentThisMonth,
     required this.budgetSpent,
@@ -24,11 +22,6 @@ class DashboardStats {
     this.budgetPeriodEnd,
   });
 
-  /// Active budget-period net: income − expenses (display currency).
-  /// Window comes from the budget start day (any day 1–31), not calendar month.
-  /// Money log is intentionally excluded — it is independent of the ledger.
-  final double totalBalance;
-  final double totalIncomeThisMonth;
   final double totalSpentToday;
 
   /// Expense total for the active budget period (home “Spent” chip).
@@ -48,6 +41,11 @@ class DashboardStats {
   double get budgetProgress =>
       monthlyBudget > 0 ? (budgetSpent / monthlyBudget).clamp(0.0, 1.0) : 0.0;
 
+  bool get hasBudget => monthlyBudget > 0;
+
   bool get hasBudgetPeriod =>
       budgetPeriodStart != null && budgetPeriodEnd != null;
+
+  /// Hero amount: budget left when a budget exists, otherwise period spend.
+  double get heroAmount => hasBudget ? budgetRemaining : totalSpentThisMonth;
 }
