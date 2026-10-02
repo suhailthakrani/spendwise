@@ -8,6 +8,7 @@ import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../providers/data_providers.dart';
 
 /// Whether the home “customize” tip should show. Hidden after dismiss.
 final homeCustomizeTipVisibleProvider =
@@ -40,12 +41,20 @@ class _HomeCustomizeTipNotifier extends StateNotifier<AsyncValue<bool>> {
   }
 }
 
-/// Short tip pointing users at home customization. Dismissible once.
+/// Short tip pointing users at home customization.
+///
+/// Hidden until the user has logged a few expenses, and dismissible once.
 class HomeCustomizeTip extends ConsumerWidget {
-  const HomeCustomizeTip({super.key});
+  const HomeCustomizeTip({super.key, this.minExpenseCount = 5});
+
+  final int minExpenseCount;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final expenseCount =
+        ref.watch(expensesProvider).valueOrNull?.length ?? 0;
+    if (expenseCount < minExpenseCount) return const SizedBox.shrink();
+
     final visible = ref.watch(homeCustomizeTipVisibleProvider).valueOrNull;
     if (visible != true) return const SizedBox.shrink();
 

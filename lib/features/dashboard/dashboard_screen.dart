@@ -9,6 +9,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/utils/category_lookup.dart';
 import '../../core/utils/currency_display.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/utils/smart_greeting.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/chart_widgets.dart';
 import '../../core/widgets/common_widgets.dart';
@@ -19,6 +20,7 @@ import '../../data/models/dashboard_layout.dart';
 import '../../data/models/dashboard_stats.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/forecast.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
 import '../../providers/repository_providers.dart';
@@ -32,6 +34,7 @@ class DashboardScreen extends ConsumerWidget {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final expensesAsync = ref.watch(ledgerProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
+    final profile = ref.watch(currentUserProvider).valueOrNull;
     final prefs = ref.watch(preferencesProvider).valueOrNull;
     final currency = ref.watch(currencyDisplayProvider);
     final theme = Theme.of(context);
@@ -65,8 +68,21 @@ class DashboardScreen extends ConsumerWidget {
                     elevation: 0,
                     scrolledUnderElevation: 0,
                     backgroundColor: theme.scaffoldBackgroundColor,
-                    toolbarHeight: 76,
-                    title: _DashboardTitle(greeting: _greeting()),
+                    toolbarHeight: AppSpacing.tabAppBarHeight,
+                    title: _DashboardTitle(
+                      greeting: SmartGreeting.resolve(
+                        stats: stats,
+                        userName: profile?.name,
+                      ),
+                      periodLabel: stats.hasBudget
+                          ? (stats.hasBudgetPeriod
+                              ? DateFormatter.periodRange(
+                                  stats.budgetPeriodStart!,
+                                  stats.budgetPeriodEnd!,
+                                )
+                              : null)
+                          : null,
+                    ),
                     actions: [
                       Padding(
                         padding: const EdgeInsets.only(right: 16),
@@ -345,13 +361,6 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ),
     ];
-  }
-
-  static String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
   }
 
   static String _budgetLeftSubtitle(DashboardStats stats) {
@@ -677,14 +686,18 @@ class _HomeRatingGateState extends ConsumerState<_HomeRatingGate> {
 }
 
 class _DashboardTitle extends StatelessWidget {
-  const _DashboardTitle({required this.greeting});
+  const _DashboardTitle({
+    required this.greeting,
+    this.periodLabel,
+  });
 
   final String greeting;
+  final String? periodLabel;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final monthLabel = DateFormatter.monthYear(DateTime.now());
+    final subtitle = periodLabel ?? DateFormatter.monthYear(DateTime.now());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -699,7 +712,7 @@ class _DashboardTitle extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          monthLabel,
+          subtitle,
           style: theme.textTheme.bodySmall?.copyWith(
             color: AppColors.secondaryText(context),
             fontWeight: FontWeight.w500,
@@ -882,7 +895,7 @@ class _SpendingHeroCard extends StatelessWidget {
                   ] else ...[
                     const SizedBox(height: 14),
                     Text(
-                      'Set a monthly budget to stay on track',
+                      'Set a budget to stay on track',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.78),
                         fontWeight: FontWeight.w500,

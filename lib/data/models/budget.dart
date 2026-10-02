@@ -96,6 +96,41 @@ class Budget {
     return nextStart.subtract(const Duration(days: 1));
   }
 
+  /// Anchor `(year, month)` of the cycle that contains [date] for [startDay].
+  ///
+  /// Example: on 2 Oct with start day 15 → September (15 Sep → 14 Oct).
+  /// On 15 Oct with start day 15 → October (15 Oct → 14 Nov).
+  static DateTime anchorContaining({
+    required DateTime date,
+    int startDay = 1,
+  }) {
+    final day = DateTime(date.year, date.month, date.day);
+    final thisStart = resolvePeriodStart(
+      year: day.year,
+      month: day.month,
+      startDay: startDay,
+    );
+    if (!day.isBefore(thisStart)) {
+      return DateTime(day.year, day.month);
+    }
+    final previous = DateTime(day.year, day.month - 1);
+    return DateTime(previous.year, previous.month);
+  }
+
+  /// Overall (non-category) budget whose period covers [asOf], if any.
+  static Budget? activeOverall(
+    Iterable<Budget> budgets, {
+    DateTime? asOf,
+  }) {
+    final when = asOf ?? DateTime.now();
+    for (final budget in budgets) {
+      if (budget.categoryId == null && budget.isActiveOn(when)) {
+        return budget;
+      }
+    }
+    return null;
+  }
+
   double get effectiveLimit => BudgetRollover.effectiveLimit(
         limit: limit,
         rolloverAmount: rolloverAmount,

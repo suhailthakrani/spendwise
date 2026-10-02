@@ -1,4 +1,5 @@
 import '../../core/utils/currency_display.dart';
+import '../models/budget.dart';
 import '../models/dashboard_stats.dart';
 import '../models/expense.dart';
 import '../models/insights_period.dart';
@@ -19,14 +20,12 @@ class ReportRepository {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
+    await _budgets.repairMisanchoredPaydayBudgets(asOf: today);
+
     final budgets = await _budgets.watchAll().first;
-    // Active overall budget. Period follows that budget's start day (any day
-    // of month, e.g. 1→end or 15→14) — not a fixed calendar month.
-    final monthly = budgets
-        .where(
-          (b) => b.categoryId == null && b.isActiveOn(now),
-        )
-        .firstOrNull;
+    // Active overall budget for today — payday cycles (15→14) must resolve
+    // even when the calendar month differs from the period anchor month.
+    final monthly = Budget.activeOverall(budgets, asOf: now);
 
     final periodStart = monthly?.periodStart ?? DateTime(now.year, now.month, 1);
     final periodEnd = monthly?.periodEnd ?? DateTime(now.year, now.month + 1, 0);

@@ -2,11 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:spendwise/data/models/dashboard_layout.dart';
 
 void main() {
-  test('defaults include core widgets', () {
+  test('defaults include core widgets only', () {
     final layout = DashboardLayout.defaults();
-    expect(layout.widgets, contains(DashboardWidgetId.balance));
-    expect(layout.widgets, contains(DashboardWidgetId.safeToSpend));
-    expect(layout.widgets, isNotEmpty);
+    expect(layout.widgets, [
+      DashboardWidgetId.balance,
+      DashboardWidgetId.recent,
+      DashboardWidgetId.budgets,
+    ]);
+    expect(layout.widgets, isNot(contains(DashboardWidgetId.safeToSpend)));
+    expect(layout.widgets, isNot(contains(DashboardWidgetId.forecast)));
   });
 
   test('fromJson skips unknown widget ids', () {

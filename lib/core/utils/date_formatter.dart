@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import '../../data/models/budget.dart';
+
 abstract final class DateFormatter {
   static final DateFormat _short = DateFormat('MMM d, yyyy');
   static final DateFormat _medium = DateFormat('EEEE, MMM d');
@@ -38,6 +40,30 @@ abstract final class DateFormatter {
   /// Short range label, e.g. `15 Sep → 14 Oct`.
   static String periodRange(DateTime start, DateTime end) {
     return '${dayMonth(start)} → ${dayMonth(end)}';
+  }
+
+  /// Header label for a budget cycle.
+  ///
+  /// Start day 1 → `October 2026`. Otherwise → `15 Sep → 14 Oct`.
+  static String periodHeader({
+    required int year,
+    required int month,
+    int startDay = 1,
+  }) {
+    if (startDay <= 1) {
+      return monthYear(DateTime(year, month));
+    }
+    final start = Budget.resolvePeriodStart(
+      year: year,
+      month: month,
+      startDay: startDay,
+    );
+    final end = Budget.resolvePeriodEnd(
+      year: year,
+      month: month,
+      startDay: startDay,
+    );
+    return periodRange(start, end);
   }
 
   /// Whole days from [asOf] (default: today) until [end], not counting today.

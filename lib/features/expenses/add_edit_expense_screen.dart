@@ -239,12 +239,16 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: SoftIconButton(
-          asset: AppIcons.clear,
-          onPressed: () => context.pop(),
-          size: 40,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: SoftIconButton(
+            asset: AppIcons.clear,
+            onPressed: () => context.pop(),
+            size: 36,
+            iconSize: 18,
+          ),
         ),
-        leadingWidth: 64,
+        leadingWidth: 52,
         title: Text(title),
       ),
       body: SafeArea(
@@ -356,15 +360,6 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const _FieldLabel('Tags'),
-                    const SizedBox(height: 10),
-                    AppTextFormField(
-                      controller: _tagsController,
-                      decoration: const InputDecoration(
-                        hintText: 'food, travel (comma-separated)',
-                      ),
-                    ),
-                    const SizedBox(height: 20),
                     Row(
                       children: [
                         Expanded(
@@ -397,6 +392,15 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                           ),
                         ],
                       ],
+                    ),
+                    const SizedBox(height: 20),
+                    const _FieldLabel('Tags'),
+                    const SizedBox(height: 10),
+                    AppTextFormField(
+                      controller: _tagsController,
+                      decoration: const InputDecoration(
+                        hintText: 'food, travel (comma-separated)',
+                      ),
                     ),
                     const SizedBox(height: 20),
                     const _FieldLabel('Payment method'),
@@ -717,40 +721,59 @@ class _CategoryStrip extends StatelessWidget {
   final String selectedId;
   final ValueChanged<String> onSelected;
 
-  /// Matches [_CompactCategoryChip]: 10+10 padding, ~18 icon/text, 3 border.
   static const _chipHeight = 42.0;
-  static const _rowGap = 8.0;
+  static const _gap = 8.0;
 
   @override
   Widget build(BuildContext context) {
     if (categories.isEmpty) return const SizedBox.shrink();
 
-    // One row when a single chip; otherwise pack into at most two rows.
-    final rows = categories.length == 1 ? 1 : 2;
-    final height = rows == 1 ? _chipHeight : (_chipHeight * 2) + _rowGap;
+    // Pack by row (not vertical columns) so short names don't leave holes
+    // beside longer names in the same "column".
+    final top = <ExpenseCategory>[];
+    final bottom = <ExpenseCategory>[];
+    if (categories.length == 1) {
+      top.add(categories.first);
+    } else {
+      for (var i = 0; i < categories.length; i++) {
+        if (i.isEven) {
+          top.add(categories[i]);
+        } else {
+          bottom.add(categories[i]);
+        }
+      }
+    }
 
-    return SizedBox(
-      height: height,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Wrap(
-          direction: Axis.vertical,
-          spacing: _rowGap,
-          runSpacing: _rowGap,
-          children: [
-            for (final cat in categories)
-              SizedBox(
-                height: _chipHeight,
-                child: Center(
-                  child: _CompactCategoryChip(
-                    category: cat,
-                    selected: cat.id == selectedId,
-                    onTap: () => onSelected(cat.id),
-                  ),
-                ),
+    Widget rowOf(List<ExpenseCategory> cats) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < cats.length; i++) ...[
+            if (i > 0) const SizedBox(width: _gap),
+            SizedBox(
+              height: _chipHeight,
+              child: _CompactCategoryChip(
+                category: cats[i],
+                selected: cats[i].id == selectedId,
+                onTap: () => onSelected(cats[i].id),
               ),
+            ),
           ],
-        ),
+        ],
+      );
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          rowOf(top),
+          if (bottom.isNotEmpty) ...[
+            const SizedBox(height: _gap),
+            rowOf(bottom),
+          ],
+        ],
       ),
     );
   }

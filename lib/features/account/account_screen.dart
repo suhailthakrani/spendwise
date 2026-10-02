@@ -23,6 +23,7 @@ class AccountScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
     final prefsAsync = ref.watch(preferencesProvider);
+    final versionAsync = ref.watch(appVersionProvider);
     final theme = Theme.of(context);
 
     return prefsAsync.when(
@@ -120,31 +121,14 @@ class AccountScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const _SectionTitle(title: 'Records'),
+              const _SectionTitle(title: 'Money'),
               SurfaceGroup(
                 children: [
                   SettingsTile(
                     iconAsset: AppIcons.wallet,
                     title: 'Money log',
-                    subtitle: 'Money in and out, kept out of your budget',
+                    subtitle: 'Extra money not counted in your budget',
                     onTap: () => context.push(AppRoutes.moneyLog),
-                  ),
-                  SettingsTile(
-                    iconAsset: AppIcons.calendar,
-                    title: 'Calendar',
-                    subtitle: 'Bills and goal due dates',
-                    onTap: () => context.push(AppRoutes.calendar),
-                  ),
-                ],
-              ),
-              const _SectionTitle(title: 'Setup'),
-              SurfaceGroup(
-                children: [
-                  SettingsTile(
-                    iconAsset: AppIcons.settings,
-                    title: 'Customize home',
-                    subtitle: 'Reorder and hide dashboard widgets',
-                    onTap: () => context.push(AppRoutes.customizeDashboard),
                   ),
                   SettingsTile(
                     iconAsset: AppIcons.savings,
@@ -160,19 +144,19 @@ class AccountScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              const _SectionTitle(title: 'Export'),
+              const _SectionTitle(title: 'Backup'),
               SurfaceGroup(
                 children: [
                   SettingsTile(
                     iconAsset: AppIcons.globe,
                     title: 'Google Drive backup',
-                    subtitle: 'Add a Drive email. Back up and restore any time',
+                    subtitle: 'Back up and restore any time',
                     onTap: () => context.push(AppRoutes.backup),
                   ),
                   SettingsTile(
                     iconAsset: AppIcons.exportExcel,
                     title: 'Export Excel',
-                    subtitle: 'Choose timeline and preview',
+                    subtitle: 'Share a spreadsheet of your spending',
                     onTap: () => context.push(AppRoutes.export),
                   ),
                 ],
@@ -183,8 +167,7 @@ class AccountScreen extends ConsumerWidget {
                   SettingsTile(
                     iconAsset: AppIcons.settings,
                     title: 'Settings',
-                    subtitle:
-                        'Change theme, currency, locale, notifications',
+                    subtitle: 'Theme, currency, and notifications',
                     onTap: () => context.push(AppRoutes.settings),
                   ),
                   SettingsTile(
@@ -192,6 +175,23 @@ class AccountScreen extends ConsumerWidget {
                     title: 'Privacy',
                     subtitle: 'How your data stays on this device',
                     onTap: () => context.push(AppRoutes.privacy),
+                  ),
+                ],
+              ),
+              const _SectionTitle(title: 'More'),
+              SurfaceGroup(
+                children: [
+                  SettingsTile(
+                    iconAsset: AppIcons.settings,
+                    title: 'Customize home',
+                    subtitle: 'Show or hide home sections',
+                    onTap: () => context.push(AppRoutes.customizeDashboard),
+                  ),
+                  SettingsTile(
+                    iconAsset: AppIcons.calendar,
+                    title: 'Calendar',
+                    subtitle: 'Bills and goal due dates',
+                    onTap: () => context.push(AppRoutes.calendar),
                   ),
                 ],
               ),
@@ -248,10 +248,14 @@ class AccountScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Center(
-                child: Text(
-                  'v1.3.2',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.tertiaryText(context),
+                child: versionAsync.when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                  data: (version) => Text(
+                    'v$version',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppColors.tertiaryText(context),
+                    ),
                   ),
                 ),
               ),

@@ -88,6 +88,54 @@ void main() {
     });
   });
 
+  group('Budget.anchorContaining', () {
+    test('before start day uses previous month', () {
+      expect(
+        Budget.anchorContaining(
+          date: DateTime(2026, 10, 2),
+          startDay: 15,
+        ),
+        DateTime(2026, 9),
+      );
+    });
+
+    test('on start day uses current month', () {
+      expect(
+        Budget.anchorContaining(
+          date: DateTime(2026, 10, 15),
+          startDay: 15,
+        ),
+        DateTime(2026, 10),
+      );
+    });
+
+    test('start day 1 always uses calendar month', () {
+      expect(
+        Budget.anchorContaining(
+          date: DateTime(2026, 10, 2),
+          startDay: 1,
+        ),
+        DateTime(2026, 10),
+      );
+    });
+  });
+
+  group('DateFormatter.periodHeader', () {
+    test('start day 1 keeps month year', () {
+      expect(
+        DateFormatter.periodHeader(year: 2026, month: 10, startDay: 1),
+        'October 2026',
+      );
+    });
+
+    test('payday cycle shows range', () {
+      expect(
+        DateFormatter.periodHeader(year: 2026, month: 9, startDay: 15),
+        '15 Sep → 14 Oct',
+      );
+    });
+  });
+
   group('DateFormatter budget cycle labels', () {
     test('periodRange formats short bounds', () {
       expect(

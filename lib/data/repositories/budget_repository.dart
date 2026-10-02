@@ -156,6 +156,56 @@ class BudgetRepository {
         .go();
   }
 
+  /// Fixes payday budgets stored under the current calendar month before the
+  /// cycle starts (e.g. start day 15, today Oct 2, saved as October instead of
+  /// September). Rewrites year/month + period bounds to the cycle covering today.
+  Future<bool> repairMisanchoredPaydayBudgets({DateTime? asOf}) async {
+    final now = asOf ?? DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final rows = await (_db.select(_db.budgets)
+          ..where((t) => t.userId.equals(_userId)))
+        .get();
+
+    var repaired = false;
+    for (final row in rows) {
+      if (row.categoryId != null) continue;
+      final startDay = row.startDate?.day ?? 1;
+      if (startDay <= 1) continue;
+      if (row.year != today.year || row.month != today.month) continue;
+      if (startDay <= today.day) continue;
+
+      final anchor = Budget.anchorContaining(
+        date: today,
+        startDay: startDay,
+      );
+      if (anchor.year == row.year && anchor.month == row.month) continue;
+
+      final startDate = Budget.resolvePeriodStart(
+        year: anchor.year,
+        month: anchor.month,
+        startDay: startDay,
+      );
+      final endDate = Budget.resolvePeriodEnd(
+        year: anchor.year,
+        month: anchor.month,
+        startDay: startDay,
+      );
+
+      await (_db.update(_db.budgets)
+            ..where((t) => t.id.equals(row.id) & t.userId.equals(_userId)))
+          .write(
+        BudgetsCompanion(
+          year: Value(anchor.year),
+          month: Value(anchor.month),
+          startDate: Value(startDate),
+          endDate: Value(endDate),
+        ),
+      );
+      repaired = true;
+    }
+    return repaired;
+  }
+
   Future<List<Budget>> _mapBudgets(List<BudgetRow> rows) async {
     final budgets = <Budget>[];
     for (final row in rows) {

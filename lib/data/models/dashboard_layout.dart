@@ -19,7 +19,7 @@ enum DashboardWidgetId {
   }
 
   String get label => switch (this) {
-        DashboardWidgetId.balance => 'Balance',
+        DashboardWidgetId.balance => 'Overview',
         DashboardWidgetId.safeToSpend => 'Safe to spend',
         DashboardWidgetId.forecast => 'Forecast',
         DashboardWidgetId.budgets => 'Budgets',
@@ -37,15 +37,13 @@ class DashboardLayout {
   final List<DashboardWidgetId> widgets;
 
   static DashboardLayout defaults() {
+    // Keep first-run Home calm: status → recent → budget.
+    // Advanced widgets stay available via Customize home.
     return const DashboardLayout(
       widgets: [
         DashboardWidgetId.balance,
-        DashboardWidgetId.safeToSpend,
-        DashboardWidgetId.forecast,
-        DashboardWidgetId.budgets,
-        DashboardWidgetId.goals,
         DashboardWidgetId.recent,
-        DashboardWidgetId.insights,
+        DashboardWidgetId.budgets,
       ],
     );
   }

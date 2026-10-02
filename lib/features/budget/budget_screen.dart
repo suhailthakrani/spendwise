@@ -13,6 +13,7 @@ import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/expense_widgets.dart';
 import '../../core/widgets/goal_progress_banner.dart';
 import '../../core/widgets/month_picker.dart';
+import '../../data/models/budget.dart';
 import '../../data/models/category.dart';
 import '../../data/models/envelope.dart';
 import '../../data/models/recurring_expense.dart';
@@ -20,11 +21,52 @@ import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
 import '../../providers/repository_providers.dart';
 
-class BudgetScreen extends ConsumerWidget {
+class BudgetScreen extends ConsumerStatefulWidget {
   const BudgetScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BudgetScreen> createState() => _BudgetScreenState();
+}
+
+class _BudgetScreenState extends ConsumerState<BudgetScreen> {
+  var _didSyncActivePeriod = false;
+
+  void _syncToActivePeriod(List<Budget> rawBudgets) {
+    if (_didSyncActivePeriod) return;
+    final selected = ref.read(budgetMonthProvider);
+    final hasSelected = rawBudgets.any(
+      (b) => b.year == selected.year && b.month == selected.month,
+    );
+    if (hasSelected) {
+      _didSyncActivePeriod = true;
+      return;
+    }
+    final active = Budget.activeOverall(rawBudgets);
+    if (active != null) {
+      _didSyncActivePeriod = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(budgetMonthProvider.notifier).state =
+            DateTime(active.year, active.month);
+      });
+      return;
+    }
+    final overall = rawBudgets.where((b) => b.categoryId == null).firstOrNull;
+    if (overall != null) {
+      _didSyncActivePeriod = true;
+      final anchor = Budget.anchorContaining(
+        date: DateTime.now(),
+        startDay: overall.startDay,
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(budgetMonthProvider.notifier).state = anchor;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final budgetsAsync = ref.watch(budgetsProvider);
     final recurringAsync = ref.watch(recurringExpensesProvider);
     final autoPostAsync = ref.watch(autoPostQueueProvider);
@@ -55,14 +97,17 @@ class BudgetScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: AppSpacing.tabAppBarHeight,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               'Budget',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.4,
+                height: 1.1,
               ),
             ),
             Text(
@@ -90,6 +135,7 @@ class BudgetScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('Error: $error')),
         data: (rawBudgets) {
+          _syncToActivePeriod(rawBudgets);
           final categories = categoriesAsync.valueOrNull ?? [];
           final recurring = recurringAsync.valueOrNull ?? [];
           final autoPostQueue = autoPostAsync.valueOrNull ?? [];
@@ -111,6 +157,18 @@ class BudgetScreen extends ConsumerWidget {
           final categoryBudgets =
               categoryRaws.map(currency.budgetInDisplay).toList();
 
+          final startDay = monthlyRaw?.startDay ??
+              rawBudgets
+                  .where((b) => b.categoryId == null)
+                  .map((b) => b.startDay)
+                  .firstOrNull ??
+              1;
+          final periodLabel = DateFormatter.periodHeader(
+            year: selectedMonth.year,
+            month: selectedMonth.month,
+            startDay: startDay,
+          );
+
           return ListView(
             padding: const EdgeInsets.only(bottom: AppSpacing.navClearance),
             children: [
@@ -124,6 +182,7 @@ class BudgetScreen extends ConsumerWidget {
                 ),
                 child: MonthNavigator(
                   month: selectedMonth,
+                  label: periodLabel,
                   onPrevious: () => shiftMonth(-1),
                   onNext: () => shiftMonth(1),
                   onPick: pickMonth,
@@ -131,13 +190,12 @@ class BudgetScreen extends ConsumerWidget {
               ),
               if (monthBudgets.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(top: 32),
+                  padding: const EdgeInsets.only(top: 48),
                   child: EmptyState(
                     iconAsset: AppIcons.budget,
-                    title: 'No budgets for this period',
-                    subtitle:
-                        'Create a budget for this period to track your spending.',
-                    actionLabel: 'Add budget',
+                    title: 'Set your budget',
+                    subtitle: 'Decide how much you want to spend this period.',
+                    actionLabel: 'Set budget',
                     onAction: () => context.push(AppRoutes.addBudget),
                   ),
                 )
@@ -337,7 +395,7 @@ class BudgetScreen extends ConsumerWidget {
                       ),
                       title: const Text('Set a monthly budget'),
                       subtitle: Text(
-                        'Track spending for ${DateFormatter.monthYear(selectedMonth)}',
+                        'How much can you spend in $periodLabel?',
                       ),
                       trailing: const AppIcon(AppIcons.add, size: 20),
                       onTap: () => context.push(AppRoutes.addBudget),
@@ -436,130 +494,141 @@ class BudgetScreen extends ConsumerWidget {
                   ),
                 ),
               ],
-              if (autoPostQueue.isNotEmpty) ...[
-                const SectionHeader(title: 'Auto-post queue'),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.page,
-                  ),
-                  child: Card(
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < autoPostQueue.length; i++) ...[
-                          ListTile(
-                            title: Text(autoPostQueue[i].title),
-                            subtitle: Text(
-                              'Due ${DateFormatter.short(autoPostQueue[i].nextDueDate)}',
-                            ),
-                            trailing: FilledButton.tonal(
-                              onPressed: () async {
-                                final repo =
-                                    ref.read(recurringExpenseRepositoryProvider);
-                                final expenses =
-                                    ref.read(expenseRepositoryProvider);
-                                await repo.postNow(
-                                  autoPostQueue[i],
-                                  expenses: expenses,
-                                  newExpenseId: expenses.newId,
-                                );
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Posted to ledger'),
-                                  ),
-                                );
-                              },
-                              child: const Text('Confirm'),
-                            ),
-                          ),
-                          if (i < autoPostQueue.length - 1)
-                            Divider(
-                              height: 1,
-                              indent: 16,
-                              color: AppColors.border(context),
-                            ),
-                        ],
-                      ],
-                    ),
-                  ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.page,
                 ),
-              ],
-              if (recurring.isNotEmpty) ...[
-                const SectionHeader(title: 'Recurring'),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.page,
-                  ),
-                  child: Card(
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < recurring.length; i++) ...[
-                          _RecurringTile(
-                            recurring: recurring[i],
-                            category: categoryById(
-                              categories,
-                              recurring[i].categoryId,
-                            ),
-                          ),
-                          if (i < recurring.length - 1)
-                            Divider(
-                              height: 1,
-                              indent: 70,
-                              color: AppColors.border(context),
-                            ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              SectionHeader(
-                title: 'Envelopes',
-                actionLabel: 'Add',
-                onActionTap: () => _showAddEnvelopeDialog(context, ref),
-              ),
-              if (envelopes.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.page,
-                  ),
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Text(
-                        'No envelopes yet. Allocate cash for specific spending pots.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
+                child: Card(
+                  child: Theme(
+                    data: theme.copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      initiallyExpanded: false,
+                      tilePadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      childrenPadding: const EdgeInsets.only(bottom: 8),
+                      title: Text(
+                        'More tools',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Recurring, envelopes, and goals',
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: AppColors.secondaryText(context),
                         ),
                       ),
-                    ),
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.page,
-                  ),
-                  child: Card(
-                    child: Column(
                       children: [
-                        for (var i = 0; i < envelopes.length; i++) ...[
-                          _EnvelopeTile(envelope: envelopes[i]),
-                          if (i < envelopes.length - 1)
-                            Divider(
-                              height: 1,
-                              indent: 16,
-                              color: AppColors.border(context),
+                        if (autoPostQueue.isNotEmpty) ...[
+                          const _AdvancedSubhead(title: 'Auto-post queue'),
+                          for (var i = 0; i < autoPostQueue.length; i++)
+                            ListTile(
+                              title: Text(autoPostQueue[i].title),
+                              subtitle: Text(
+                                'Due ${DateFormatter.short(autoPostQueue[i].nextDueDate)}',
+                              ),
+                              trailing: FilledButton.tonal(
+                                onPressed: () async {
+                                  final repo = ref.read(
+                                    recurringExpenseRepositoryProvider,
+                                  );
+                                  final expenses =
+                                      ref.read(expenseRepositoryProvider);
+                                  await repo.postNow(
+                                    autoPostQueue[i],
+                                    expenses: expenses,
+                                    newExpenseId: expenses.newId,
+                                  );
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Posted to ledger'),
+                                    ),
+                                  );
+                                },
+                                child: const Text('Confirm'),
+                              ),
                             ),
                         ],
+                        if (recurring.isNotEmpty) ...[
+                          const _AdvancedSubhead(title: 'Recurring'),
+                          for (final bill in recurring)
+                            _RecurringTile(
+                              recurring: bill,
+                              category: categoryById(
+                                categories,
+                                bill.categoryId,
+                              ),
+                            ),
+                        ],
+                        const _AdvancedSubhead(title: 'Envelopes'),
+                        if (envelopes.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                            child: Text(
+                              'Optional cash pots for specific spending.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: AppColors.secondaryText(context),
+                              ),
+                            ),
+                          )
+                        else
+                          for (final envelope in envelopes)
+                            _EnvelopeTile(envelope: envelope),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: () =>
+                                _showAddEnvelopeDialog(context, ref),
+                            icon: const AppIcon(AppIcons.add, size: 16),
+                            label: const Text('Add envelope'),
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const AppIconBox(
+                            asset: AppIcons.savings,
+                            color: AppColors.accent,
+                            size: 40,
+                            iconSize: 18,
+                          ),
+                          title: const Text('Saving goals'),
+                          subtitle: const Text('Wishlist and long-term funds'),
+                          trailing:
+                              const AppIcon(AppIcons.chevronRight, size: 18),
+                          onTap: () => context.push(AppRoutes.goals),
+                        ),
                       ],
                     ),
                   ),
                 ),
-              const _GoalsShortcut(),
+              ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _AdvancedSubhead extends StatelessWidget {
+  const _AdvancedSubhead({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.secondaryText(context),
+            ),
       ),
     );
   }
@@ -630,39 +699,6 @@ Future<void> _showAddEnvelopeDialog(BuildContext context, WidgetRef ref) async {
   );
   nameController.dispose();
   amountController.dispose();
-}
-
-class _GoalsShortcut extends ConsumerWidget {
-  const _GoalsShortcut();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final pace = ref.watch(monthlyGoalsPaceProvider);
-    if (pace.activeCount > 0) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.page,
-        20,
-        AppSpacing.page,
-        0,
-      ),
-      child: Card(
-        child: ListTile(
-          leading: const AppIconBox(
-            asset: AppIcons.savings,
-            color: AppColors.accent,
-            size: 42,
-            iconSize: 20,
-          ),
-          title: const Text('Set a saving goal'),
-          subtitle: const Text('Track progress toward a wishlist or fund'),
-          trailing: const AppIcon(AppIcons.chevronRight, size: 18),
-          onTap: () => context.push(AppRoutes.goals),
-        ),
-      ),
-    );
-  }
 }
 
 class _EnvelopeTile extends ConsumerWidget {

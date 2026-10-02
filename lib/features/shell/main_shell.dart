@@ -69,7 +69,8 @@ class MainShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final index = _selectedIndex(context);
-    final showFab = index == 0 || index == 1 || index == 3;
+    // Home / Insights: quick add. Spend: full expense. Budget: add budget.
+    final showFab = index == 0 || index == 1 || index == 2 || index == 3;
 
     return PopScope(
       canPop: false,
@@ -81,14 +82,19 @@ class MainShell extends ConsumerWidget {
         body: child,
         floatingActionButton: showFab
             ? FloatingActionButton(
+                tooltip: index == 3
+                    ? 'Add budget'
+                    : index == 1
+                        ? 'Add expense'
+                        : 'Quick add',
                 onPressed: () {
                   HapticFeedback.mediumImpact();
-                  if (index == 3) {
-                    context.push(AppRoutes.addBudget);
-                  } else if (index == 0) {
-                    showQuickAddSheet(context, ref);
-                  } else {
+                  if (index == 1) {
                     context.push(AppRoutes.addExpense);
+                  } else if (index == 3) {
+                    context.push(AppRoutes.addBudget);
+                  } else {
+                    showQuickAddSheet(context, ref);
                   }
                 },
                 child: const AppIcon(

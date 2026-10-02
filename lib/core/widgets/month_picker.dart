@@ -178,6 +178,7 @@ class MonthNavigator extends StatelessWidget {
     required this.onPick,
     this.canGoPrevious = true,
     this.canGoNext = true,
+    this.label,
   });
 
   final DateTime month;
@@ -186,13 +187,15 @@ class MonthNavigator extends StatelessWidget {
   final VoidCallback onPick;
   final bool canGoPrevious;
   final bool canGoNext;
+  /// When set, shown instead of `MMMM yyyy` (e.g. `15 Sep → 14 Oct`).
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         IconButton(
-          tooltip: 'Previous month',
+          tooltip: 'Previous period',
           onPressed: canGoPrevious ? onPrevious : null,
           icon: const RotatedBox(
             quarterTurns: 2,
@@ -205,11 +208,12 @@ class MonthNavigator extends StatelessWidget {
               month: month,
               dense: true,
               onTap: onPick,
+              label: label,
             ),
           ),
         ),
         IconButton(
-          tooltip: 'Next month',
+          tooltip: 'Next period',
           onPressed: canGoNext ? onNext : null,
           icon: const AppIcon(AppIcons.chevronRight, size: 20),
         ),
@@ -225,11 +229,13 @@ class MonthSelectorChip extends StatelessWidget {
     required this.month,
     required this.onTap,
     this.dense = false,
+    this.label,
   });
 
   final DateTime month;
   final VoidCallback onTap;
   final bool dense;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -255,11 +261,15 @@ class MonthSelectorChip extends StatelessWidget {
                 color: AppColors.primary,
               ),
               const SizedBox(width: 8),
-              Text(
-                DateFormatter.monthYear(month),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+              Flexible(
+                child: Text(
+                  label ?? DateFormatter.monthYear(month),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
               ),
               const SizedBox(width: 4),
               AppIcon(

@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/utils/goal_pace_calculator.dart';
 import '../data/models/budget.dart';
-import '../data/models/budget_period_type.dart';
 import '../data/models/category.dart';
 import '../data/models/dashboard_stats.dart';
 import '../data/models/envelope.dart';
@@ -69,10 +68,25 @@ final budgetsProvider = StreamProvider<List<Budget>>((ref) {
   return ref.watch(budgetRepositoryProvider).watchAll();
 });
 
-/// Selected calendar month on the Budget tab (day ignored). Defaults to now.
+/// Selected budget-period anchor on the Budget tab (`year`+`month` of cycle start).
+///
+/// Prefer [Budget.anchorContaining] so payday cycles (e.g. 15→14) land on the
+/// period that covers today, not the calendar month.
 final budgetMonthProvider = StateProvider<DateTime>((ref) {
   final now = DateTime.now();
   return DateTime(now.year, now.month);
+});
+
+/// Selected period anchor on the Spend tab. Synced to the active budget cycle.
+final spendPeriodProvider = StateProvider<DateTime>((ref) {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month);
+});
+
+/// Overall budget whose period covers today, if any.
+final activeOverallBudgetProvider = Provider<Budget?>((ref) {
+  final budgets = ref.watch(budgetsProvider).valueOrNull ?? [];
+  return Budget.activeOverall(budgets);
 });
 
 /// Selected calendar month on Money log (day ignored). Defaults to now.
@@ -139,14 +153,7 @@ final forecastProvider = FutureProvider<ForecastResult>((ref) async {
 
   final now = DateTime.now();
 
-  final activeMonthly = budgets
-      .where(
-        (b) =>
-            b.periodType == BudgetPeriodType.monthly &&
-            b.categoryId == null &&
-            b.isActiveOn(now),
-      )
-      .firstOrNull;
+  final activeMonthly = Budget.activeOverall(budgets, asOf: now);
 
   final periodStart = activeMonthly?.periodStart;
   final periodEnd = activeMonthly?.periodEnd;

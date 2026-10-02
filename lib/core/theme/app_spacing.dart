@@ -10,6 +10,9 @@ abstract final class AppSpacing {
   /// Standard horizontal page inset.
   static const double page = 20;
 
+  /// Tab AppBars with title + subtitle (matches Home SliverAppBar).
+  static const double tabAppBarHeight = 76;
+
   /// Clearance above bottom nav + FAB.
   static const double navClearance = 88;
 }

@@ -69,7 +69,6 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     final categories =
         await ref.read(categoryRepositoryProvider).watchAll().first;
     final currency = ref.read(currencyDisplayProvider);
-    final selectedMonth = ref.read(budgetMonthProvider);
 
     Budget? budget;
     if (widget.budgetId != null) {
@@ -95,13 +94,17 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
       _isSpendingLimit = budget.isSpendingLimit;
     } else {
       _nameController.text = 'Monthly Budget';
-      _month = DateTime(selectedMonth.year, selectedMonth.month);
       // Keep the user's cycle (salary day, etc.) — any day they last chose.
       final prior = (await ref.read(budgetsProvider.future))
           .where((b) => b.categoryId == null)
           .toList();
       if (!mounted) return;
       _startDay = prior.isNotEmpty ? prior.first.startDay : 1;
+      // Anchor to the period that covers today (e.g. Oct 2 + day 15 → Sep).
+      _month = Budget.anchorContaining(
+        date: DateTime.now(),
+        startDay: _startDay,
+      );
       _clampStartDay();
     }
 
@@ -141,11 +144,17 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
   String get _startDayLabel => DateFormatter.dayOrdinal(_startDay);
 
   String get _startCycleHint {
-    if (_startDay == 1) {
-      return 'Covers the 1st through the end of the month';
-    }
-    final day = _startDayLabel;
-    return 'Covers the $day through the day before the next $day';
+    final start = Budget.resolvePeriodStart(
+      year: _month.year,
+      month: _month.month,
+      startDay: _startDay,
+    );
+    final end = Budget.resolvePeriodEnd(
+      year: _month.year,
+      month: _month.month,
+      startDay: _startDay,
+    );
+    return 'Covers ${DateFormatter.periodRange(start, end)}';
   }
 
   Future<void> _pickStartDay() async {
@@ -163,7 +172,17 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
       helpText: 'Budget start date',
     );
     if (picked != null) {
-      setState(() => _startDay = picked.day);
+      setState(() {
+        _startDay = picked.day;
+        if (!isEditing) {
+          // Keep the new budget on the cycle that covers today.
+          _month = Budget.anchorContaining(
+            date: DateTime.now(),
+            startDay: _startDay,
+          );
+          _clampStartDay();
+        }
+      });
     }
   }
 
@@ -269,10 +288,16 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
     if (!_initialized) {
       return Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-            icon: const AppIcon(AppIcons.clear, size: 22),
-            onPressed: () => context.pop(),
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: SoftIconButton(
+              asset: AppIcons.clear,
+              onPressed: () => context.pop(),
+              size: 36,
+              iconSize: 18,
+            ),
           ),
+          leadingWidth: 52,
           title: Text(isEditing ? 'Edit Budget' : 'Add Budget'),
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -303,10 +328,16 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const AppIcon(AppIcons.clear, size: 22),
-          onPressed: () => context.pop(),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: SoftIconButton(
+            asset: AppIcons.clear,
+            onPressed: () => context.pop(),
+            size: 36,
+            iconSize: 18,
+          ),
         ),
+        leadingWidth: 52,
         title: Text(isEditing ? 'Edit Budget' : 'Add Budget'),
         actions: [
           TextButton(
@@ -399,6 +430,11 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                       const SizedBox(height: 18),
                       MonthNavigator(
                         month: _month,
+                        label: DateFormatter.periodHeader(
+                          year: _month.year,
+                          month: _month.month,
+                          startDay: _startDay,
+                        ),
                         onPrevious: () => _shiftMonth(-1),
                         onNext: () => _shiftMonth(1),
                         onPick: _pickMonth,
