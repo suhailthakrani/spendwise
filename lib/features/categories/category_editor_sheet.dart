@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_icons.dart';
@@ -19,7 +20,6 @@ Future<void> showCategoryEditorSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    enableDrag: false,
     builder: (_) => CategoryEditorSheet(category: category),
   );
 }
@@ -38,17 +38,28 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
   static const _palette = <Color>[
     Color(0xFF0D9488),
     Color(0xFF3B82F6),
-    Color(0xFF0EA5E9),
     Color(0xFFF97316),
-    Color(0xFFF59E0B),
+    Color(0xFFEF4444),
+    Color(0xFF8B5CF6),
     Color(0xFF10B981),
     Color(0xFFEC4899),
-    Color(0xFF6366F1),
-    Color(0xFFEF4444),
-    Color(0xFF06B6D4),
-    Color(0xFF8B5CF6),
-    Color(0xFF059669),
     Color(0xFF64748B),
+  ];
+
+  /// Keep the picker short — full set is overwhelming for a quick add.
+  static const _quickIcons = <String>[
+    'category',
+    'shopping_bag',
+    'restaurant',
+    'grocery',
+    'directions_car',
+    'home',
+    'favorite',
+    'movie',
+    'school',
+    'wifi',
+    'savings',
+    'briefcase',
   ];
 
   final _nameController = TextEditingController();
@@ -66,7 +77,13 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
     final existing = widget.category;
     _nameController.text = existing?.name ?? '';
     _selectedColor = existing?.color ?? _palette.first;
-    _selectedIcon = existing?.iconName ?? AppIcons.categoryIconChoices.last;
+    _selectedIcon = existing?.iconName ?? 'category';
+    if (!_quickIcons.contains(_selectedIcon) &&
+        AppIcons.categoryIconChoices.contains(_selectedIcon)) {
+      // Keep a non-quick icon if editing an existing custom category.
+    } else if (!_quickIcons.contains(_selectedIcon)) {
+      _selectedIcon = 'category';
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _nameFocus.requestFocus();
     });
@@ -79,11 +96,18 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
     super.dispose();
   }
 
+  List<String> get _icons {
+    if (_isEditing && !_quickIcons.contains(_selectedIcon)) {
+      return [_selectedIcon, ..._quickIcons];
+    }
+    return _quickIcons;
+  }
+
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a category name')),
+        const SnackBar(content: Text('Enter a name')),
       );
       return;
     }
@@ -114,6 +138,7 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
       }
 
       if (!mounted) return;
+      HapticFeedback.lightImpact();
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -137,8 +162,8 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
         SnackBar(
           content: Text(
             used == 1
-                ? 'Move the 1 transaction out of this category first'
-                : 'Move the $used transactions out of this category first',
+                ? 'Move the 1 transaction out first'
+                : 'Move the $used transactions out first',
           ),
         ),
       );
@@ -148,7 +173,7 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
     final confirmed = await showAppConfirmDialog(
       context: context,
       title: 'Delete ${existing.name}?',
-      message: 'This custom category will be removed from this device.',
+      message: 'This custom category will be removed.',
       confirmLabel: 'Delete',
       iconAsset: AppIcons.delete,
     );
@@ -171,39 +196,68 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final previewName = _nameController.text.trim().isEmpty
+        ? 'Category'
+        : _nameController.text.trim();
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(20, 8, 20, 20 + bottomInset),
+      padding: EdgeInsets.fromLTRB(20, 10, 20, 16 + bottomInset),
       child: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _isEditing ? 'Edit category' : 'Add custom category',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(999),
                 ),
-                IconButton(
-                  tooltip: 'Close',
-                  onPressed: _saving ? null : () => Navigator.pop(context),
-                  icon: const AppIcon(AppIcons.clear, size: 20),
-                ),
-              ],
+              ),
             ),
+            const SizedBox(height: 14),
             Text(
-              _isEditing
-                  ? 'Update the name, color, or icon'
-                  : 'e.g. Personal grooming, Bike maintenance, Travel',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.secondaryText(context),
+              _isEditing ? 'Edit category' : 'New category',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: _selectedColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppIcon(
+                      AppIcons.categoryIcon(_selectedIcon),
+                      size: 18,
+                      color: _selectedColor,
+                    ),
+                    const SizedBox(width: 8),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 220),
+                      child: Text(
+                        previewName,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: _selectedColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -212,10 +266,11 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
               focusNode: _nameFocus,
               textCapitalization: TextCapitalization.words,
               textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _nameFocus.unfocus(),
+              onChanged: (_) => setState(() {}),
+              onSubmitted: (_) => _save(),
               decoration: const InputDecoration(
-                labelText: 'Category name',
-                hintText: 'Personal grooming',
+                labelText: 'Name',
+                hintText: 'e.g. Gym, Pet food',
               ),
             ),
             const SizedBox(height: 16),
@@ -227,16 +282,16 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
               ),
             ),
             const SizedBox(height: 10),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 for (final color in _palette)
                   GestureDetector(
                     onTap: () => setState(() => _selectedColor = color),
-                    child: Container(
-                      width: 32,
-                      height: 32,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 140),
+                      width: 30,
+                      height: 30,
                       decoration: BoxDecoration(
                         color: color,
                         shape: BoxShape.circle,
@@ -264,10 +319,11 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final iconName in AppIcons.categoryIconChoices)
+                for (final iconName in _icons)
                   GestureDetector(
                     onTap: () => setState(() => _selectedIcon = iconName),
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 140),
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
@@ -293,21 +349,21 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
                   ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 22),
             FilledButton(
               onPressed: _saving ? null : _save,
               child: Text(
                 _saving
                     ? (_isEditing ? 'Saving…' : 'Adding…')
-                    : (_isEditing ? 'Save changes' : 'Add category'),
+                    : (_isEditing ? 'Save' : 'Add'),
               ),
             ),
             if (_isEditing) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               TextButton(
                 onPressed: _saving ? null : _delete,
                 style: TextButton.styleFrom(foregroundColor: AppColors.error),
-                child: const Text('Delete category'),
+                child: const Text('Delete'),
               ),
             ],
           ],

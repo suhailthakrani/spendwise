@@ -65,7 +65,7 @@ void main() {
     final groceryId = (await (db.select(db.categories)
               ..where((t) => t.userId.equals('user_a')))
             .get())
-        .firstWhere((c) => c.name == 'Grocery')
+        .firstWhere((c) => c.name == 'Groceries')
         .id;
 
     await ledger.create(

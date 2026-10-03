@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/constants/app_icons.dart';
+import '../../core/constants/preset_avatars.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/avatar_storage.dart';
@@ -33,7 +34,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   var _obscure = true;
   String? _error;
 
-  /// Current display path (existing saved avatar or newly picked).
+  /// Current display path (emoji, file, or network).
   String? _avatarPath;
 
   /// True when user chose to remove avatar.
@@ -41,6 +42,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   /// Pending new file from picker (not yet copied into app storage).
   String? _pendingSourcePath;
+
+  /// Selected emoji avatar (`emoji:…`), if any.
+  String? _pendingEmojiAvatar;
 
   @override
   void dispose() {
@@ -71,6 +75,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (file == null || !mounted) return;
       setState(() {
         _pendingSourcePath = file.path;
+        _pendingEmojiAvatar = null;
         _avatarPath = file.path;
         _clearAvatar = false;
         _error = null;
@@ -79,6 +84,113 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (!mounted) return;
       setState(() => _error = 'Could not pick image');
     }
+  }
+
+  void _selectEmojiAvatar(String emoji) {
+    final encoded = PresetAvatars.encode(emoji);
+    setState(() {
+      _pendingEmojiAvatar = encoded;
+      _pendingSourcePath = null;
+      _avatarPath = encoded;
+      _clearAvatar = false;
+      _error = null;
+    });
+  }
+
+  Future<void> _showEmojiAvatarPicker() async {
+    final selected = PresetAvatars.decode(_clearAvatar ? null : _avatarPath);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.66,
+          minChildSize: 0.42,
+          maxChildSize: 0.9,
+          builder: (_, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.dividerColor,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Choose an avatar',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Pick an emoji — just like your style.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.secondaryText(ctx),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: GridView.builder(
+                      controller: scrollController,
+                      itemCount: PresetAvatars.all.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 6,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                      ),
+                      itemBuilder: (_, index) {
+                        final emoji = PresetAvatars.all[index];
+                        final isSelected = selected == emoji;
+                        return Material(
+                          color: isSelected
+                              ? AppColors.primary.withValues(alpha: 0.14)
+                              : AppColors.primary.withValues(alpha: 0.05),
+                          shape: CircleBorder(
+                            side: BorderSide(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              _selectEmojiAvatar(emoji);
+                            },
+                            child: Center(
+                              child: Text(
+                                emoji,
+                                style: const TextStyle(fontSize: 26),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showAvatarOptions() {
@@ -95,6 +207,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                ListTile(
+                  leading: const Text('😎', style: TextStyle(fontSize: 22)),
+                  title: const Text('Choose emoji avatar'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _showEmojiAvatarPicker();
+                  },
+                ),
                 ListTile(
                   leading: const AppIcon(AppIcons.profile, size: 22),
                   title: const Text('Choose from gallery'),
@@ -118,7 +238,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       size: 22,
                       color: AppColors.error,
                     ),
-                    title: const Text('Remove photo'),
+                    title: const Text('Remove avatar'),
                     titleTextStyle: Theme.of(ctx).textTheme.bodyLarge?.copyWith(
                           color: AppColors.error,
                           fontWeight: FontWeight.w600,
@@ -128,6 +248,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       setState(() {
                         _avatarPath = null;
                         _pendingSourcePath = null;
+                        _pendingEmojiAvatar = null;
                         _clearAvatar = true;
                       });
                     },
@@ -157,7 +278,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     try {
       String? savedAvatarPath;
-      if (_pendingSourcePath != null) {
+      if (_pendingEmojiAvatar != null) {
+        await AvatarStorage.deleteForUser(userId);
+        savedAvatarPath = _pendingEmojiAvatar;
+      } else if (_pendingSourcePath != null) {
         savedAvatarPath = await AvatarStorage.saveForUser(
           userId: userId,
           sourcePath: _pendingSourcePath!,
@@ -260,7 +384,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       const SizedBox(height: 10),
                       TextButton(
                         onPressed: _submitting ? null : _showAvatarOptions,
-                        child: const Text('Change photo'),
+                        child: const Text('Change avatar'),
                       ),
                     ],
                   ),

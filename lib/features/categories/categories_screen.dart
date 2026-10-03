@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_icon.dart';
-import '../../data/models/category.dart';
+import '../../core/widgets/common_widgets.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
 import 'category_editor_sheet.dart';
@@ -21,17 +21,9 @@ class CategoriesScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Categories'),
-        actions: [
-          IconButton(
-            tooltip: 'Add category',
-            icon: const AppIcon(AppIcons.add, size: 22),
-            onPressed: () => showCategoryEditorSheet(context),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Categories')),
       floatingActionButton: FloatingActionButton(
+        tooltip: 'Add category',
         onPressed: () => showCategoryEditorSheet(context),
         child: const AppIcon(AppIcons.add, size: 24, color: Colors.white),
       ),
@@ -39,14 +31,54 @@ class CategoriesScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('Error: $error')),
         data: (categories) {
-          final expenses = expensesAsync.valueOrNull ?? [];
+          if (categories.isEmpty) {
+            return EmptyState(
+              iconAsset: AppIcons.category,
+              title: 'No categories yet',
+              subtitle: 'Add one to start organizing spend.',
+              actionLabel: 'Add category',
+              onAction: () => showCategoryEditorSheet(context),
+            );
+          }
 
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
-            itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+          final expenses = expensesAsync.valueOrNull ?? [];
+          final sorted = [...categories]..sort((a, b) {
+              if (a.isCustom != b.isCustom) {
+                return a.isCustom ? -1 : 1;
+              }
+              return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+            });
+
+          final customCount = sorted.where((c) => c.isCustom).length;
+
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+            itemCount: sorted.length + (customCount > 0 ? 1 : 0) + 1,
             itemBuilder: (context, index) {
-              final cat = categories[index];
+              var i = index;
+
+              if (customCount > 0) {
+                if (i == 0) {
+                  return _SectionLabel(
+                    label: 'Yours',
+                    style: theme.textTheme.labelLarge,
+                  );
+                }
+                i -= 1;
+              }
+
+              if (i == customCount) {
+                return Padding(
+                  padding: EdgeInsets.only(top: customCount > 0 ? 12 : 0),
+                  child: _SectionLabel(
+                    label: 'Built-in',
+                    style: theme.textTheme.labelLarge,
+                  ),
+                );
+              }
+
+              final catIndex = i > customCount ? i - 1 : i;
+              final cat = sorted[catIndex];
               final catExpenses =
                   expenses.where((e) => e.categoryId == cat.id).toList();
               final total = catExpenses.fold<double>(
@@ -54,56 +86,44 @@ class CategoriesScreen extends ConsumerWidget {
                 (s, e) => s + currency.toDisplayAmount(e.amount),
               );
 
-              return Card(
-                child: ListTile(
-                  onTap: () => context.push('/categories/${cat.id}'),
-                  leading: AppIconBox(
-                    asset: AppIcons.categoryIcon(cat.iconName),
-                    color: cat.color,
-                  ),
-                  title: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          cat.name,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Card(
+                  child: ListTile(
+                    onTap: () {
+                      if (cat.isCustom) {
+                        showCategoryEditorSheet(context, category: cat);
+                      } else {
+                        context.push('/categories/${cat.id}');
+                      }
+                    },
+                    onLongPress: cat.isCustom
+                        ? () => context.push('/categories/${cat.id}')
+                        : null,
+                    leading: AppIconBox(
+                      asset: AppIcons.categoryIcon(cat.iconName),
+                      color: cat.color,
+                      size: 44,
+                      iconSize: 20,
+                    ),
+                    title: Text(
+                      cat.name,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                      if (cat.isCustom) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Custom',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      catExpenses.isEmpty
+                          ? 'No spend yet'
+                          : '${catExpenses.length} · ${currency.formatInUserCurrency(total)}',
+                    ),
+                    trailing: AppIcon(
+                      cat.isCustom ? AppIcons.edit : AppIcons.chevronRight,
+                      size: 18,
+                      color: AppColors.tertiaryText(context),
+                    ),
                   ),
-                  subtitle: Text(
-                    '${catExpenses.length} transactions · ${currency.formatInUserCurrency(total)}',
-                  ),
-                  trailing: cat.isCustom
-                      ? _CategoryActions(category: cat)
-                      : AppIcon(
-                          AppIcons.chevronRight,
-                          size: 20,
-                          color: AppColors.tertiaryText(context),
-                        ),
                 ),
               );
             },
@@ -114,31 +134,23 @@ class CategoriesScreen extends ConsumerWidget {
   }
 }
 
-class _CategoryActions extends StatelessWidget {
-  const _CategoryActions({required this.category});
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label, this.style});
 
-  final ExpenseCategory category;
+  final String label;
+  final TextStyle? style;
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
-      tooltip: 'Category actions',
-      icon: AppIcon(
-        AppIcons.more,
-        size: 20,
-        color: AppColors.tertiaryText(context),
-      ),
-      onSelected: (value) {
-        if (value == 'edit') {
-          showCategoryEditorSheet(context, category: category);
-        }
-      },
-      itemBuilder: (context) => const [
-        PopupMenuItem(
-          value: 'edit',
-          child: Text('Edit or delete'),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+      child: Text(
+        label,
+        style: style?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: AppColors.secondaryText(context),
         ),
-      ],
+      ),
     );
   }
 }

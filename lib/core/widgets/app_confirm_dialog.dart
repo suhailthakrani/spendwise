@@ -19,7 +19,7 @@ Future<bool> showAppConfirmDialog({
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,
-    barrierColor: Colors.black.withValues(alpha: 0.52),
+    barrierColor: Colors.black.withValues(alpha: 0.45),
     builder: (ctx) => AppConfirmDialog(
       title: title,
       message: message,
@@ -47,7 +47,7 @@ Future<String?> showAppInputDialog({
 }) {
   return showDialog<String>(
     context: context,
-    barrierColor: Colors.black.withValues(alpha: 0.52),
+    barrierColor: Colors.black.withValues(alpha: 0.45),
     builder: (ctx) => _AppInputDialog(
       title: title,
       message: message,
@@ -88,12 +88,34 @@ class AppConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accent = switch (tone) {
-      AppConfirmTone.destructive => AppColors.error,
-      AppConfirmTone.primary => AppColors.primary,
-    };
+    final isDestructive = tone == AppConfirmTone.destructive;
+    final accent = isDestructive ? AppColors.error : AppColors.primary;
     final icon = iconAsset ??
-        (tone == AppConfirmTone.destructive ? AppIcons.warning : AppIcons.info);
+        (isDestructive ? AppIcons.warning : AppIcons.info);
+
+    // Destructive stays ceremonial. Everyday confirms stay light and quick.
+    if (!isDestructive && child == null) {
+      return AlertDialog(
+        title: Text(title),
+        content: Text(
+          message,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: AppColors.secondaryText(context),
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: onCancel ?? () => Navigator.pop(context, false),
+            child: Text(cancelLabel),
+          ),
+          FilledButton(
+            onPressed: onConfirm,
+            child: Text(confirmLabel),
+          ),
+        ],
+      );
+    }
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
@@ -101,30 +123,34 @@ class AppConfirmDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadii.xl),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 28, 22, 18),
+        padding: const EdgeInsets.fromLTRB(22, 24, 22, 16),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
+              if (isDestructive) ...[
+                Center(
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: AppIcon(icon, size: 26, color: accent),
+                    ),
+                  ),
                 ),
-                child: Center(
-                  child: AppIcon(icon, size: 28, color: accent),
-                ),
-              ),
-              const SizedBox(height: 18),
+                const SizedBox(height: 16),
+              ],
               Text(
                 title,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
+                  letterSpacing: -0.4,
                 ),
               ),
               const SizedBox(height: 8),
@@ -137,19 +163,19 @@ class AppConfirmDialog extends StatelessWidget {
                 ),
               ),
               if (child != null) ...[
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
                 child!,
               ],
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
               FilledButton(
                 onPressed: onConfirm,
                 style: FilledButton.styleFrom(
                   backgroundColor: accent,
-                  minimumSize: const Size.fromHeight(52),
+                  minimumSize: const Size.fromHeight(48),
                 ),
                 child: Text(confirmLabel),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               TextButton(
                 onPressed: onCancel ?? () => Navigator.pop(context, false),
                 style: TextButton.styleFrom(

@@ -58,6 +58,19 @@ abstract final class AppIcons {
   static const flame = '$_base/flame.svg';
   static const grocery = '$_base/grocery.svg';
   static const waterDrop = '$_base/water_drop.svg';
+  static const phone = '$_base/phone.svg';
+  static const fuel = '$_base/fuel.svg';
+  static const transport = '$_base/transport.svg';
+  static const clothing = '$_base/clothing.svg';
+  static const personalCare = '$_base/personal_care.svg';
+  static const gift = '$_base/gift.svg';
+  static const charity = '$_base/charity.svg';
+  static const shield = '$_base/shield.svg';
+  static const tools = '$_base/tools.svg';
+  static const wrench = '$_base/wrench.svg';
+  static const paw = '$_base/paw.svg';
+  static const briefcase = '$_base/briefcase.svg';
+  static const family = '$_base/family.svg';
 
   // Payment methods
   static const payments = '$_base/payments.svg';
@@ -72,15 +85,36 @@ abstract final class AppIcons {
     'flame',
     'bolt',
     'water_drop',
+    'phone',
     'grocery',
+    'restaurant',
+    'fuel',
+    'transport',
     'shopping_bag',
-    'directions_car',
+    'clothing',
     'favorite',
+    'personal_care',
     'school',
     'movie',
+    'repeat',
+    'globe',
+    'family',
+    'gift',
+    'charity',
+    'shield',
     'savings',
+    'wallet',
+    'tools',
+    'wrench',
+    'paw',
+    'briefcase',
+    'currency',
     'receipt_long',
-    'restaurant',
+    'directions_car',
+    'bank',
+    'payments',
+    'credit_card',
+    'profile',
     'category',
   ];
 
@@ -90,15 +124,37 @@ abstract final class AppIcons {
         'flame' => flame,
         'bolt' => bolt,
         'water_drop' => waterDrop,
+        'phone' => phone,
         'grocery' => grocery,
         'restaurant' => restaurant,
+        'fuel' => fuel,
+        'transport' => transport,
         'directions_car' => car,
         'shopping_bag' => shoppingBag,
+        'clothing' => clothing,
         'receipt_long' => receipt,
         'movie' => movie,
         'favorite' => heart,
+        'personal_care' => personalCare,
         'school' => school,
         'savings' => savings,
+        'globe' => globe,
+        'repeat' => repeat,
+        'wallet' => wallet,
+        'family' => family,
+        'gift' => gift,
+        'charity' => charity,
+        'shield' => shield,
+        'tools' => tools,
+        'wrench' => wrench,
+        'paw' => paw,
+        'briefcase' => briefcase,
+        'bank' || 'account_balance' => bank,
+        'currency' => currency,
+        'payments' => payments,
+        'credit_card' => creditCard,
+        'profile' || 'account' => profile,
+        'notifications' => notifications,
         'label' || 'category' => category,
         _ => category,
       };

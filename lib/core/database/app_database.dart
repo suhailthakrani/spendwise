@@ -48,7 +48,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -150,6 +150,13 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 11) {
             await _addColumnIfAbsent(migrator, moneyLogs, moneyLogs.direction);
+          }
+          if (from < 14) {
+            // Expand / resync default category set + icons for existing accounts.
+            final users = await select(userProfiles).get();
+            for (final user in users) {
+              await seedCategoriesForUser(this, user.id);
+            }
           }
         },
       );

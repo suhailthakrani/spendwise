@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../constants/app_icons.dart';
+import '../constants/preset_avatars.dart';
 import '../theme/app_colors.dart';
 import 'app_icon.dart';
 
@@ -22,15 +23,30 @@ class ProfileAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final resolvedIconSize = iconSize ?? size * 0.47;
     final value = path?.trim() ?? '';
+    final emoji = PresetAvatars.decode(value);
     final isNetwork =
         value.startsWith('http://') || value.startsWith('https://');
-    final hasFile = value.isNotEmpty && !isNetwork && File(value).existsSync();
+    final hasFile = value.isNotEmpty &&
+        !isNetwork &&
+        emoji == null &&
+        !value.startsWith('asset:') &&
+        File(value).existsSync();
     final hasImage = hasFile || isNetwork;
+    final hasEmoji = emoji != null;
 
-    ImageProvider? image;
-    if (hasImage) {
+    Widget? child;
+    DecorationImage? decorationImage;
+
+    if (hasEmoji) {
+      child = Center(
+        child: Text(
+          emoji,
+          style: TextStyle(fontSize: size * 0.52, height: 1.1),
+        ),
+      );
+    } else if (hasFile || isNetwork) {
       final pixels = (size * MediaQuery.devicePixelRatioOf(context)).ceil();
-      image = isNetwork
+      final image = isNetwork
           ? ResizeImage(
               NetworkImage(value),
               width: pixels,
@@ -43,6 +59,15 @@ class ProfileAvatar extends StatelessWidget {
               height: pixels,
               policy: ResizeImagePolicy.fit,
             );
+      decorationImage = DecorationImage(image: image, fit: BoxFit.cover);
+    } else {
+      child = Center(
+        child: AppIcon(
+          AppIcons.profile,
+          size: resolvedIconSize,
+          color: AppColors.primary,
+        ),
+      );
     }
 
     return Container(
@@ -50,7 +75,10 @@ class ProfileAvatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: hasImage
+        color: hasEmoji
+            ? AppColors.primary.withValues(alpha: 0.08)
+            : null,
+        gradient: (hasImage || hasEmoji)
             ? null
             : LinearGradient(
                 begin: Alignment.topLeft,
@@ -60,26 +88,14 @@ class ProfileAvatar extends StatelessWidget {
                   AppColors.primaryLight.withValues(alpha: 0.25),
                 ],
               ),
-        image: image == null
-            ? null
-            : DecorationImage(
-                image: image,
-                fit: BoxFit.cover,
-              ),
+        image: decorationImage,
         border: Border.all(
           color: AppColors.primary.withValues(alpha: 0.18),
           width: 1.5,
         ),
       ),
-      child: hasImage
-          ? null
-          : Center(
-              child: AppIcon(
-                AppIcons.profile,
-                size: resolvedIconSize,
-                color: AppColors.primary,
-              ),
-            ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
     );
   }
 }
