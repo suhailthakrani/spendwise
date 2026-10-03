@@ -10,6 +10,7 @@ import '../data/repositories/report_repository.dart';
 import '../data/repositories/saving_goal_repository.dart';
 import '../data/repositories/template_repository.dart';
 import '../data/repositories/user_profile_repository.dart';
+import '../data/services/backup_reminder_service.dart';
 import '../data/services/backup_service.dart';
 import '../data/services/biometric_auth_service.dart';
 import '../data/services/export_service.dart';
@@ -104,6 +105,10 @@ final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
 
 final ratingPromptServiceProvider = Provider<RatingPromptService>((ref) {
   return RatingPromptService();
+});
+
+final backupReminderServiceProvider = Provider<BackupReminderService>((ref) {
+  return BackupReminderService();
 });
 
 final googleDriveBackupClientProvider =

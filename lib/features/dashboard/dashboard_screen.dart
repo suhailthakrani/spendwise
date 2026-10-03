@@ -48,7 +48,9 @@ class DashboardScreen extends ConsumerWidget {
           final expenses = expensesAsync.valueOrNull ?? [];
           final categories = categoriesAsync.valueOrNull ?? [];
 
-          return _HomeRatingGate(
+          return _HomeBackupReminderGate(
+            expenseCount: expenses.length,
+            child: _HomeRatingGate(
             expenseCount: expenses.length,
             child: RefreshIndicator(
               color: AppColors.primary,
@@ -109,6 +111,7 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
             ),
           );
         },
@@ -643,6 +646,51 @@ class _OutlookRow extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HomeBackupReminderGate extends ConsumerStatefulWidget {
+  const _HomeBackupReminderGate({
+    required this.expenseCount,
+    required this.child,
+  });
+
+  final int expenseCount;
+  final Widget child;
+
+  @override
+  ConsumerState<_HomeBackupReminderGate> createState() =>
+      _HomeBackupReminderGateState();
+}
+
+class _HomeBackupReminderGateState
+    extends ConsumerState<_HomeBackupReminderGate> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _tryPrompt());
+  }
+
+  @override
+  void didUpdateWidget(_HomeBackupReminderGate oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.expenseCount != widget.expenseCount) {
+      _tryPrompt();
+    }
+  }
+
+  void _tryPrompt() {
+    if (!mounted) return;
+    final prefs = ref.read(preferencesProvider).valueOrNull;
+    if (prefs == null) return;
+    ref.read(backupReminderServiceProvider).maybePromptDialog(
+          context,
+          prefs: prefs,
+          expenseCount: widget.expenseCount,
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class _HomeRatingGate extends ConsumerStatefulWidget {

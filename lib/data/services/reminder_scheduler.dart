@@ -5,6 +5,7 @@ import '../models/budget.dart';
 import '../models/recurring_expense.dart';
 import '../models/saving_goal.dart';
 import '../models/user_preferences.dart';
+import 'backup_reminder_service.dart';
 import 'notification_service.dart';
 
 class ReminderScheduler {
@@ -100,6 +101,8 @@ class ReminderScheduler {
         ..._pacePlans(goals, formatAmount, now),
       ],
       _dailyCheckInPlan(now: now, hasExpenseToday: hasExpenseToday),
+      if (BackupReminderService.shouldScheduleWeeklyNotification(prefs))
+        _backupPlan(now),
     ];
 
     final desiredIds = plans.map((plan) => plan.id).toSet();
@@ -367,6 +370,17 @@ class ReminderScheduler {
       );
     }
     return plans;
+  }
+
+  _ReminderPlan _backupPlan(DateTime now) {
+    final when = BackupReminderService.nextWeeklyReminder(now);
+    return _ReminderPlan(
+      id: _id('backup_weekly_${when.year}_${when.month}_${when.day}'),
+      when: when,
+      title: 'Back up SpendWise',
+      body: 'Save this week’s history to Google Drive so you don’t lose it.',
+      replaceIfPending: true,
+    );
   }
 
   int _id(String key) => key.hashCode & 0x7fffffff;

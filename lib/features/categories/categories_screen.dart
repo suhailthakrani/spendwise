@@ -6,9 +6,11 @@ import '../../core/constants/app_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../data/models/budget.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
 import 'category_editor_sheet.dart';
+import 'category_merge_banner.dart';
 
 class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key});
@@ -17,8 +19,24 @@ class CategoriesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(categoriesProvider);
     final expensesAsync = ref.watch(expensesProvider);
+    final activeBudget = ref.watch(activeOverallBudgetProvider);
     final currency = ref.watch(currencyDisplayProvider);
     final theme = Theme.of(context);
+
+    final now = DateTime.now();
+    final startDay = activeBudget?.startDay ?? 1;
+    final periodStart = activeBudget?.periodStart ??
+        Budget.resolvePeriodStart(
+          year: now.year,
+          month: now.month,
+          startDay: startDay,
+        );
+    final periodEnd = activeBudget?.periodEnd ??
+        Budget.resolvePeriodEnd(
+          year: now.year,
+          month: now.month,
+          startDay: startDay,
+        );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Categories')),
@@ -42,6 +60,11 @@ class CategoriesScreen extends ConsumerWidget {
           }
 
           final expenses = expensesAsync.valueOrNull ?? [];
+          final periodExpenses = expenses.where((e) {
+            final day = DateTime(e.date.year, e.date.month, e.date.day);
+            return !day.isBefore(periodStart) && !day.isAfter(periodEnd);
+          }).toList();
+
           final sorted = [...categories]..sort((a, b) {
               if (a.isCustom != b.isCustom) {
                 return a.isCustom ? -1 : 1;
@@ -50,12 +73,19 @@ class CategoriesScreen extends ConsumerWidget {
             });
 
           final customCount = sorted.where((c) => c.isCustom).length;
+          // Banner + optional section headers + rows.
+          const bannerSlot = 1;
 
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-            itemCount: sorted.length + (customCount > 0 ? 1 : 0) + 1,
+            itemCount:
+                bannerSlot + sorted.length + (customCount > 0 ? 1 : 0) + 1,
             itemBuilder: (context, index) {
-              var i = index;
+              if (index == 0) {
+                return CategoryMergeBanner(categories: sorted);
+              }
+
+              var i = index - bannerSlot;
 
               if (customCount > 0) {
                 if (i == 0) {
@@ -79,8 +109,9 @@ class CategoriesScreen extends ConsumerWidget {
 
               final catIndex = i > customCount ? i - 1 : i;
               final cat = sorted[catIndex];
-              final catExpenses =
-                  expenses.where((e) => e.categoryId == cat.id).toList();
+              final catExpenses = periodExpenses
+                  .where((e) => e.categoryId == cat.id)
+                  .toList();
               final total = catExpenses.fold<double>(
                 0,
                 (s, e) => s + currency.toDisplayAmount(e.amount),
@@ -90,16 +121,7 @@ class CategoriesScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Card(
                   child: ListTile(
-                    onTap: () {
-                      if (cat.isCustom) {
-                        showCategoryEditorSheet(context, category: cat);
-                      } else {
-                        context.push('/categories/${cat.id}');
-                      }
-                    },
-                    onLongPress: cat.isCustom
-                        ? () => context.push('/categories/${cat.id}')
-                        : null,
+                    onTap: () => context.push('/categories/${cat.id}'),
                     leading: AppIconBox(
                       asset: AppIcons.categoryIcon(cat.iconName),
                       color: cat.color,
@@ -115,11 +137,12 @@ class CategoriesScreen extends ConsumerWidget {
                     ),
                     subtitle: Text(
                       catExpenses.isEmpty
-                          ? 'No spend yet'
-                          : '${catExpenses.length} · ${currency.formatInUserCurrency(total)}',
+                          ? 'This month · no spend'
+                          : 'This month · ${currency.formatInUserCurrency(total)}'
+                              '${catExpenses.length == 1 ? '' : ' · ${catExpenses.length}'}',
                     ),
                     trailing: AppIcon(
-                      cat.isCustom ? AppIcons.edit : AppIcons.chevronRight,
+                      AppIcons.chevronRight,
                       size: 18,
                       color: AppColors.tertiaryText(context),
                     ),

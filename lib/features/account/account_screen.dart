@@ -35,7 +35,7 @@ class AccountScreen extends ConsumerWidget {
         appBar: AppBar(title: const Text('You')),
         body: Center(child: Text('Error: $error')),
       ),
-      data: (_) {
+      data: (prefs) {
         final profile = profileAsync.valueOrNull;
 
         return Scaffold(
@@ -150,7 +150,16 @@ class AccountScreen extends ConsumerWidget {
                   SettingsTile(
                     iconAsset: AppIcons.globe,
                     title: 'Google Drive backup',
-                    subtitle: 'Back up and restore any time',
+                    subtitle: () {
+                      final last = prefs.lastBackupAt;
+                      if (last == null) {
+                        return 'Protect your history — back up to Drive';
+                      }
+                      final days = DateTime.now().difference(last).inDays;
+                      if (days <= 0) return 'Last backup: today';
+                      if (days == 1) return 'Last backup: yesterday';
+                      return 'Last backup: $days days ago';
+                    }(),
                     onTap: () => context.push(AppRoutes.backup),
                   ),
                   SettingsTile(

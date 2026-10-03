@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_icons.dart';
+import '../../core/database/database_seed.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_confirm_dialog.dart';
@@ -108,6 +109,18 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter a name')),
+      );
+      return;
+    }
+
+    final others = ref.read(categoriesProvider).valueOrNull ?? [];
+    final key = categoryMatchKey(name);
+    final duplicate = others.any(
+      (c) => c.id != widget.category?.id && categoryMatchKey(c.name) == key,
+    );
+    if (duplicate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A similar category already exists')),
       );
       return;
     }
