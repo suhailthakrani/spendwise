@@ -129,7 +129,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
+                      letterSpacing: -0.2,
                     ),
                   ),
                   const SizedBox(height: 8),

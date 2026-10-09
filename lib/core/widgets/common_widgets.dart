@@ -68,9 +68,9 @@ class SectionHeader extends StatelessWidget {
       padding: padding ??
           const EdgeInsets.fromLTRB(
             AppSpacing.page,
-            AppSpacing.xl,
+            AppSpacing.xxl,
             AppSpacing.page,
-            AppSpacing.sm,
+            AppSpacing.md,
           ),
       child: Row(
         children: [
@@ -80,7 +80,6 @@ class SectionHeader extends StatelessWidget {
               style: titleStyle ??
                   theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
                   ),
             ),
           ),
@@ -131,8 +130,8 @@ class StatCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
+          child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -157,7 +156,7 @@ class StatCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
@@ -166,15 +165,15 @@ class StatCard extends StatelessWidget {
                   maxLines: 1,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
-                    letterSpacing: -0.4,
+                    letterSpacing: -0.2,
                     fontSize: 22,
-                    height: 1.1,
+                    height: 1.2,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ),
               if (subtitle != null) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   subtitle!,
                   maxLines: 1,
@@ -183,7 +182,7 @@ class StatCard extends StatelessWidget {
                 ),
               ],
               if (progress != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadii.full),
                   child: LinearProgressIndicator(
@@ -247,17 +246,15 @@ class EmptyState extends StatelessWidget {
               title,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
               ),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Text(
                 subtitle!,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: muted,
-                  height: 1.4,
                 ),
                 textAlign: TextAlign.center,
               ),

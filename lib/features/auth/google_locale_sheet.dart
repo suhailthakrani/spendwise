@@ -145,7 +145,7 @@ class _GoogleLocaleSheetState extends State<_GoogleLocaleSheet> {
             'Country & currency',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w800,
-              letterSpacing: -0.4,
+              letterSpacing: -0.2,
             ),
           ),
           const SizedBox(height: 6),

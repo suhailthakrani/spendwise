@@ -381,7 +381,7 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                         style: theme.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w800,
                           fontSize: 42,
-                          height: 1.08,
+                          height: 1.15,
                           letterSpacing: 0,
                         ),
                         decoration: InputDecoration(
@@ -390,13 +390,14 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
                           prefixStyle: theme.textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.w800,
                             fontSize: 38,
+                            height: 1.15,
                             color: AppColors.primary,
                           ),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
                           contentPadding:
-                              const EdgeInsets.symmetric(vertical: 10),
+                              const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
                       if (isEditing && effectiveLimit > 0) ...[

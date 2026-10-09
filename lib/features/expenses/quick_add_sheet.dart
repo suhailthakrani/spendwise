@@ -158,18 +158,17 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
             'Quick add',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           Text(
             displayText,
             textAlign: TextAlign.center,
             style: theme.textTheme.displaySmall?.copyWith(
               fontWeight: FontWeight.w800,
               fontSize: 40,
-              height: 1.05,
-              letterSpacing: -0.5,
+              height: 1.12,
+              letterSpacing: -0.25,
               color: _amountText.isEmpty
                   ? AppColors.tertiaryText(context)
                   : null,

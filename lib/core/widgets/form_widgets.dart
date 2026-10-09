@@ -282,7 +282,7 @@ Future<T?> showSearchablePickerSheet<T>({
                       title,
                       style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
+                            letterSpacing: -0.15,
                           ),
                     ),
                   ),

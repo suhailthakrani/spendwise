@@ -98,7 +98,7 @@ class GoalDetailScreen extends ConsumerWidget {
                           currency.formatDisplay(goal.savedAmount),
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.w800,
-                            letterSpacing: -0.6,
+                            letterSpacing: -0.15,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),

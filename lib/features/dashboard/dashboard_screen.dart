@@ -222,7 +222,7 @@ class DashboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
               child: Card(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -233,7 +233,6 @@ class DashboardScreen extends ConsumerWidget {
                               'Spending trend',
                               style: TextStyle(
                                 fontWeight: FontWeight.w800,
-                                letterSpacing: -0.3,
                               ),
                             ),
                           ),
@@ -754,11 +753,9 @@ class _DashboardTitle extends StatelessWidget {
           greeting,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-            height: 1.1,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         Text(
           subtitle,
           style: theme.textTheme.bodySmall?.copyWith(
@@ -873,9 +870,9 @@ class _SpendingHeroCard extends StatelessWidget {
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.8,
+                                  letterSpacing: -0.35,
                                   fontSize: 30,
-                                  height: 1.05,
+                                  height: 1.15,
                                   fontFeatures: const [
                                     FontFeature.tabularFigures(),
                                   ],
@@ -1071,8 +1068,8 @@ class _GlassStatChip extends StatelessWidget {
                 color: Colors.white,
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                letterSpacing: -0.2,
-                height: 1.1,
+                letterSpacing: -0.05,
+                height: 1.25,
                 fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),

@@ -288,7 +288,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                       style: theme.textTheme.displaySmall?.copyWith(
                         fontWeight: FontWeight.w800,
                         fontSize: 42,
-                        height: 1.08,
+                        height: 1.15,
                         letterSpacing: 0,
                       ),
                       decoration: InputDecoration(
@@ -297,13 +297,14 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                         prefixStyle: theme.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w800,
                           fontSize: 38,
+                          height: 1.15,
                           color: AppColors.primary,
                         ),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10,
+                          vertical: 12,
                         ),
                       ),
                     ),
@@ -623,7 +624,7 @@ class _AllCategoriesSheetState extends State<_AllCategoriesSheet> {
                     'All categories',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
+                      letterSpacing: -0.15,
                     ),
                   ),
                   const SizedBox(height: 4),

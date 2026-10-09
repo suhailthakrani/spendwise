@@ -122,7 +122,7 @@ class _CategoryPieChartState extends State<CategoryPieChart> {
                           currency.formatInUserCurrency(amount, compact: true),
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
-                            letterSpacing: -0.4,
+                            letterSpacing: -0.2,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
@@ -386,7 +386,7 @@ class _MonthlyTrendChartState extends ConsumerState<MonthlyTrendChart> {
                       ),
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
+                        letterSpacing: -0.25,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),

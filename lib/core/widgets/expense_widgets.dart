@@ -60,10 +60,9 @@ class ExpenseTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w600,
-                        letterSpacing: -0.2,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 4),
                     Text(
                       showDate
                           ? '${category.name} · ${DateFormatter.relative(expense.date)}'

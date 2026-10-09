@@ -152,7 +152,7 @@ class _FinancialCalendarScreenState
           'Calendar',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            letterSpacing: -0.4,
+            letterSpacing: -0.2,
           ),
         ),
       ),

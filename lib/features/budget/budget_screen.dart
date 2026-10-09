@@ -15,7 +15,6 @@ import '../../core/widgets/goal_progress_banner.dart';
 import '../../core/widgets/month_picker.dart';
 import '../../data/models/budget.dart';
 import '../../data/models/category.dart';
-import '../../data/models/envelope.dart';
 import '../../data/models/recurring_expense.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/preferences_providers.dart';
@@ -70,7 +69,6 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     final budgetsAsync = ref.watch(budgetsProvider);
     final recurringAsync = ref.watch(recurringExpensesProvider);
     final autoPostAsync = ref.watch(autoPostQueueProvider);
-    final envelopesAsync = ref.watch(envelopesProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
     final selectedMonth = ref.watch(budgetMonthProvider);
     final currency = ref.watch(currencyDisplayProvider);
@@ -106,8 +104,6 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               'Budget',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
-                letterSpacing: -0.4,
-                height: 1.1,
               ),
             ),
             Text(
@@ -139,7 +135,6 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           final categories = categoriesAsync.valueOrNull ?? [];
           final recurring = recurringAsync.valueOrNull ?? [];
           final autoPostQueue = autoPostAsync.valueOrNull ?? [];
-          final envelopes = envelopesAsync.valueOrNull ?? [];
           final monthBudgets = rawBudgets
               .where(
                 (b) =>
@@ -337,7 +332,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                                 ),
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.6,
+                                  letterSpacing: -0.3,
                                   color: monthlyBudget.isOverBudget
                                       ? AppColors.error
                                       : Colors.white,
@@ -516,7 +511,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                         ),
                       ),
                       subtitle: Text(
-                        'Recurring, envelopes, and goals',
+                        'Saving goals, money log, and recurring',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: AppColors.secondaryText(context),
                         ),
@@ -564,30 +559,6 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                               ),
                             ),
                         ],
-                        const _AdvancedSubhead(title: 'Envelopes'),
-                        if (envelopes.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                            child: Text(
-                              'Optional cash pots for specific spending.',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.secondaryText(context),
-                              ),
-                            ),
-                          )
-                        else
-                          for (final envelope in envelopes)
-                            _EnvelopeTile(envelope: envelope),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton.icon(
-                            onPressed: () =>
-                                _showAddEnvelopeDialog(context, ref),
-                            icon: const AppIcon(AppIcons.add, size: 16),
-                            label: const Text('Add envelope'),
-                          ),
-                        ),
-                        const Divider(height: 1),
                         ListTile(
                           leading: const AppIconBox(
                             asset: AppIcons.savings,
@@ -600,6 +571,21 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                           trailing:
                               const AppIcon(AppIcons.chevronRight, size: 18),
                           onTap: () => context.push(AppRoutes.goals),
+                        ),
+                        ListTile(
+                          leading: const AppIconBox(
+                            asset: AppIcons.wallet,
+                            color: AppColors.primary,
+                            size: 40,
+                            iconSize: 18,
+                          ),
+                          title: const Text('Money log'),
+                          subtitle: const Text(
+                            'Income and spending outside your budget',
+                          ),
+                          trailing:
+                              const AppIcon(AppIcons.chevronRight, size: 18),
+                          onTap: () => context.push(AppRoutes.moneyLog),
                         ),
                       ],
                     ),
@@ -629,98 +615,6 @@ class _AdvancedSubhead extends StatelessWidget {
               fontWeight: FontWeight.w700,
               color: AppColors.secondaryText(context),
             ),
-      ),
-    );
-  }
-}
-
-Future<void> _showAddEnvelopeDialog(BuildContext context, WidgetRef ref) async {
-  final nameController = TextEditingController();
-  final amountController = TextEditingController();
-  final currency = ref.read(currencyDisplayProvider);
-  final month = ref.read(budgetMonthProvider);
-
-  final created = await showDialog<bool>(
-    context: context,
-    builder: (ctx) {
-      return AlertDialog(
-        title: const Text('New envelope'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(hintText: 'Name'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                hintText: 'Allocated',
-                prefixText: '${currency.symbol} ',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Create'),
-          ),
-        ],
-      );
-    },
-  );
-
-  if (created != true) {
-    nameController.dispose();
-    amountController.dispose();
-    return;
-  }
-
-  final allocatedDisplay = currency.parseInput(amountController.text) ?? 0;
-  final repo = ref.read(envelopeRepositoryProvider);
-  await repo.create(
-    Envelope(
-      id: repo.newId(),
-      name: nameController.text.trim().isEmpty
-          ? 'Envelope'
-          : nameController.text.trim(),
-      allocated: currency.toStorageAmount(allocatedDisplay),
-      spent: 0,
-      year: month.year,
-      month: month.month,
-    ),
-  );
-  nameController.dispose();
-  amountController.dispose();
-}
-
-class _EnvelopeTile extends ConsumerWidget {
-  const _EnvelopeTile({required this.envelope});
-
-  final Envelope envelope;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currency = ref.watch(currencyDisplayProvider);
-    final theme = Theme.of(context);
-    return ListTile(
-      title: Text(envelope.name),
-      subtitle: Text(
-        '${currency.format(envelope.spent)} spent · '
-        '${currency.format(envelope.remaining)} left',
-      ),
-      trailing: Text(
-        currency.format(envelope.allocated),
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-        ),
       ),
     );
   }

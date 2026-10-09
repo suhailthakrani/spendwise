@@ -101,7 +101,7 @@ class ExpenseDetailScreen extends ConsumerWidget {
                         style: theme.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: AppColors.error,
-                          letterSpacing: -1,
+                          letterSpacing: -0.45,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),

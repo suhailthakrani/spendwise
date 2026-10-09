@@ -236,7 +236,7 @@ class _CategoryEditorSheetState extends ConsumerState<CategoryEditorSheet> {
               _isEditing ? 'Edit category' : 'New category',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
+                letterSpacing: -0.15,
               ),
             ),
             const SizedBox(height: 14),

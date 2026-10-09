@@ -103,7 +103,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           textAlign: TextAlign.center,
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.w800,
-                            letterSpacing: -0.6,
+                            letterSpacing: -0.15,
                           ),
                         ),
                         const SizedBox(height: 14),

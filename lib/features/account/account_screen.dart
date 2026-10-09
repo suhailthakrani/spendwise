@@ -44,7 +44,6 @@ class AccountScreen extends ConsumerWidget {
               'You',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
-                letterSpacing: -0.4,
               ),
             ),
           ),
@@ -78,7 +77,6 @@ class AccountScreen extends ConsumerWidget {
                                     : 'Your profile',
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.4,
                                 ),
                               ),
                               if ((profile?.email ?? '').isNotEmpty) ...[
@@ -127,7 +125,7 @@ class AccountScreen extends ConsumerWidget {
                   SettingsTile(
                     iconAsset: AppIcons.wallet,
                     title: 'Money log',
-                    subtitle: 'Extra money not counted in your budget',
+                    subtitle: 'Income and spending outside your budget',
                     onTap: () => context.push(AppRoutes.moneyLog),
                   ),
                   SettingsTile(

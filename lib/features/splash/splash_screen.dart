@@ -152,7 +152,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                               Theme.of(context).textTheme.titleLarge?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.4,
+                                    letterSpacing: -0.2,
                                   ),
                         ),
                         const SizedBox(height: 6),

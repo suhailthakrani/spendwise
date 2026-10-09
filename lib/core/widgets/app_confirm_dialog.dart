@@ -150,7 +150,7 @@ class AppConfirmDialog extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -0.4,
+                  letterSpacing: -0.2,
                 ),
               ),
               const SizedBox(height: 8),

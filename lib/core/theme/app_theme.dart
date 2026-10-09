@@ -84,7 +84,8 @@ abstract final class AppTheme {
         systemOverlayStyle: overlayStyle(brightness),
         titleTextStyle: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w700,
-          letterSpacing: -0.4,
+          letterSpacing: -0.2,
+          height: 1.2,
         ),
         iconTheme: IconThemeData(color: onSurface, size: 22),
       ),
@@ -112,13 +113,14 @@ abstract final class AppTheme {
           elevation: 0,
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size.fromHeight(54),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.md),
           ),
           textStyle: textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
-            letterSpacing: -0.2,
+            letterSpacing: -0.1,
+            height: 1.25,
           ),
         ),
       ),
@@ -147,7 +149,7 @@ abstract final class AppTheme {
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         hintStyle: textTheme.bodyMedium?.copyWith(
           color:
               isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
@@ -165,7 +167,8 @@ abstract final class AppTheme {
         ),
         labelStyle: textTheme.labelMedium,
         side: BorderSide.none,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: card,
@@ -175,7 +178,9 @@ abstract final class AppTheme {
         ),
         titleTextStyle: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w700,
+          height: 1.25,
         ),
+        contentTextStyle: textTheme.bodyMedium?.copyWith(height: 1.45),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: card,
@@ -198,15 +203,21 @@ abstract final class AppTheme {
       listTileTheme: ListTileThemeData(
         titleTextStyle: textTheme.bodyLarge?.copyWith(
           fontWeight: FontWeight.w600,
-          letterSpacing: -0.2,
+          letterSpacing: -0.05,
+          height: 1.3,
         ),
         subtitleTextStyle: textTheme.bodySmall?.copyWith(
           color: isDark
               ? AppColors.textSecondaryDark
               : AppColors.textSecondaryLight,
+          height: 1.4,
         ),
         iconColor: onSurface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+        minVerticalPadding: AppSpacing.listTileVertical,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.page,
+          vertical: 2,
+        ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: surface,
@@ -214,14 +225,14 @@ abstract final class AppTheme {
             AppColors.primary.withValues(alpha: isDark ? 0.22 : 0.14),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        height: 64,
+        height: 68,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return textTheme.labelSmall?.copyWith(
-            fontSize: 11,
+            fontSize: 11.5,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            letterSpacing: -0.1,
-            height: 1.1,
+            letterSpacing: 0,
+            height: 1.2,
             color: selected
                 ? AppColors.primary
                 : (isDark
@@ -259,6 +270,8 @@ abstract final class AppTheme {
     );
   }
 
+  /// Nunito reads rounder and slightly shorter than Montserrat at the same
+  /// size — soften tracking and open line height so UI text doesn’t feel tight.
   static TextTheme _textTheme(TextTheme base) {
     final themed = base.apply(
       fontFamily: AppFonts.family,
@@ -268,56 +281,74 @@ abstract final class AppTheme {
     return themed.copyWith(
       displayLarge: themed.displayLarge?.copyWith(
         fontWeight: FontWeight.w800,
-        letterSpacing: -1.5,
-        height: 1.05,
+        letterSpacing: -0.8,
+        height: 1.12,
       ),
       displayMedium: themed.displayMedium?.copyWith(
         fontWeight: FontWeight.w800,
-        letterSpacing: -1.2,
-        height: 1.05,
+        letterSpacing: -0.6,
+        height: 1.12,
       ),
       displaySmall: themed.displaySmall?.copyWith(
         fontWeight: FontWeight.w700,
-        letterSpacing: -1,
-        height: 1.1,
+        letterSpacing: -0.5,
+        height: 1.15,
       ),
       headlineMedium: themed.headlineMedium?.copyWith(
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.6,
+        letterSpacing: -0.3,
+        height: 1.2,
       ),
       headlineSmall: themed.headlineSmall?.copyWith(
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.4,
+        letterSpacing: -0.25,
+        height: 1.22,
       ),
       titleLarge: themed.titleLarge?.copyWith(
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.4,
+        letterSpacing: -0.2,
+        height: 1.22,
       ),
       titleMedium: themed.titleMedium?.copyWith(
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.3,
+        letterSpacing: -0.15,
+        height: 1.25,
       ),
       titleSmall: themed.titleSmall?.copyWith(
         fontWeight: FontWeight.w600,
-        letterSpacing: -0.2,
+        letterSpacing: -0.1,
+        height: 1.25,
       ),
       bodyLarge: themed.bodyLarge?.copyWith(
         fontWeight: FontWeight.w500,
-        letterSpacing: 0,
-        height: 1.35,
+        letterSpacing: 0.1,
+        height: 1.45,
       ),
       bodyMedium: themed.bodyMedium?.copyWith(
         fontWeight: FontWeight.w500,
-        letterSpacing: 0,
-        height: 1.35,
+        letterSpacing: 0.1,
+        height: 1.45,
       ),
       bodySmall: themed.bodySmall?.copyWith(
         fontWeight: FontWeight.w500,
-        height: 1.3,
+        letterSpacing: 0.1,
+        height: 1.4,
       ),
-      labelLarge: themed.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-      labelMedium: themed.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-      labelSmall: themed.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+      labelLarge: themed.labelLarge?.copyWith(
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.1,
+        height: 1.25,
+      ),
+      labelMedium: themed.labelMedium?.copyWith(
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.1,
+        height: 1.25,
+      ),
+      labelSmall: themed.labelSmall?.copyWith(
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.15,
+        height: 1.25,
+      ),
     );
   }
 }

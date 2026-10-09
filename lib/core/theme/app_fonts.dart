@@ -1,5 +1,5 @@
 abstract final class AppFonts {
-  static const String family = 'Montserrat';
+  static const String family = 'Nunito';
 
   /// Covers Arabic (AED symbol), Devanagari (INR), and Latin fallbacks.
   static const List<String> fallback = [

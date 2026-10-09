@@ -24,7 +24,7 @@ class PrivacyScreen extends StatelessWidget {
             'Your privacy on SpendWise',
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
-              letterSpacing: -0.4,
+              letterSpacing: -0.2,
             ),
           ),
           const SizedBox(height: 8),

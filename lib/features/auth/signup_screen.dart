@@ -640,7 +640,7 @@ class _BrandHeader extends StatelessWidget {
           title,
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
-            letterSpacing: -0.6,
+            letterSpacing: -0.15,
           ),
         ),
         const SizedBox(height: 6),
