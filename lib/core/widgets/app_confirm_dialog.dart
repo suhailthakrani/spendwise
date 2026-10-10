@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../constants/app_icons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import 'app_icon.dart';
 import 'app_text_field.dart';
 
 enum AppConfirmTone { primary, destructive }
@@ -19,14 +17,13 @@ Future<bool> showAppConfirmDialog({
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,
-    barrierColor: Colors.black.withValues(alpha: 0.45),
+    barrierColor: Colors.black.withValues(alpha: 0.35),
     builder: (ctx) => AppConfirmDialog(
       title: title,
       message: message,
       confirmLabel: confirmLabel,
       cancelLabel: cancelLabel,
       tone: tone,
-      iconAsset: iconAsset,
       onCancel: () => Navigator.pop(ctx, false),
       onConfirm: () => Navigator.pop(ctx, true),
     ),
@@ -47,14 +44,13 @@ Future<String?> showAppInputDialog({
 }) {
   return showDialog<String>(
     context: context,
-    barrierColor: Colors.black.withValues(alpha: 0.45),
+    barrierColor: Colors.black.withValues(alpha: 0.35),
     builder: (ctx) => _AppInputDialog(
       title: title,
       message: message,
       confirmLabel: confirmLabel,
       cancelLabel: cancelLabel,
       fieldLabel: fieldLabel,
-      iconAsset: iconAsset,
       obscureText: obscureText,
       validator: validator,
     ),
@@ -71,7 +67,6 @@ class AppConfirmDialog extends StatelessWidget {
     this.cancelLabel = 'Cancel',
     this.onCancel,
     this.tone = AppConfirmTone.destructive,
-    this.iconAsset,
     this.child,
   });
 
@@ -82,107 +77,141 @@ class AppConfirmDialog extends StatelessWidget {
   final VoidCallback onConfirm;
   final VoidCallback? onCancel;
   final AppConfirmTone tone;
-  final String? iconAsset;
   final Widget? child;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final isDestructive = tone == AppConfirmTone.destructive;
-    final accent = isDestructive ? AppColors.error : AppColors.primary;
-    final icon = iconAsset ??
-        (isDestructive ? AppIcons.warning : AppIcons.info);
-
-    // Destructive stays ceremonial. Everyday confirms stay light and quick.
-    if (!isDestructive && child == null) {
-      return AlertDialog(
-        title: Text(title),
-        content: Text(
-          message,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.secondaryText(context),
-            height: 1.4,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: onCancel ?? () => Navigator.pop(context, false),
-            child: Text(cancelLabel),
-          ),
-          FilledButton(
-            onPressed: onConfirm,
-            child: Text(confirmLabel),
-          ),
-        ],
-      );
-    }
+    final accent = isDestructive ? scheme.error : scheme.primary;
+    final onAccent = isDestructive ? scheme.onError : scheme.onPrimary;
+    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final dismiss = onCancel ?? () => Navigator.pop(context, false);
+    final buttonShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppRadii.md),
+    );
+    final buttonText = theme.textTheme.labelLarge?.copyWith(
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.1,
+    );
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+      elevation: 0,
+      backgroundColor: surface,
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xxl,
+        vertical: AppSpacing.xxl,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.xl),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 24, 22, 16),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
         child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xxl,
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.xl,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (isDestructive) ...[
-                Center(
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: AppIcon(icon, size: 26, color: accent),
-                    ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  onPressed: dismiss,
+                  tooltip: 'Close',
+                  visualDensity: VisualDensity.compact,
+                  style: IconButton.styleFrom(
+                    foregroundColor: AppColors.tertiaryText(context),
+                    minimumSize: const Size(36, 36),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.2,
+                  icon: const Icon(Icons.close_rounded, size: 20),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.secondaryText(context),
-                  height: 1.45,
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.md),
+                child: Text(
+                  title,
+                  textAlign: TextAlign.start,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                    letterSpacing: -0.2,
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.md),
+                child: Text(
+                  message,
+                  textAlign: TextAlign.start,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    height: 1.45,
+                    color: AppColors.secondaryText(context),
+                  ),
                 ),
               ),
               if (child != null) ...[
-                const SizedBox(height: 16),
-                child!,
+                const SizedBox(height: AppSpacing.lg),
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.md),
+                  child: child,
+                ),
               ],
-              const SizedBox(height: 22),
-              FilledButton(
-                onPressed: onConfirm,
-                style: FilledButton.styleFrom(
-                  backgroundColor: accent,
-                  minimumSize: const Size.fromHeight(48),
+              const SizedBox(height: AppSpacing.xl),
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.md),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      OutlinedButton(
+                        onPressed: dismiss,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: scheme.onSurface,
+                          backgroundColor: surface,
+                          side: BorderSide(color: AppColors.border(context)),
+                          minimumSize: const Size(80, 44),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                          ),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: buttonShape,
+                          textStyle: buttonText,
+                        ),
+                        child: Text(cancelLabel),
+                      ),
+                      FilledButton(
+                        onPressed: onConfirm,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: accent,
+                          foregroundColor: onAccent,
+                          elevation: 0,
+                          minimumSize: const Size(80, 44),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                          ),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: buttonShape,
+                          textStyle: buttonText,
+                        ),
+                        child: Text(confirmLabel),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Text(confirmLabel),
-              ),
-              const SizedBox(height: 4),
-              TextButton(
-                onPressed: onCancel ?? () => Navigator.pop(context, false),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size.fromHeight(44),
-                  foregroundColor: AppColors.secondaryText(context),
-                ),
-                child: Text(cancelLabel),
               ),
             ],
           ),
@@ -200,7 +229,6 @@ class _AppInputDialog extends StatefulWidget {
     required this.cancelLabel,
     required this.fieldLabel,
     required this.obscureText,
-    this.iconAsset,
     this.validator,
   });
 
@@ -209,7 +237,6 @@ class _AppInputDialog extends StatefulWidget {
   final String confirmLabel;
   final String cancelLabel;
   final String fieldLabel;
-  final String? iconAsset;
   final bool obscureText;
   final String? Function(String value)? validator;
 
@@ -246,7 +273,6 @@ class _AppInputDialogState extends State<_AppInputDialog> {
       confirmLabel: widget.confirmLabel,
       cancelLabel: widget.cancelLabel,
       tone: AppConfirmTone.primary,
-      iconAsset: widget.iconAsset ?? AppIcons.info,
       onCancel: () => Navigator.pop(context),
       onConfirm: _submit,
       child: Column(
